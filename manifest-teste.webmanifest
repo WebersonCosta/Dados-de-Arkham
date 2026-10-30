@@ -1,0 +1,18 @@
+{
+  "name": "Dados de Arkham (teste)",
+  "short_name": "Arkham Teste",
+  "description": "Versão de teste do rolador de dados 3D à luz de velas.",
+  "lang": "pt-BR",
+  "id": "/Dados-de-Arkham-teste/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "background_color": "#060807",
+  "theme_color": "#060807",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

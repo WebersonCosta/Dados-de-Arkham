@@ -6,6 +6,8 @@ penalidade no d100, como em Call of Cthulhu (7ª edição).
 
 **Endereço do app:** https://webersoncosta.github.io/Dados-de-Arkham/
 
+**Endereço de teste** (próxima versão, ainda em teste): https://webersoncosta.github.io/Dados-de-Arkham-teste/
+
 ## Dados de bônus e de penalidade (d100)
 
 Com o d100 escolhido, aparece uma fileira acima da bandeja: **penalidade 2 · 1**, **Normal** e
@@ -35,12 +37,72 @@ na mesa e é lançado junto com os outros.
 O ícone aparece junto dos outros apps e abre em tela cheia. Depois da primeira abertura, ele
 funciona mesmo sem internet. No iPhone, deixe o modo silencioso desligado para ouvir os sons.
 
-## Publicar uma nova versão
+## Versões: desenvolver, testar e publicar
 
-O site é publicado pelo GitHub Pages a partir da ramificação `main` deste repositório.
-Basta enviar as mudanças para o GitHub (commit + push na `main`): em cerca de um minuto o
-endereço já mostra a versão nova. Quem tem o app instalado recebe a atualização na próxima vez
-que abrir o app com internet (se não aparecer, é só fechar o app e abrir de novo).
+O app tem dois endereços:
+
+| | Endereço | Para quê |
+| --- | --- | --- |
+| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | A versão publicada, que os amigos usam |
+| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | A próxima versão, para testar antes de publicar |
+
+O número da versão aparece pequeno no canto de baixo da tela, à direita (por exemplo, `v1.1`).
+No endereço de teste ele vem em vermelho e com a palavra "teste" (`v1.1 · teste`).
+
+**O fluxo**
+
+1. **Desenvolver:** todo trabalho novo é feito na linha `desenvolvimento` do GitHub. A cada etapa
+   pronta, o endereço de teste é atualizado (leva cerca de um minuto).
+2. **Testar:** abra o endereço de teste no celular e teste à vontade. Se quiser, mande o link para
+   um amigo. O endereço oficial continua igual.
+3. **Publicar:** quando estiver tudo certo, diga **"pode publicar"**. Só então a versão do teste
+   vai para o endereço oficial e fica marcada no GitHub com o seu número. Quem tem o app instalado
+   recebe a versão nova na próxima vez que abrir o app com internet (se não aparecer, é só fechar
+   o app e abrir de novo).
+
+Sem um "pode publicar", nada muda no endereço oficial.
+
+**Voltar para uma versão anterior**
+
+Cada versão publicada fica marcada no GitHub, na lista de
+[tags](https://github.com/WebersonCosta/Dados-de-Arkham/tags) (a primeira é a `v1.0`). Se algo
+der errado, diga, por exemplo, **"volte o app oficial para a versão 1.0"**. Em cerca de um minuto
+o endereço oficial volta a mostrar aquela versão, e o trabalho novo continua guardado na linha de
+desenvolvimento, para ser corrigido e publicado depois.
+
+**O teste não se mistura com o app oficial**
+
+O teste fica num endereço fora do app oficial, tem outro nome ("Arkham Teste") e guarda à parte
+as suas preferências e a sua cópia para uso sem internet. Dá para abrir e até instalar o teste sem
+mexer no app oficial que os amigos têm na tela inicial.
+
+**Para quem mexe no código**
+
+- `main` é a versão oficial: o GitHub Pages deste repositório publica a `main`.
+- `desenvolvimento` é a versão em teste. O repositório
+  [Dados-de-Arkham-teste](https://github.com/WebersonCosta/Dados-de-Arkham-teste) existe só para
+  o endereço de teste e recebe uma cópia dela: `git push teste desenvolvimento:main` (o atalho
+  `teste` é criado uma vez com
+  `git remote add teste https://github.com/WebersonCosta/Dados-de-Arkham-teste.git`).
+- O número da versão fica em `src/version.js`; na `desenvolvimento` ele já é o da próxima versão.
+- Publicar a versão X.Y (só depois do "pode publicar"). A `main` vira uma cópia exata da
+  `desenvolvimento`, sem misturar históricos:
+  ```sh
+  git switch main
+  git restore --source=desenvolvimento --staged --worktree -- .
+  git commit -m "Versão X.Y"
+  git tag -a vX.Y -m "Versão X.Y"
+  git push origin main vX.Y
+  git switch desenvolvimento
+  ```
+- Voltar o oficial para a versão X.Y, sem apagar nada do histórico:
+  ```sh
+  git switch main
+  git restore --source=vX.Y --staged --worktree -- .
+  git commit -m "Volta para a versão X.Y"
+  git push origin main
+  git switch desenvolvimento
+  ```
 
 ## Como o projeto está organizado
 
@@ -70,6 +132,8 @@ O restante:
 
 - `index.html`: a página.
 - `manifest.webmanifest`: nome, ícone e cores do app instalado.
+- `manifest-teste.webmanifest`: o mesmo para o endereço de teste, com outro nome ("Arkham Teste").
+- `src/version.js`: o número da versão, mostrado no canto da tela.
 - `sw.js`: guarda o app no aparelho para abrir rápido e funcionar sem internet.
 - `icons/`: os ícones do app (gerados por `tools/icone.html`).
 - `src/main.js`: liga as peças (toque, escolha do dado, resultado).

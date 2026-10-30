@@ -4,6 +4,7 @@ import { DiceTable } from './core/physics.js';
 import { DICE_SETS } from './core/dice-sets.js';
 import { createDieModel } from './core/polyhedra.js';
 import { THEMES, DEFAULT_THEME } from './themes/index.js';
+import { VERSION, PLACE } from './version.js';
 
 // Liga as peças: carrega o tema, monta a mesa e cuida do toque, da escolha do dado e do resultado.
 
@@ -12,7 +13,12 @@ const canvas = $('scene'), hudTop = $('hudTop'), hudBottom = $('hudBottom');
 const hint = $('hint'), verdict = $('verdict'), tray = $('tray'), modesBox = $('modes');
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const PREFS_KEY = 'arkham-dice-prefs';
+// versão no canto da tela; fora do endereço oficial, diz também onde o app está aberto
+$('version').textContent = `v${VERSION}` + (PLACE === 'oficial' ? '' : ` · ${PLACE}`);
+$('version').dataset.place = PLACE;
+
+// o endereço de teste guarda as suas escolhas à parte, sem mexer nas do app oficial
+const PREFS_KEY = PLACE === 'teste' ? 'arkham-dice-prefs-teste' : 'arkham-dice-prefs';
 const prefs = { sfx: true, amb: true, die: 'd100' };
 try { Object.assign(prefs, JSON.parse(localStorage.getItem(PREFS_KEY) || '{}')); } catch (e) {}
 const savePrefs = () => { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) {} };
@@ -31,7 +37,7 @@ function loadStylesheet(href) {
 
 /* ---------------------------------------------------------------- tema */
 const theme = (await THEMES[DEFAULT_THEME]()).default;
-document.title = theme.title;
+document.title = theme.title + (PLACE === 'teste' ? ' (teste)' : '');
 $('appTitle').textContent = theme.title;
 hint.textContent = theme.texts.loading;
 await Promise.race([loadStylesheet(theme.css), wait(3000)]);

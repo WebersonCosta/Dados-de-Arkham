@@ -15,6 +15,17 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Arkham">
+  <script>
+    // No endereço de teste o app ganha outro nome e outra identidade, para nunca se misturar com o
+    // app oficial que os amigos instalaram na tela inicial.
+    (() => {
+      const teste = location.pathname.toLowerCase().startsWith('/dados-de-arkham-teste/');
+      document.documentElement.dataset.place = teste ? 'teste' : location.hostname === 'localhost' ? 'local' : 'oficial';
+      if (!teste) return;
+      document.querySelector('link[rel="manifest"]').href = 'manifest-teste.webmanifest';
+      document.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'Arkham Teste';
+    })();
+  </script>
 
   <!-- prévia do link ao compartilhar (WhatsApp e afins) -->
   <meta property="og:type" content="website">
@@ -54,6 +65,7 @@
     <div class="modes" id="modes" role="group"></div>
     <nav class="tray" id="tray" aria-label="Escolha o dado"></nav>
   </footer>
+  <p class="version" id="version"></p>
 
   <script type="module" src="src/main.js"></script>
 </body>

@@ -3,10 +3,14 @@
 // cópia guardada quando estiver offline. Bibliotecas e fontes, que nunca mudam no mesmo endereço,
 // vêm direto da cópia guardada.
 
-const CACHE = 'dados-de-arkham-v2';
+// O endereço oficial e o de teste ficam no mesmo site (webersoncosta.github.io) e dividem o mesmo
+// lugar de guardar: cada um usa nomes próprios e só apaga as suas próprias cópias antigas.
+const TEST = self.location.pathname.toLowerCase().startsWith('/dados-de-arkham-teste/');
+const PREFIX = TEST ? 'dados-de-arkham-teste-v' : 'dados-de-arkham-v';
+const CACHE = PREFIX + '3';
 const APP_FILES = [
-  './', 'index.html', 'manifest.webmanifest',
-  'src/app.css', 'src/vendor.js', 'src/main.js',
+  './', 'index.html', TEST ? 'manifest-teste.webmanifest' : 'manifest.webmanifest',
+  'src/app.css', 'src/vendor.js', 'src/version.js', 'src/main.js',
   'src/lib/util.js', 'src/lib/canvas.js',
   'src/core/polyhedra.js', 'src/core/dice-sets.js', 'src/core/physics.js', 'src/core/stage.js',
   'src/themes/index.js',
@@ -29,7 +33,7 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key))))
+    .then(keys => Promise.all(keys.filter(key => key.startsWith(PREFIX) && key !== CACHE).map(key => caches.delete(key))))
     .then(() => self.clients.claim()));
 });
 
