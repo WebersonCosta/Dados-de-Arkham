@@ -25,6 +25,28 @@
       document.querySelector('link[rel="manifest"]').href = 'manifest-teste.webmanifest';
       document.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'Arkham Teste';
     })();
+
+    // Cópia do app no aparelho (sw.js), só nos endereços publicados. A versão nova chega inteira em
+    // segundo plano; quando ela assume, a página recarrega num momento em que ninguém está usando:
+    // logo ao abrir (antes do primeiro toque) ou quando o app sai da tela. Página que abriu
+    // quebrada (arquivos de versões diferentes, logo depois de uma publicação) recarrega na hora.
+    if ('serviceWorker' in navigator && /^\/dados-de-arkham(-teste)?\//i.test(location.pathname)) (() => {
+      const sw = navigator.serviceWorker, update = !!sw.controller;
+      let touched = false, broken = false, reloading = false;
+      const reload = () => { if (!reloading) { reloading = true; location.reload(); } };
+      addEventListener('pointerdown', () => { touched = true; }, { capture: true, once: true });
+      addEventListener('error', () => { broken = true; }, true);
+      sw.addEventListener('controllerchange', () => {
+        if (!update && !broken) return;   // primeira vez: a página já é da versão que ficou guardada
+        if (broken || !touched) return reload();
+        addEventListener('visibilitychange', () => { if (document.hidden) reload(); });
+      });
+      addEventListener('load', () => sw.register('sw.js').catch(() => {}));
+      // de volta ao app (no celular ele fica dias aberto): procura versão nova
+      addEventListener('visibilitychange', () => {
+        if (!document.hidden) sw.getRegistration().then(r => r && r.update()).catch(() => {});
+      });
+    })();
   </script>
 
   <!-- prévia do link ao compartilhar (WhatsApp e afins) -->
@@ -70,7 +92,7 @@
           <div class="mode-buttons"><button type="button" class="mode-chip" id="btnShortcuts" aria-label="Atalhos e fórmulas salvas">★</button></div>
         </div>
         <div class="mode-group formula-group">
-          <span class="mode-caption">fórmula</span>
+          <span class="mode-caption" id="formulaCaption">fórmula</span>
           <div class="formula">
             <span id="formulaText" aria-live="polite"></span>
             <button type="button" id="btnClear" aria-label="Limpar e voltar a um dado só">×</button>

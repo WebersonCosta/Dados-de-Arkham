@@ -94,6 +94,12 @@ export class DiceTable {
     this.roll = null;
   }
 
+  // Põe de volta, no mesmo lugar, um dado que tinha acabado de sair (o toque duplo desfaz a troca).
+  restoreDie(die) {
+    this.world.addBody(die.body);
+    this.dice.push(die);
+  }
+
   impact(die, ev) {
     if (this.muted) return;
     const other = ev.body;
@@ -197,8 +203,9 @@ export class DiceTable {
 
   // Os dados caem devagar num lugar livre da mesa (ao trocar de dado, ou quando um dado entra na
   // fórmula). Não conta como lançamento. Com `fresh`, só esses caem; os outros ficam onde estão.
-  drop(fresh) {
-    const falling = fresh || this.dice, placed = this.dice.filter(d => !falling.includes(d));
+  // `avoid`: dados que já saíram da mesa mas ainda podem voltar; ninguém cai no lugar deles.
+  drop(fresh, avoid = []) {
+    const falling = fresh || this.dice, placed = [...this.dice.filter(d => !falling.includes(d)), ...avoid];
     for (const d of falling) {
       this.place(d, placed);
       placed.push(d);

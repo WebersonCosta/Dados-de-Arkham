@@ -113,15 +113,20 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   display: flex; justify-content: center; align-items: flex-end; gap: 10px; min-width: 0; pointer-events: auto;
 }
 .formula-group { flex: 1 1 auto; min-width: 0; max-width: 230px; }
+/* modo dado único: a fórmula fica apagada; no modo montagem ela acende ("somando"), e o próximo
+   dado tocado soma em vez de trocar */
 .formula {
   display: flex; box-sizing: border-box; min-height: 2.125rem;
-  border: 1px solid var(--c-accent); border-radius: 2px; background: var(--c-accent-soft);
+  border: 1px solid var(--c-line); border-radius: 2px; background: var(--c-panel);
+  transition: border-color .25s, background-color .25s;
 }
 .formula span {
   flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 0 .5rem;
   font-family: var(--font-number); font-weight: 700; font-size: .95rem; letter-spacing: .02em;
-  color: var(--c-accent); white-space: nowrap; overflow: hidden;
+  color: var(--c-text); white-space: nowrap; overflow: hidden; transition: color .25s;
 }
+.is-building .formula { border-color: var(--c-accent); background: var(--c-accent-soft); }
+.is-building .formula span, .is-building .formula-group .mode-caption { color: var(--c-accent); }
 .formula span[data-size="m"] { font-size: .78rem; }
 .formula span[data-size="s"] { font-size: .6rem; line-height: 1.2; white-space: normal; text-align: center; }
 .formula button {

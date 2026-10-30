@@ -15,9 +15,18 @@ const hint = $('hint'), verdict = $('verdict'), tray = $('tray');
 const modesBox = $('modes'), composeBox = $('compose'), sheet = $('sheet');
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-// versão no canto da tela; fora do endereço oficial, diz também onde o app está aberto
-$('version').textContent = `v${VERSION}` + (PLACE === 'oficial' ? '' : ` · ${PLACE}`);
+// versão no canto da tela; fora do endereço oficial, diz também onde o app está aberto e, no de
+// teste, o número do envio (o RELEASE do sw.js), para saber se a versão nova já chegou
+const showVersion = release => {
+  $('version').textContent = `v${VERSION}` + (PLACE === 'oficial' ? '' : ` · ${PLACE}${release ? ` ${release}` : ''}`);
+};
+showVersion();
 $('version').dataset.place = PLACE;
+if (PLACE !== 'oficial' && navigator.serviceWorker?.controller) {
+  navigator.serviceWorker.addEventListener('message', ev => { if (ev.data?.release) showVersion(ev.data.release); });
+  navigator.serviceWorker.startMessages();
+  navigator.serviceWorker.controller.postMessage('release');
+}
 
 // o endereço de teste guarda as suas escolhas à parte, sem mexer nas do app oficial
 const PREFS_KEY = PLACE === 'teste' ? 'arkham-dice-prefs-teste' : 'arkham-dice-prefs';
@@ -91,10 +100,11 @@ function putAway(d) {
 }
 
 // current.set: o que vai para a mesa (o d100 ou uma fórmula). formula: a fórmula dos dados comuns.
-// building: enquanto a fórmula é montada, cada toque num dado soma mais um; depois de lançar, um
-// dado que ainda não está na fórmula começa outra.
+// building: o modo montagem, em que cada toque num dado soma mais um (até limpar no ×). Fora dele,
+// no modo dado único, um toque troca de dado.
 let state = 'loading', current = { set: null, dice: [] }, verdictTimer = 0, leaving = [];
-let formula = formulas.single('d20'), building = false, lastKind = 'd20';
+let formula = formulas.single('d20'), building = false, lastKind = 'd20', swap = null;
+const lone = f => formulas.count(f) === 1 && !f.fixed;
 
 // Troca o que vai para a mesa. Os dados que continuam ficam onde estão; os que saem afundam e os
 // que entram caem num lugar livre.
@@ -113,22 +123,36 @@ function setFormula(f, options) {
   chooseSet(formulas.toSet(f), options);
 }
 
-// Toque num dado da bandeja. Enquanto se monta, cada toque soma mais um dado. Depois de lançar,
-// tocar num dado que já está na fórmula aumenta a quantidade, e um dado novo começa outra fórmula.
-function tapKind(kind) {
+// Toque num dado da bandeja.
+// Modo dado único: um toque troca de dado; tocar no dado que já está na mesa soma mais um; um toque
+// duplo num dado diferente soma os dois. A troca acontece já no primeiro toque, sem esperar para ver
+// se vem outro: se o segundo vier logo, o dado de antes volta e os dois ficam somados.
+// Modo montagem (a partir da primeira soma): todo toque soma, até limpar no ×.
+const DOUBLE_TAP = 350;   // ms entre os toques do toque duplo; no mouse, vale também o clique duplo do sistema
+function tapKind(kind, ev) {
   audio.unlock();
-  let next = formulas.single(kind);
-  if (current.set !== D100 && (building || formulas.has(formula, kind))) {
-    next = formulas.add(formula, kind);
-    if (!next) return flashHint(`No máximo ${MAX_DICE} dados na mesa`);
-  }
-  building = true;
+  const last = swap, now = performance.now();
+  swap = null;
   lastKind = kind;
-  setFormula(next);
+  if (last?.kind === kind && (ev?.detail > 1 || now - last.at < DOUBLE_TAP)) {
+    building = true;   // o d100 não entra na soma: depois dele, a montagem começa só com este dado
+    return setFormula((last.before && formulas.add(last.before, kind)) || formula);
+  }
+  if (building || (current.set !== D100 && formulas.has(formula, kind))) {
+    const next = formulas.add(formula, kind);
+    if (!next) return flashHint(`No máximo ${MAX_DICE} dados na mesa`);
+    building = true;
+    return setFormula(next);
+  }
+  swap = { kind, at: now, before: current.set === D100 ? null : formula };
+  setFormula(formulas.single(kind));
 }
 
+// O d100 nunca entra na soma: tocar nele troca para o d100 e sai do modo montagem.
 function pickD100() {
   audio.unlock();
+  building = false;
+  swap = null;
   if (current.set !== D100) chooseSet(D100);
 }
 
@@ -153,11 +177,14 @@ function refreshUI() {
   $('subtitle').textContent = !isD100 && set.dice.length > 1 ? set.subtitle : `${set.subtitle} · ${set.name}`;
   modesBox.classList.toggle('is-off', !hasModes);
   composeBox.classList.toggle('is-off', isD100 || hasModes);
+  // no modo montagem a fórmula acende e avisa que o próximo dado tocado soma
+  composeBox.classList.toggle('is-building', building);
+  $('formulaCaption').textContent = building ? 'somando' : 'fórmula';
+  $('btnClear').disabled = !building;
   if (isD100) return;
   const text = $('formulaText');
   text.textContent = set.name;
   text.dataset.size = set.name.length > 17 ? 's' : set.name.length > 11 ? 'm' : '';
-  $('btnClear').disabled = formulas.count(formula) === 1 && !formula.fixed;
 }
 
 let hintTimer = 0;
@@ -174,20 +201,25 @@ function stepFixed(delta) {
   const next = formulas.withFixed(formula, formula.fixed + delta);
   if (next.fixed === formula.fixed) return;
   building = true;
+  swap = null;
   setFormula(next);
 }
 
-// Limpar: volta a um dado só (o último escolhido).
+// Limpar: sai do modo montagem e volta a um dado só (o último tocado).
 function clearFormula() {
   audio.unlock();
   building = false;
+  swap = null;
   setFormula(formulas.single(lastKind));
 }
 
+// Atalho ou fórmula salva: 3d6 e 2d6+6 já vêm montados; 1d3 ou 1d4 são um dado só, como tocar na
+// bandeja (o soco com bônus de dano é o 1d3 e um toque duplo no d4).
 function useFormula(text) {
   const f = formulas.parse(text);
   if (!f) return;
-  building = true;   // ainda dá para somar dados (1d3 e depois o d4: o soco com bônus de dano)
+  building = !lone(f);
+  swap = null;
   lastKind = f.groups[f.groups.length - 1].kind;
   closeSheet();
   setFormula(f);
@@ -325,7 +357,8 @@ function chooseMode(option) {
 }
 
 // Deixa na mesa os dados que a próxima jogada vai usar: os do conjunto mais os que a opção pede.
-// Dado descartado na jogada anterior é o primeiro a sair; os que faltam caem num lugar livre.
+// Dado descartado na jogada anterior é o primeiro a sair; um que acabou de sair (o toque duplo
+// desfaz a troca) volta para onde estava; os que faltam caem num lugar livre.
 function arrange({ instant = false } = {}) {
   const { set } = current, extra = mode.extra;
   const wanted = [...set.dice];
@@ -336,6 +369,8 @@ function arrange({ instant = false } = {}) {
   current.dice = wanted.map(spec => {
     const i = free.findIndex(d => d.spec === spec);
     if (i >= 0) return free.splice(i, 1)[0];
+    const back = leaving.findIndex(d => d.spec === spec);
+    if (back >= 0) return comeBack(leaving.splice(back, 1)[0]);
     const d = placeDie(spec);
     fresh.push(d.die);
     return d;
@@ -343,7 +378,7 @@ function arrange({ instant = false } = {}) {
   free.forEach(vanish);
   for (const d of current.dice) d.dropped = false;
   if (instant) table.settleNow();
-  else if (fresh.length) table.drop(fresh);
+  else if (fresh.length) table.drop(fresh, leaving.map(d => d.die));   // longe dos que saem, que ainda podem voltar
   if (instant || fresh.length) syncMeshes(false);
 }
 
@@ -355,9 +390,20 @@ function vanish(d) {
   leaving.push(d);
 }
 
-// A cada quadro: o dado descartado escurece aos poucos, e o que está saindo afunda.
+// O dado que estava afundando volta ao mesmo lugar, sobe de novo e acende.
+function comeBack(d) {
+  table.restoreDie(d.die);
+  d.dim = Math.max(d.dim, Math.min(1, d.sink * 1.6));
+  return d;
+}
+
+// A cada quadro: o dado descartado escurece aos poucos, o que está saindo afunda e o que voltou sobe.
 function fade(dt) {
   for (const d of current.dice) {
+    if (d.sink > 0) {
+      d.sink = Math.max(0, d.sink - dt / .25);
+      d.mesh.position.y -= d.sink ** 2 * d.die.radius * 2.4;
+    }
     const target = d.dropped ? 1 : 0;
     if (d.dim === target) continue;
     d.dim = Math.abs(target - d.dim) < .02 ? target : d.dim + (target - d.dim) * Math.min(1, dt * 6);
@@ -451,7 +497,7 @@ canvas.addEventListener('pointerdown', ev => {
     rolled = mode;
     mode = normalMode();
     syncModes();
-    building = false;   // depois de lançar, um dado novo começa outra fórmula
+    swap = null;   // a fórmula montada continua (para rolar o mesmo dano de novo), até limpar no ×
   } else if (state === 'result') {
     toIdle();
   }
@@ -464,7 +510,7 @@ for (const id of [...Object.keys(DIE_KINDS), D100.id]) {
   b.dataset.set = id;
   b.setAttribute('aria-pressed', 'false');
   b.append(id === D100.id ? D100.name : DIE_KINDS[id].name, Object.assign(document.createElement('span'), { className: 'count' }));
-  b.addEventListener('click', () => (id === D100.id ? pickD100() : tapKind(id)));
+  b.addEventListener('click', ev => (id === D100.id ? pickD100() : tapKind(id, ev)));
   tray.appendChild(b);
 }
 
@@ -506,12 +552,14 @@ function frame() {
   requestAnimationFrame(frame);
 }
 
-// Abre com o que estava na mesa da última vez (o d100 não é fórmula: parse devolve null).
+// Abre com o que estava na mesa da última vez (o d100 não é fórmula: parse devolve null). Uma
+// fórmula montada volta no modo montagem; um dado só, no modo dado único.
 buildModes(D100);   // a faixa de opções já ocupa o seu lugar ao medir a tela
 relayout();
 const saved = formulas.parse(prefs.roll ?? prefs.die);
 if (saved) {
   lastKind = saved.groups[saved.groups.length - 1].kind;
+  building = !lone(saved);
   setFormula(saved, { instant: true });
 } else {
   chooseSet(D100, { instant: true });
@@ -519,9 +567,7 @@ if (saved) {
 window.addEventListener('resize', relayout);
 document.fonts.ready.then(relayout);
 requestAnimationFrame(frame);
-
-// Guarda o app no aparelho para abrir rápido e funcionar sem internet (só no endereço publicado).
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+// (a cópia do app no aparelho, o sw.js, é registrada pela própria página: veja o index.html)
 
 // Atalho só para testes no computador (localhost): permite simular resultados e opções.
 if (location.hostname === 'localhost') {
@@ -529,6 +575,6 @@ if (location.hostname === 'localhost') {
     showResult, chooseSet, setFormula, tapKind, pickD100, chooseMode, stepFixed, clearFormula, useFormula,
     formulas, tick, table, stage, theme, THREE, D100,
     get current() { return current; }, get state() { return state; }, get mode() { return mode; },
-    get formula() { return formula; }, get building() { return building; }
+    get formula() { return formula; }, get building() { return building; }, get leaving() { return leaving; }
   };
 }

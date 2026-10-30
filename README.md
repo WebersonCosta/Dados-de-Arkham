@@ -11,21 +11,42 @@ Call of Cthulhu (7ª edição).
 
 ## Rolar vários dados
 
-- **Um dado só (como sempre):** toque no dado da bandeja e depois na mesa.
-- **Mais dados iguais:** toque de novo no mesmo dado. Cada toque soma mais um (d6, d6, d6 dá
-  **3d6**), e o número em cima do botão mostra quantos são.
-- **Dados diferentes:** enquanto monta, toque em outros dados (d8 e depois d4 dá **1d8 + 1d4**).
+Para lançar, escolha o dado na bandeja e toque na mesa. Para montar uma rolagem com vários
+dados, o app tem dois modos.
+
+**Modo dado único** (quando o app abre, e depois de limpar no **×**)
+
+- **Um toque em outro dado troca:** no 1d4, tocar no d20 deixa **1d20**.
+- **Toque duplo** (dois toques rápidos) **em outro dado soma** e entra no modo montagem: no 1d4,
+  um toque duplo no d20 deixa **1d4 + 1d20**. No computador, é o clique duplo.
+- **Tocar no dado que já está escolhido soma mais um** e entra no modo montagem: no 1d6, tocar
+  no d6 deixa **2d6**.
+- Os botões **−** e **+** do número fixo também entram no modo montagem.
+
+**Modo montagem** (a partir da primeira soma)
+
+- **Cada toque num dado soma mais um:** no 2d6 + 1d4 + 3, tocar no d20 deixa
+  **2d6 + 1d4 + 1d20 + 3**. O número em cima do botão mostra quantos dados daquele tipo há.
+- A fórmula acende e a palavra **somando** aparece em cima dela: é o aviso de que o próximo toque
+  soma, e não troca.
+- Depois de lançar, a fórmula continua montada, para rolar o mesmo dano quantas vezes quiser.
+- O **×** sai do modo montagem e volta a um dado só (o último que você tocou).
+- O **d100** nunca entra na soma: tocar nele troca para o d100 e sai do modo montagem.
+
+**Detalhes**
+
+- O toque duplo não atrasa a troca: o primeiro toque já troca o dado na hora; se o segundo vier
+  logo (em menos de ⅓ de segundo), o dado de antes volta para a mesa e os dois ficam somados.
+  Por isso, para ter **2d20** estando no 1d4, toque no d20, espere um instante e toque de novo.
+- Saindo do d100, um toque duplo num dado começa a montagem só com ele.
 - **Número fixo:** os botões **−** e **+** somam ou tiram um número fixo (segure para ir mais
   rápido), como em **2d6 + 6** ou **1d10 + 2**.
-- A fórmula montada aparece no meio da faixa acima da bandeja. O **×** limpa a montagem e volta
-  a um dado só.
-- Depois de lançar, tocar na mesa de novo repete a mesma fórmula. Tocar num dado que já está na
-  fórmula aumenta a quantidade; tocar num dado que não está nela começa outra (para voltar ao
-  d20, por exemplo, basta tocar no d20).
 - **Atalhos (★):** fórmulas prontas de Call of Cthulhu (3d6 para FOR, CON, DES, APA e POD; 2d6+6
   para TAM, INT e EDU; 1d3 para o soco; 1d4, 1d6 e 1d10) e as suas fórmulas favoritas. Para
   guardar uma, monte a fórmula, abra os atalhos e toque em **Salvar**. Ficam guardadas no
-  aparelho (até 12), e o **×** de cada uma apaga.
+  aparelho (até 12), e o **×** de cada uma apaga. Atalhos de um dado só (1d3, 1d4…) ficam no
+  modo dado único; os de vários dados (3d6, 2d6+6) já vêm no modo montagem. O soco com bônus de
+  dano (1d3 + 1d4) é o atalho 1d3 e um toque duplo no d4.
 - **1d3:** como em Call of Cthulhu, é rolado com um d6 (de pedra, para não se confundir com os
   outros d6): 1-2 vale 1, 3-4 vale 2 e 5-6 vale 3. O resultado mostra a conversão (por exemplo,
   "5→3") e lembra a regra.
@@ -33,7 +54,6 @@ Call of Cthulhu (7ª edição).
   ("5 + 3 + 6 = 14").
 - **Limite de 8 dados na mesa de uma vez.** Com mais que isso, a mesa do celular vira um
   amontoado e o resultado demora para sair.
-- O d100 continua à parte, com os dados de bônus e de penalidade.
 
 ## Dados de bônus e de penalidade (d100)
 
@@ -74,20 +94,28 @@ O app tem dois endereços:
 | **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | A próxima versão, para testar antes de publicar |
 
 O número da versão aparece pequeno no canto de baixo da tela, à direita (por exemplo, `v1.1`).
-No endereço de teste ele vem em vermelho e com a palavra "teste" (`v1.1 · teste`).
+No endereço de teste ele vem em vermelho, com a palavra "teste" e o número do envio
+(`v1.1 · teste 5`). Esse número sobe a cada envio: é o jeito de saber se a versão nova já chegou.
 
 **O fluxo**
 
 1. **Desenvolver:** todo trabalho novo é feito na linha `desenvolvimento` do GitHub. A cada etapa
-   pronta, o endereço de teste é atualizado (leva cerca de um minuto).
+   pronta, o endereço de teste é atualizado (leva alguns minutos para chegar a todos).
 2. **Testar:** abra o endereço de teste no celular e teste à vontade. Se quiser, mande o link para
    um amigo. O endereço oficial continua igual.
 3. **Publicar:** quando estiver tudo certo, diga **"pode publicar"**. Só então a versão do teste
-   vai para o endereço oficial e fica marcada no GitHub com o seu número. Quem tem o app instalado
-   recebe a versão nova na próxima vez que abrir o app com internet (se não aparecer, é só fechar
-   o app e abrir de novo).
+   vai para o endereço oficial e fica marcada no GitHub com o seu número.
 
 Sem um "pode publicar", nada muda no endereço oficial.
+
+**Como a versão nova chega a quem já usa o app**
+
+O app guarda no aparelho uma cópia inteira da versão em uso e sempre abre dela (por isso funciona
+sem internet). Quando há versão nova, ela é baixada inteira em segundo plano e só entra depois de
+completa; se faltar algum arquivo, o app continua na versão anterior e tenta de novo depois. A
+troca acontece num momento em que ninguém está usando: logo ao abrir o app, antes do primeiro
+toque, ou quando o app sai da tela (troca de app, tela apagada). Assim o app nunca fica "meio
+atualizado", com arquivos novos misturados com antigos.
 
 **Voltar para uma versão anterior**
 
@@ -117,6 +145,9 @@ mexer no app oficial que os amigos têm na tela inicial.
   git push teste "$c:refs/heads/main"
   ```
 - O número da versão fica em `src/version.js`; na `desenvolvimento` ele já é o da próxima versão.
+- **A cada envio** (para o teste ou para o oficial) que mude arquivos do app, suba o `RELEASE` do
+  `sw.js` (é ele que avisa os aparelhos que há versão nova, e é o número que aparece depois de
+  "teste" no canto). Arquivo novo do app entra também na lista `APP_FILES` do `sw.js`.
 - Publicar a versão X.Y (só depois do "pode publicar"). A `main` vira uma cópia exata da
   `desenvolvimento`, sem misturar históricos:
   ```sh
@@ -167,13 +198,16 @@ O restante:
 - `manifest.webmanifest`: nome, ícone e cores do app instalado.
 - `manifest-teste.webmanifest`: o mesmo para o endereço de teste, com outro nome ("Arkham Teste").
 - `src/version.js`: o número da versão, mostrado no canto da tela.
-- `sw.js`: guarda o app no aparelho para abrir rápido e funcionar sem internet.
+- `sw.js`: guarda cada versão inteira no aparelho, para abrir rápido, funcionar sem internet e
+  nunca misturar arquivos de versões diferentes.
+- `CLAUDE.md`: notas do projeto (estado atual, decisões, fluxo de trabalho e ideias para o
+  futuro), para continuar o trabalho numa conversa nova sem perder nada.
 - `icons/`: os ícones do app (gerados por `tools/icone.html`).
 - `src/main.js`: liga as peças (toque, escolha dos dados, fórmula, atalhos, resultado).
 - `src/app.css`: posição dos elementos na tela.
 - `src/themes/index.js`: a lista de temas (hoje só "arkham").
 - `src/lib/`: ferramentas pequenas usadas em todo o app.
-- `tools/servidor-local.py`: só para testar no computador.
+- `tools/servidor-local.py` e `tools/servidor-caminhos.py`: só para testar no computador.
 - `.nojekyll`: avisa o GitHub Pages para publicar os arquivos como estão.
 
 ## Para criar um tema no futuro
@@ -234,4 +268,8 @@ E na ficha `theme.js` desse tema entra `modes`, junto com a regra de crítico do
 ## Testar no computador (opcional)
 
 Com o Python instalado, rode `python tools/servidor-local.py` dentro desta pasta e abra
-http://localhost:8766 no navegador.
+http://localhost:8766 no navegador. Ali o app não guarda cópia, e cada mudança aparece na hora.
+
+Para testar a cópia guardada e as atualizações de versão, rode `python tools/servidor-caminhos.py`
+e abra http://localhost:8767/Dados-de-Arkham-teste/ (ou `/Dados-de-Arkham/`): o app se comporta
+como publicado.
