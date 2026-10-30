@@ -1,6 +1,6 @@
 // Número da versão do app, mostrado discretamente no canto de baixo da tela.
 // Na linha de desenvolvimento ele já é o da próxima versão a publicar.
-export const VERSION = '1.1';
+export const VERSION = '1.2';
 
 // Onde o app está aberto: 'oficial' (o endereço dos amigos), 'teste' (o endereço de teste) ou
 // 'local' (o computador). Quem descobre é o index.html, pelo endereço da página.

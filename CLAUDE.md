@@ -27,14 +27,18 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.0** | `main` = tag `v1.0` (3ac132c), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Em teste | **1.1**, ainda não publicada | `desenvolvimento`, https://webersoncosta.github.io/Dados-de-Arkham-teste/ (envio `teste 5`) |
+| Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
+| Desenvolvimento | **1.2**, começando (nada novo ainda) | `desenvolvimento`; o endereço de teste ainda mostra a 1.1 (envio `teste 5`) |
 
-A 1.1 tem: vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas,
-os modos dado único e montagem, e as atualizações sem mistura de versões. Está esperando o teste
-no celular e o "pode publicar". O Claude só testou nos navegadores do computador.
+Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
+juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
+montagem, as atualizações sem mistura de versões e o número da versão no canto.
 
-Depois de publicar a 1.1: na `desenvolvimento`, mudar `VERSION` em `src/version.js` para `1.2`.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 6.
+- A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
+  arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
+  pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
+  atualizações chegam inteiras.
 
 ## Decisões tomadas (e por quê)
 
@@ -110,7 +114,8 @@ Depois de publicar a 1.1: na `desenvolvimento`, mudar `VERSION` em `src/version.
   `id`), cópias guardadas com nomes diferentes (cada um só apaga as suas) e preferências
   separadas (`arkham-dice-prefs` e `arkham-dice-prefs-teste`). O `index.html` descobre onde está
   pelo caminho e marca `data-place` (`oficial`, `teste` ou `local`).
-- O número no canto: `v1.1` no oficial; `v1.1 · teste 5` no teste (5 é o `RELEASE`).
+- O número no canto: `vX.Y` no oficial (`v1.1`); `vX.Y · teste N` no teste, em que N é o
+  `RELEASE` (`v1.1 · teste 5`).
 
 ## Fluxo: desenvolver, testar e publicar
 
