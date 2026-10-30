@@ -15,6 +15,39 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Arkham">
+  <script>
+    // No endereço de teste o app ganha outro nome e outra identidade, para nunca se misturar com o
+    // app oficial que os amigos instalaram na tela inicial.
+    (() => {
+      const teste = location.pathname.toLowerCase().startsWith('/dados-de-arkham-teste/');
+      document.documentElement.dataset.place = teste ? 'teste' : location.hostname === 'localhost' ? 'local' : 'oficial';
+      if (!teste) return;
+      document.querySelector('link[rel="manifest"]').href = 'manifest-teste.webmanifest';
+      document.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'Arkham Teste';
+    })();
+
+    // Cópia do app no aparelho (sw.js), só nos endereços publicados. A versão nova chega inteira em
+    // segundo plano; quando ela assume, a página recarrega num momento em que ninguém está usando:
+    // logo ao abrir (antes do primeiro toque) ou quando o app sai da tela. Página que abriu
+    // quebrada (arquivos de versões diferentes, logo depois de uma publicação) recarrega na hora.
+    if ('serviceWorker' in navigator && /^\/dados-de-arkham(-teste)?\//i.test(location.pathname)) (() => {
+      const sw = navigator.serviceWorker, update = !!sw.controller;
+      let touched = false, broken = false, reloading = false;
+      const reload = () => { if (!reloading) { reloading = true; location.reload(); } };
+      addEventListener('pointerdown', () => { touched = true; }, { capture: true, once: true });
+      addEventListener('error', () => { broken = true; }, true);
+      sw.addEventListener('controllerchange', () => {
+        if (!update && !broken) return;   // primeira vez: a página já é da versão que ficou guardada
+        if (broken || !touched) return reload();
+        addEventListener('visibilitychange', () => { if (document.hidden) reload(); });
+      });
+      addEventListener('load', () => sw.register('sw.js').catch(() => {}));
+      // de volta ao app (no celular ele fica dias aberto): procura versão nova
+      addEventListener('visibilitychange', () => {
+        if (!document.hidden) sw.getRegistration().then(r => r && r.update()).catch(() => {});
+      });
+    })();
+  </script>
 
   <!-- prévia do link ao compartilhar (WhatsApp e afins) -->
   <meta property="og:type" content="website">
@@ -51,9 +84,47 @@
 
   <footer class="hud-bottom" id="hudBottom">
     <p class="hint" id="hint">Preparando a mesa…</p>
-    <div class="modes" id="modes" role="group"></div>
-    <nav class="tray" id="tray" aria-label="Escolha o dado"></nav>
+    <div class="slot">
+      <div class="modes" id="modes" role="group"></div>
+      <div class="compose is-off" id="compose" role="group" aria-label="Montar a rolagem">
+        <div class="mode-group">
+          <span class="mode-caption">atalhos</span>
+          <div class="mode-buttons"><button type="button" class="mode-chip" id="btnShortcuts" aria-label="Atalhos e fórmulas salvas">★</button></div>
+        </div>
+        <div class="mode-group formula-group">
+          <span class="mode-caption" id="formulaCaption">fórmula</span>
+          <div class="formula">
+            <span id="formulaText" aria-live="polite"></span>
+            <button type="button" id="btnClear" aria-label="Limpar e voltar a um dado só">×</button>
+          </div>
+        </div>
+        <div class="mode-group">
+          <span class="mode-caption">número fixo</span>
+          <div class="mode-buttons">
+            <button type="button" class="mode-chip" id="btnMinus" aria-label="Diminuir o número fixo">−</button>
+            <button type="button" class="mode-chip" id="btnPlus" aria-label="Aumentar o número fixo">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="tray" id="tray" aria-label="Escolha os dados"></nav>
   </footer>
+  <p class="version" id="version"></p>
+
+  <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="presetsHead">
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <p class="sheet-title" id="presetsHead">Atalhos</p>
+        <button type="button" class="toggle" id="btnCloseSheet">Fechar</button>
+      </div>
+      <p class="sheet-label" id="presetsTitle">Prontos</p>
+      <div class="sheet-grid" id="presets"></div>
+      <p class="sheet-label">Minhas fórmulas</p>
+      <div class="sheet-grid" id="favorites"></div>
+      <p class="sheet-empty" id="favoritesEmpty">Nenhuma ainda. Monte uma fórmula e salve aqui.</p>
+      <button type="button" class="sheet-save" id="btnSave"></button>
+    </div>
+  </div>
 
   <script type="module" src="src/main.js"></script>
 </body>

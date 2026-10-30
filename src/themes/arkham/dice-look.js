@@ -9,7 +9,7 @@ const FONT = 'Cinzel, "Trajan Pro", Georgia, serif';
 const FILL = .8;   // quanto do espaço livre da face o número ocupa
 
 const STYLES = {
-  // dezenas do d100: pedra esverdeada, números verde-pálidos com um brilho fraco
+  // dezenas do d100 e o d6 que faz as vezes de d3: pedra esverdeada, números verde-pálidos com um brilho fraco
   stone: {
     base: '#2c3d33', specks: ['#3a4e40', '#1c2820', '#4a5e4a', '#162019', '#33443a'], vein: 'rgba(150,185,150,.13)',
     ink: '#c3e6b4', glow: '#6fbf6c', edge: 'rgba(0,0,0,.6)', edgeHi: 'rgba(170,200,160,.18)',
@@ -22,7 +22,7 @@ const STYLES = {
     roughness: .55, emissive: 0
   }
 };
-const styleFor = (setId, role) => (role === 'tens' ? STYLES.stone : STYLES.bone);
+const styleFor = (setId, role) => (role === 'tens' || setId === 'd3' ? STYLES.stone : STYLES.bone);
 
 // Mede o número e calcula o tamanho de fonte que o faz caber na face.
 function measure(ctx, label) {
