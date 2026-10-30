@@ -3,7 +3,7 @@
 // cópia guardada quando estiver offline. Bibliotecas e fontes, que nunca mudam no mesmo endereço,
 // vêm direto da cópia guardada.
 
-const CACHE = 'dados-de-arkham-v1';
+const CACHE = 'dados-de-arkham-v2';
 const APP_FILES = [
   './', 'index.html', 'manifest.webmanifest',
   'src/app.css', 'src/vendor.js', 'src/main.js',
@@ -11,7 +11,7 @@ const APP_FILES = [
   'src/core/polyhedra.js', 'src/core/dice-sets.js', 'src/core/physics.js', 'src/core/stage.js',
   'src/themes/index.js',
   'src/themes/arkham/theme.js', 'src/themes/arkham/theme.css', 'src/themes/arkham/scene.js',
-  'src/themes/arkham/dice-look.js', 'src/themes/arkham/audio.js',
+  'src/themes/arkham/dice-look.js', 'src/themes/arkham/audio.js', 'src/themes/arkham/rules.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'
 ];
 const LIBS = [

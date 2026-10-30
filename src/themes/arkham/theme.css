@@ -9,6 +9,10 @@
   --c-accent-soft: rgba(201, 162, 79, .13);
   --c-critical: #b2e0a6;
   --c-fumble: #c8432b;
+  --c-bonus: #b2e0a6;
+  --c-bonus-soft: rgba(178, 224, 166, .12);
+  --c-penalty: #d8674c;
+  --c-penalty-soft: rgba(200, 67, 43, .16);
   --c-panel: rgba(8, 10, 8, .62);
   --c-line: rgba(220, 207, 168, .16);
   --c-line-strong: rgba(201, 162, 79, .38);

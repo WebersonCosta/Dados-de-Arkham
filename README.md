@@ -1,9 +1,24 @@
 # Dados de Arkham
 
 Rolador de dados 3D para RPG, feito para abrir no navegador do celular e instalar na tela inicial.
-Dados: d4, d6, d8, d10, d12, d20 e d100 (dois d10: dezenas + unidades).
+Dados: d4, d6, d8, d10, d12, d20 e d100 (dois d10: dezenas + unidades), com dados de bônus e de
+penalidade no d100, como em Call of Cthulhu (7ª edição).
 
 **Endereço do app:** https://webersoncosta.github.io/Dados-de-Arkham/
+
+## Dados de bônus e de penalidade (d100)
+
+Com o d100 escolhido, aparece uma fileira acima da bandeja: **penalidade 2 · 1**, **Normal** e
+**bônus 1 · 2**. Cada dado de bônus ou de penalidade é mais um dado de dezenas (de pedra) que cai
+na mesa e é lançado junto com os outros.
+
+- **Bônus:** cada dezena é somada à mesma unidade e fica o **menor** resultado.
+- **Penalidade:** fica o **maior** resultado.
+- Como "00" com unidade "0" vale 100, nesse caso a dezena "00" é o pior resultado, e não o melhor
+  (é assim que o livro manda contar).
+- Na tela do resultado aparecem todas as dezenas: as descartadas vêm riscadas, e os dados delas
+  ficam apagados na mesa. Crítico (01) e desastre (100) olham o resultado final.
+- Depois de cada lançamento, a escolha volta sozinha para **Normal**.
 
 ## Instalar na tela inicial
 
@@ -37,17 +52,18 @@ O projeto tem duas metades que não se misturam:
 | --- | --- |
 | `polyhedra.js` | A forma de cada dado e em que face fica cada número |
 | `dice-sets.js` | O que cada botão rola (o d100 são dois d10) e como somar |
-| `physics.js` | Gravidade, quiques, paredes e a leitura da face que ficou para cima |
+| `physics.js` | Gravidade, quiques, paredes e a leitura da face que ficou para cima, com quantos dados vierem |
 | `stage.js` | Câmera e área da mesa, ajustadas ao tamanho da tela |
 
-**O tema** (`src/themes/arkham/`) é tudo o que se vê e se ouve:
+**O tema** (`src/themes/arkham/`) é tudo o que se vê e se ouve, e as regras do jogo:
 
 | Arquivo | O que faz |
 | --- | --- |
-| `theme.js` | Ficha do tema: nome, textos, regras de crítico, vibração |
+| `theme.js` | Ficha do tema: nome, textos, vibração e quais regras e peças ele usa |
+| `rules.js` | Regras de Call of Cthulhu: crítico, desastre, dados de bônus e de penalidade |
 | `theme.css` | Cores e fontes da interface |
 | `scene.js` | Mesa, velas, tomo, papéis, névoa, luz e a reação aos críticos |
-| `dice-look.js` | Material e pintura dos dados (pedra, osso, números) |
+| `dice-look.js` | Material e pintura dos dados (pedra, osso, números) e o dado descartado apagado |
 | `audio.js` | Som dos dados, vento, sussurros e presságios |
 
 O restante:
@@ -66,11 +82,50 @@ O restante:
 ## Para criar um tema no futuro
 
 1. Copie a pasta `src/themes/arkham` com outro nome (por exemplo `src/themes/fantasia`).
-2. Troque o visual, os sons, os textos e as regras de crítico dentro dela.
+2. Troque o visual, os sons, os textos e as regras (`rules.js`) dentro dela.
    Em D&D, por exemplo, a regra de crítico olharia o d20: 20 é crítico e 1 é falha.
 3. Registre o tema novo em `src/themes/index.js`.
 
 A física, as formas dos dados e a leitura do resultado não precisam mudar.
+
+### Rolagens especiais: bônus, penalidade, vantagem…
+
+Cada tema pode oferecer jeitos especiais de rolar um dado, que aparecem como botões acima da
+bandeja. São as opções em `modes` (na ficha `theme.js`, vindas de `rules.js`). Cada opção diz:
+
+- `extra`: quantos dados a mais vão para a mesa, e iguais a qual dado do conjunto;
+- `combine`: como contar depois que todos param. A função devolve o total, os números da tela,
+  com os descartados riscados (`pieces`), e quais dados ficam apagados na mesa (`discard`).
+
+A opção sem `extra` é a normal, e a escolha volta para ela depois de cada lançamento. O app só
+põe os dados na mesa, lança todos com a mesma física e lê as faces; o tema decide o que valem.
+
+No Arkham, as opções do d100 são os dados de bônus e de penalidade. Num tema de D&D, vantagem e
+desvantagem (2d20, fica o maior ou o menor) ficariam assim no `rules.js` do tema:
+
+```js
+const keep = (tone, name, pick) => ({
+  id: tone, chip: name, name, tone,              // tone: cor do botão ('bonus' ou 'penalty')
+  extra: { role: 'single', count: 1 },           // mais um d20 na mesa
+  combine(values) {                              // values: os dois d20
+    const total = pick(...values), at = values.indexOf(total);
+    return {
+      total, text: String(total),
+      pieces: values.map((v, i) => ({ text: String(v), dropped: i !== at })),
+      discard: values.map((v, i) => i).filter(i => i !== at)
+    };
+  }
+});
+
+export const modes = {
+  d20: {
+    title: 'Vantagem e desvantagem',
+    options: [keep('penalty', 'Desvantagem', Math.min), { id: 'normal', chip: 'Normal' }, keep('bonus', 'Vantagem', Math.max)]
+  }
+};
+```
+
+E na ficha `theme.js` desse tema entra `modes`, junto com a regra de crítico do d20.
 
 ## Testar no computador (opcional)
 

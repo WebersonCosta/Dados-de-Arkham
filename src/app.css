@@ -9,6 +9,10 @@
   --c-accent-soft: rgba(201, 162, 79, .13);
   --c-critical: #a8dca0;
   --c-fumble: #cc4a30;
+  --c-bonus: #a8dca0;
+  --c-bonus-soft: rgba(168, 220, 160, .12);
+  --c-penalty: #d06a50;
+  --c-penalty-soft: rgba(208, 106, 80, .14);
   --c-panel: rgba(10, 10, 10, .6);
   --c-line: rgba(255, 255, 255, .15);
   --c-line-strong: rgba(255, 255, 255, .35);
@@ -89,6 +93,30 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 }
 .die-chip[aria-pressed="true"] { color: var(--c-accent); border-color: var(--c-accent); background: var(--c-accent-soft); }
 
+/* Opções de rolagem do tema (bônus e penalidade no d100). Nos dados sem opções a faixa fica
+   invisível, mas guarda o lugar para a mesa não mudar de tamanho. */
+.modes {
+  display: flex; justify-content: center; align-items: flex-end; gap: 10px;
+  max-width: 520px; width: 100%; margin: 0 auto -4px; pointer-events: auto;
+}
+.modes.is-off { visibility: hidden; pointer-events: none; }
+.mode-group { display: flex; flex-direction: column; gap: 4px; }
+.mode-caption {
+  min-height: 1em; font-family: var(--font-ui); font-size: .62rem; line-height: 1;
+  letter-spacing: .16em; text-align: center; color: var(--c-text-dim); text-shadow: 0 0 6px #000;
+}
+.mode-buttons { display: flex; gap: 4px; }
+.mode-chip {
+  min-width: 44px; padding: .6rem .75rem; font-family: var(--font-ui); font-size: .8rem; line-height: 1;
+  color: var(--c-text-dim); background: var(--c-panel); border: 1px solid var(--c-line); border-radius: 2px;
+  cursor: pointer; touch-action: manipulation;
+}
+.mode-chip[aria-pressed="true"] { color: var(--c-accent); border-color: var(--c-accent); background: var(--c-accent-soft); }
+.tone-bonus .mode-caption { color: var(--c-bonus); opacity: .8; }
+.tone-penalty .mode-caption { color: var(--c-penalty); opacity: .8; }
+.tone-bonus .mode-chip[aria-pressed="true"] { color: var(--c-bonus); border-color: var(--c-bonus); background: var(--c-bonus-soft); }
+.tone-penalty .mode-chip[aria-pressed="true"] { color: var(--c-penalty); border-color: var(--c-penalty); background: var(--c-penalty-soft); }
+
 .verdict {
   position: fixed; left: 0; right: 0; top: 17%;
   display: flex; flex-direction: column; align-items: center; gap: .1rem;
@@ -112,13 +140,23 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   color: var(--c-text); text-shadow: 0 0 28px rgba(0,0,0,.95), 0 0 4px #000;
 }
 .verdict-parts {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .7em;
   font-family: var(--font-ui); font-size: .9rem; letter-spacing: .1em;
   color: var(--c-text-dim); text-shadow: 0 0 8px #000;
 }
+.verdict-parts span { color: var(--c-text); }   /* números que contam */
+.verdict-parts s { opacity: .5; }                /* números descartados */
+.verdict-note {
+  font-family: var(--font-ui); font-size: .74rem; letter-spacing: .14em;
+  color: var(--c-text-dim); text-shadow: 0 0 8px #000;
+}
+.verdict-note.tone-bonus { color: var(--c-bonus); }
+.verdict-note.tone-penalty { color: var(--c-penalty); }
 .verdict.is-critical .verdict-num, .verdict.is-critical .verdict-label { color: var(--c-critical); }
 .verdict.is-fumble .verdict-num, .verdict.is-fumble .verdict-label { color: var(--c-fumble); }
 .verdict.show > * { animation: ink .9s ease-out both; }
 .verdict.show .verdict-parts { animation-delay: .25s; }
+.verdict.show .verdict-note { animation-delay: .4s; }
 @keyframes ink {
   from { opacity: 0; filter: blur(8px); transform: scale(1.06); letter-spacing: .3em; }
   to { opacity: 1; filter: blur(0); transform: none; }

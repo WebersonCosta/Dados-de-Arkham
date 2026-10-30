@@ -106,3 +106,12 @@ export function createDieMaterial({ layout, setId, role, maxAniso }) {
     emissiveIntensity: st.emissive
   });
 }
+
+// Dado descartado (bônus e penalidade): escurece, perde o reflexo da lamparina e quase todo o
+// brilho, mas o número continua legível para quem quiser conferir. amount vai de 0 (normal) a 1.
+export function dimDie(material, amount) {
+  const lit = material.userData.lit ??= { glow: material.emissiveIntensity, roughness: material.roughness };
+  material.color.setScalar(1 - .75 * amount);
+  material.emissiveIntensity = lit.glow * (1 - .8 * amount);
+  material.roughness = lit.roughness + (.95 - lit.roughness) * amount;
+}

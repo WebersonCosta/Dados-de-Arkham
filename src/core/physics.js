@@ -46,7 +46,7 @@ export class DiceTable {
     this.roll = null;
     this.muted = false;
     this.onImpact = () => {};   // (força, 'table' | 'wall' | 'die', posição de -1 a 1 da esquerda à direita)
-    this.onSettled = () => {};  // (valores lidos, um por dado)
+    this.onSettled = () => {};  // todos os dados do lançamento pararam deitados numa face
   }
 
   setArena(arena) {
@@ -77,7 +77,7 @@ export class DiceTable {
       model, body, radius: shape.radius, lastHit: 0,
       normals: shape.faces.map(f => new CANNON.Vec3(f.normal.x, f.normal.y, f.normal.z)),
       corners: shape.V.map(v => new CANNON.Vec3(v.x, v.y, v.z)),
-      restPos: new CANNON.Vec3(), restQuat: new CANNON.Quaternion(), restTime: 0
+      restPos: new CANNON.Vec3(), restQuat: new CANNON.Quaternion(), restTime: 0, leanTime: 0
     };
     body.addEventListener('collide', ev => this.impact(die, ev));
     this.world.addBody(body);
@@ -159,31 +159,49 @@ export class DiceTable {
   throw(target) {
     const { hw, zMin, zMax } = this.arena, n = this.dice.length;
     const tx = clamp(target.x, -hw + 1.2, hw - 1.2), tz = clamp(target.z, zMin + 1, zMax - 2.6);
+    // saem lado a lado e um pouco desencontrados; numa mesa estreita, com muitos dados, mais juntos
+    const room = Math.max(hw - 1, 0), gap = Math.min(1.7, 2 * room / Math.max(n - 1, 1));
+    const cx = clamp(tx * .35, -room + gap * (n - 1) / 2, room - gap * (n - 1) / 2);
     this.dice.forEach((d, i) => {
-      const off = (i - (n - 1) / 2) * 1.7, m = d.radius + .1;
-      const sx = clamp(tx * .35 + off + rand(-.3, .3), -hw + m, hw - m), sz = zMax - m;
-      teleport(d.body, sx, rand(2.2, 3.1), sz, randomQuat());
+      const off = (i - (n - 1) / 2) * gap, m = d.radius + .1;
+      const sx = clamp(cx + off + rand(-.25, .25), -hw + m, hw - m), sz = zMax - m - (i % 2) * .5;
+      teleport(d.body, sx, rand(2.2, 3.1) + (i % 2) * .4, sz, randomQuat());
       const dx = tx + off * .6 + rand(-.6, .6) - sx, dz = tz + rand(-.6, .6) - sz;
       const len = Math.hypot(dx, dz) || 1, speed = rand(8, 13);
       d.body.velocity.set(dx / len * speed, rand(1, 4), dz / len * speed);
       d.body.angularVelocity.set(rand(-26, 26), rand(-26, 26), rand(-26, 26));
       d.body.wakeUp();
-      d.restTime = 0;
+      d.restTime = d.leanTime = 0;
     });
     this.roll = { time: 0, report: true };
   }
 
-  // Ao trocar de dado: ele cai devagar no meio da mesa. Não conta como lançamento.
-  drop() {
-    const { zMin, zMax } = this.arena, n = this.dice.length;
-    this.dice.forEach((d, i) => {
-      teleport(d.body, (i - (n - 1) / 2) * 1.8 + rand(-.2, .2), rand(2.2, 2.8), (zMin + zMax) / 2 + rand(0, .6), randomQuat());
+  // Ao trocar de dado: eles caem devagar no meio da mesa. Não conta como lançamento.
+  // Com `fresh` (dados que acabaram de entrar), só esses caem, num lugar livre; os outros ficam onde estão.
+  drop(fresh) {
+    const { zMin, zMax } = this.arena, falling = fresh || this.dice, n = falling.length;
+    falling.forEach((d, i) => {
+      const [x, z] = fresh ? this.freeSpot(d) : [(i - (n - 1) / 2) * 1.8 + rand(-.2, .2), (zMin + zMax) / 2 + rand(0, .6)];
+      teleport(d.body, x, rand(2.2, 2.8), z, randomQuat());
       d.body.velocity.set(rand(-.6, .6), 0, rand(-.6, .6));
       d.body.angularVelocity.set(rand(-7, 7), rand(-7, 7), rand(-7, 7));
       d.body.wakeUp();
-      d.restTime = 0;
+      d.restTime = d.leanTime = 0;
     });
     this.roll = { time: 0, report: false };
+  }
+
+  // Entre alguns pontos sorteados na mesa, o mais longe dos outros dados e das bordas.
+  freeSpot(die) {
+    const { hw, zMin, zMax } = this.arena, m = die.radius + .1;
+    let best = [0, (zMin + zMax) / 2], most = -Infinity;
+    for (let k = 0; k < 32; k++) {
+      const x = rand(-hw + m, hw - m), z = rand(zMin + m, zMax - m);
+      let room = Math.min(x + hw, hw - x, z - zMin, zMax - z);
+      for (const o of this.dice) if (o !== die) room = Math.min(room, Math.hypot(o.body.position.x - x, o.body.position.z - z) - o.radius);
+      if (room > most) { most = room; best = [x, z]; }
+    }
+    return best;
   }
 
   // Mesma queda, mas simulada na hora e em silêncio (para a mesa já abrir com os dados parados).
@@ -205,11 +223,22 @@ export class DiceTable {
   }
 
   // Espera os dados pararem. Dado parado torto rola de novo; quando todos estão deitados numa
-  // face, os valores são lidos. Depois de 10 s, dado deitado numa face vale mesmo que ainda se mexa.
+  // face, os valores são lidos. Dado torto que não para de escorregar devagar (encostado num
+  // canto ou em outro dado) também rola de novo, sem esperar os outros.
+  // Depois de 10 s, dado deitado numa face vale mesmo que ainda se mexa.
   track(dt) {
     const r = this.roll;
     r.time += dt;
-    for (const d of this.dice) this.watch(d, dt);
+    for (const d of this.dice) {
+      this.watch(d, dt);
+      const slow = d.body.velocity.lengthSquared() < 2.25 && d.body.angularVelocity.lengthSquared() < 9;
+      d.leanTime = slow && !this.isFlat(d) ? d.leanTime + dt : 0;
+    }
+    const sliding = this.dice.filter(d => d.leanTime > 1.2);
+    if (sliding.length) {
+      for (const d of sliding) { d.leanTime = 0; this.nudge(d); }
+      return;
+    }
     const still = r.time > .6 && this.dice.every(d => d.restTime > .35);
     if (!still && r.time < 10) return;
     const leaning = this.dice.filter(d => !this.isFlat(d));
@@ -219,6 +248,6 @@ export class DiceTable {
       return;
     }
     this.roll = null;
-    if (r.report) this.onSettled(this.dice.map(d => this.read(d)));
+    if (r.report) this.onSettled();
   }
 }

@@ -57,7 +57,13 @@ export function createStage(canvas, view = {}) {
       const r = canvas.getBoundingClientRect();
       return hit((clientX - r.left) / r.width * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1, 0);
     },
-    screenY(position) { return position.clone().project(camera).y; },
+    // Caixa, em pixels da tela, ocupada por um dado de raio `radius` nessa posição: [esq, topo, dir, base].
+    screenBox(position, radius) {
+      const r = canvas.getBoundingClientRect();
+      const c = position.clone().project(camera), e = position.clone().setX(position.x + radius).project(camera);
+      const x = r.left + (c.x + 1) / 2 * r.width, y = r.top + (1 - c.y) / 2 * r.height, s = Math.abs(e.x - c.x) / 2 * r.width;
+      return [x - s, y - s, x + s, y + s];
+    },
     render() { renderer.render(scene, camera); }
   };
 }

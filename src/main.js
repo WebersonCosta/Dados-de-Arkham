@@ -9,7 +9,7 @@ import { THEMES, DEFAULT_THEME } from './themes/index.js';
 
 const $ = id => document.getElementById(id);
 const canvas = $('scene'), hudTop = $('hudTop'), hudBottom = $('hudBottom');
-const hint = $('hint'), verdict = $('verdict'), tray = $('tray');
+const hint = $('hint'), verdict = $('verdict'), tray = $('tray'), modesBox = $('modes');
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const PREFS_KEY = 'arkham-dice-prefs';
@@ -48,34 +48,48 @@ const look = theme.createScene({ stage });
 const audio = theme.createAudio({ prefs });
 const table = new DiceTable();
 table.onImpact = (strength, kind, pan) => audio.hit(strength, kind, pan);
-table.onSettled = showResult;
+table.onSettled = () => showResult(current.dice.map(d => table.read(d.die)));
+const dim = (d, amount) => theme.dimDie?.(d.mesh.material, amount);
 
 /* ---------------------------------------------------------------- dados */
-const built = new Map();
+// Cada tipo de dado (conjunto + papel) é montado uma vez. Cada dado na mesa tem a sua própria
+// malha e o seu material, para poder ficar apagado sozinho quando for descartado.
+const kinds = new Map();
 function placeDie(set, spec) {
   const key = `${set.id}/${spec.role}`;
-  if (!built.has(key)) {
+  if (!kinds.has(key)) {
     const model = createDieModel(spec.shape, spec.values, spec.label);
     const material = theme.dieMaterial({ layout: model.layout, setId: set.id, role: spec.role, maxAniso: stage.maxAniso });
-    const mesh = new THREE.Mesh(model.geometry, material);
-    mesh.castShadow = mesh.receiveShadow = true;
-    built.set(key, { model, mesh });
+    kinds.set(key, { model, material, spare: [] });
   }
-  const { model, mesh } = built.get(key);
+  const kind = kinds.get(key);
+  let mesh = kind.spare.pop();
+  if (!mesh) {
+    mesh = new THREE.Mesh(kind.model.geometry, kind.material.clone());
+    mesh.castShadow = mesh.receiveShadow = true;
+  }
   stage.scene.add(mesh);
-  return { mesh, die: table.addDie(model) };
+  return { spec, kind, mesh, die: table.addDie(kind.model), dim: 0, dropped: false };
 }
 
-let state = 'loading', current = null, verdictTimer = 0;
+// Guarda a malha de um dado que saiu da mesa, para usar de novo depois.
+function putAway(d) {
+  stage.scene.remove(d.mesh);
+  dim(d, 0);
+  d.kind.spare.push(d.mesh);
+}
+
+let state = 'loading', current = null, verdictTimer = 0, leaving = [];
 
 function select(setId, { instant = false } = {}) {
   const set = DICE_SETS.find(s => s.id === setId) || DICE_SETS.find(s => s.id === 'd100');
-  if (current) for (const d of current.dice) { table.removeDie(d.die); stage.scene.remove(d.mesh); }
+  if (current) for (const d of current.dice) { table.removeDie(d.die); putAway(d); }
   current = { set, dice: set.dice.map(spec => placeDie(set, spec)) };
   if (instant) table.settleNow(); else table.drop();
   syncMeshes(false);
   for (const b of tray.children) b.setAttribute('aria-pressed', String(b.dataset.set === set.id));
   $('subtitle').textContent = `${set.subtitle} · ${set.name}`;
+  buildModes(set);
   prefs.die = set.id;
   savePrefs();
   toIdle();
@@ -88,21 +102,129 @@ function syncMeshes(interpolated) {
   }
 }
 
+/* ---------------------------------------------------------------- bônus, penalidade e afins */
+// O tema pode oferecer jeitos especiais de rolar um conjunto (no Arkham, os dados de bônus e de
+// penalidade do d100). Cada opção diz quantos dados a mais vão para a mesa e como contar o
+// resultado; a opção sem dados a mais é a normal. Depois de cada lançamento, volta para a normal.
+const PLAIN = { id: 'normal' };
+const themeModes = Object.values(theme.modes || {});
+let options = null, mode = PLAIN, rolled = PLAIN;
+const normalMode = () => options?.find(o => !o.extra) || PLAIN;
+modesBox.hidden = !themeModes.length;
+
+function buildModes(set) {
+  const list = theme.modes?.[set?.id];
+  options = list?.options || null;
+  mode = normalMode();
+  modesBox.classList.toggle('is-off', !list);
+  // num dado sem opções a faixa fica invisível, mas no mesmo lugar: a mesa não muda de tamanho
+  const shown = list || (!modesBox.childElementCount && themeModes[0]);
+  if (shown) {
+    modesBox.replaceChildren();
+    modesBox.setAttribute('aria-label', shown.title);
+    let group = null;
+    for (const option of shown.options) {
+      if (!group || group.dataset.name !== (option.group || '')) {
+        group = document.createElement('div');
+        group.className = 'mode-group' + (option.tone ? ` tone-${option.tone}` : '');
+        group.dataset.name = option.group || '';
+        const caption = document.createElement('span');
+        caption.className = 'mode-caption';
+        caption.textContent = option.group || '';
+        const row = document.createElement('div');
+        row.className = 'mode-buttons';
+        group.append(caption, row);
+        modesBox.appendChild(group);
+      }
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mode-chip';
+      b.textContent = option.chip;
+      b.dataset.mode = option.id;
+      b.setAttribute('aria-label', option.name || option.chip);
+      b.addEventListener('click', () => chooseMode(option));
+      group.lastChild.appendChild(b);
+    }
+  }
+  syncModes();
+}
+
+function syncModes() {
+  for (const b of modesBox.querySelectorAll('.mode-chip')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode.id));
+}
+
+function chooseMode(option) {
+  audio.unlock();
+  mode = option;
+  syncModes();
+  if (state === 'result') toIdle();
+  else if (state === 'idle') arrange();
+}
+
+// Deixa na mesa os dados que a próxima jogada vai usar: os do conjunto mais os que a opção pede.
+// Dado descartado na jogada anterior é o primeiro a sair; os que faltam caem num lugar livre.
+function arrange() {
+  const { set } = current, extra = mode.extra;
+  const wanted = [...set.dice];
+  const copy = extra && set.dice.find(s => s.role === extra.role);
+  if (copy) for (let i = 0; i < extra.count; i++) wanted.push(copy);
+  const free = [...current.dice].sort((a, b) => a.dropped - b.dropped);
+  const fresh = [];
+  current.dice = wanted.map(spec => {
+    const i = free.findIndex(d => d.spec === spec);
+    if (i >= 0) return free.splice(i, 1)[0];
+    const d = placeDie(set, spec);
+    fresh.push(d.die);
+    return d;
+  });
+  free.forEach(vanish);
+  for (const d of current.dice) d.dropped = false;
+  if (fresh.length) { table.drop(fresh); syncMeshes(false); }
+}
+
+// O dado que sai da mesa afunda na madeira e some.
+function vanish(d) {
+  table.removeDie(d.die);
+  d.sink = 0;
+  d.top = d.mesh.position.y;
+  leaving.push(d);
+}
+
+// A cada quadro: o dado descartado escurece aos poucos, e o que está saindo afunda.
+function fade(dt) {
+  for (const d of current.dice) {
+    const target = d.dropped ? 1 : 0;
+    if (d.dim === target) continue;
+    d.dim = Math.abs(target - d.dim) < .02 ? target : d.dim + (target - d.dim) * Math.min(1, dt * 6);
+    dim(d, d.dim);
+  }
+  leaving = leaving.filter(d => {
+    d.sink = Math.min(1, d.sink + dt / .7);
+    d.mesh.position.y = d.top - d.sink ** 2 * d.die.radius * 2.4;
+    dim(d, Math.max(d.dim, Math.min(1, d.sink * 1.6)));
+    if (d.sink < 1) return true;
+    putAway(d);
+    return false;
+  });
+}
+
 /* ---------------------------------------------------------------- resultado */
-function showResult(values) {
+// how: a opção com que os dados foram lançados (normal, bônus…), que decide como contar.
+function showResult(values, how = rolled) {
   const { set } = current;
-  const result = set.combine(values);
+  const result = how.combine ? how.combine(values, set) : set.combine(values);
   const crit = theme.critical(set.id, result);
   $('vNum').textContent = result.text;
-  $('vParts').textContent = result.detail || set.name;
+  showParts(result.pieces, result.detail || set.name);
+  const note = $('vNote');
+  note.textContent = how.extra ? how.name : '';
+  note.className = 'verdict-note' + (how.tone ? ` tone-${how.tone}` : '');
+  note.hidden = !how.extra;
   $('vLabel').textContent = crit ? crit.label : '';
   verdict.className = 'verdict' + (crit ? ` is-${crit.kind}` : '');
-  // o resultado aparece na faixa da tela mais distante dos dados
-  const ys = current.dice.map(d => stage.screenY(new THREE.Vector3().copy(d.die.body.position)));
-  const spots = [{ top: '17%', y: .42 }, { top: '50%', y: -.26 }];
-  const gap = spot => Math.min(...ys.map(y => Math.abs(y - spot.y)));
-  verdict.style.top = (gap(spots[1]) > gap(spots[0]) ? spots[1] : spots[0]).top;
+  for (const i of result.discard || []) if (current.dice[i]) current.dice[i].dropped = true;
   verdict.hidden = false;
+  placeVerdict();
   void verdict.offsetWidth;
   verdict.classList.add('show');
   look.setMood(crit ? crit.kind : null);
@@ -113,6 +235,34 @@ function showResult(values) {
   state = 'result';
 }
 
+// O resultado vai para a altura da tela em que cobre menos os dados, entre o cabeçalho e a bandeja.
+function placeVerdict() {
+  verdict.style.top = '0px';
+  const h = verdict.offsetHeight, w = Math.max(...[...verdict.children].map(el => el.offsetWidth)) + 32;
+  const x0 = (innerWidth - w) / 2, x1 = x0 + w;
+  const boxes = current.dice.map(d => stage.screenBox(new THREE.Vector3().copy(d.die.body.position), d.die.radius + .15));
+  const cover = y => boxes.reduce((sum, [a, b, c, e]) =>
+    sum + Math.max(0, Math.min(c, x1) - Math.max(a, x0)) * Math.max(0, Math.min(e, y + h) - Math.max(b, y)), 0);
+  const top = hudTop.getBoundingClientRect().bottom, bottom = hudBottom.getBoundingClientRect().top - h;
+  let best = top, least = Infinity;
+  for (let y = top; y <= bottom; y += 6) {
+    const score = cover(y) + Math.abs(y - innerHeight * .17) / 100;   // sem diferença, prefere o alto da tela
+    if (score < least) { least = score; best = y; }
+  }
+  verdict.style.top = `${best}px`;
+}
+
+// Os números que formam o resultado; os descartados aparecem riscados.
+function showParts(pieces, text) {
+  const parts = $('vParts');
+  if (!pieces) { parts.textContent = text; return; }
+  parts.replaceChildren(...pieces.map(p => {
+    const el = document.createElement(p.dropped ? 's' : 'span');
+    el.textContent = p.text;
+    return el;
+  }));
+}
+
 function toIdle() {
   clearTimeout(verdictTimer);
   verdict.hidden = true;
@@ -121,6 +271,7 @@ function toIdle() {
   hint.textContent = theme.texts.hint;
   hint.hidden = false;
   state = 'idle';
+  arrange();
 }
 
 /* ---------------------------------------------------------------- toques e botões */
@@ -131,6 +282,10 @@ canvas.addEventListener('pointerdown', ev => {
     hint.hidden = true;
     buzz(theme.haptics.throw);
     state = 'rolling';
+    // a jogada leva a opção escolhida, e a escolha volta para a normal (ninguém esquece o bônus ligado)
+    rolled = mode;
+    mode = normalMode();
+    syncModes();
   } else if (state === 'result') {
     toIdle();
   }
@@ -176,15 +331,19 @@ function relayout() {
 }
 
 const clock = new THREE.Clock();
-function frame() {
-  const dt = Math.min(clock.getDelta(), 1 / 20);
+function tick(dt) {
   table.step(dt);
   syncMeshes(true);
+  fade(dt);
   look.update(dt, clock.elapsedTime);
   stage.render();
+}
+function frame() {
+  tick(Math.min(clock.getDelta(), 1 / 20));
   requestAnimationFrame(frame);
 }
 
+buildModes(DICE_SETS.find(s => s.id === prefs.die));   // a faixa de opções já ocupa o seu lugar ao medir a tela
 relayout();
 select(prefs.die, { instant: true });
 window.addEventListener('resize', relayout);
@@ -194,5 +353,10 @@ requestAnimationFrame(frame);
 // Guarda o app no aparelho para abrir rápido e funcionar sem internet (só no endereço publicado).
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 
-// Atalho só para testes no computador (localhost): permite simular um resultado.
-if (location.hostname === 'localhost') window.__dados = { showResult, select, table, stage, THREE };
+// Atalho só para testes no computador (localhost): permite simular resultados e opções.
+if (location.hostname === 'localhost') {
+  window.__dados = {
+    showResult, select, chooseMode, tick, table, stage, theme, THREE,
+    get current() { return current; }, get state() { return state; }, get mode() { return mode; }
+  };
+}

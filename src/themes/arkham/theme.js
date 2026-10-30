@@ -1,9 +1,10 @@
 import { createArkhamScene } from './scene.js';
 import { createArkhamAudio } from './audio.js';
-import { createDieMaterial } from './dice-look.js';
+import { createDieMaterial, dimDie } from './dice-look.js';
+import { critical, modes } from './rules.js';
 
 // Ficha do tema "Arkham" (horror cósmico, Call of Cthulhu).
-// O tema decide tudo o que se vê e se ouve, e as regras de crítico. A física, as formas dos dados
+// O tema decide tudo o que se vê e se ouve, e as regras do jogo. A física, as formas dos dados
 // e a leitura do resultado ficam em src/core e não mudam de um tema para outro.
 export default {
   id: 'arkham',
@@ -23,14 +24,12 @@ export default {
   createScene: createArkhamScene,   // mesa, luzes, objetos e a reação das velas aos críticos
   createAudio: createArkhamAudio,   // dado na madeira, vento, sussurros, presságios
   dieMaterial: createDieMaterial,   // como cada dado é pintado
+  dimDie,                           // como fica o dado descartado (bônus e penalidade)
 
-  // Regras de crítico de Call of Cthulhu: valem só no d100. 01 é sucesso crítico, 100 é desastre.
-  critical(setId, result) {
-    if (setId !== 'd100') return null;
-    if (result.total === 1) return { kind: 'critical', label: 'Sucesso crítico' };
-    if (result.total === 100) return { kind: 'fumble', label: 'Desastre' };
-    return null;
-  },
+  // Regras de Call of Cthulhu (em rules.js): 01 é sucesso crítico e 100 é desastre, no d100; e os
+  // dados de bônus e de penalidade, que aparecem como opções acima da bandeja quando o d100 está escolhido.
+  critical,
+  modes,
 
   // vibração em milissegundos (funciona no Android)
   haptics: { throw: 12, settle: 35, critical: [30, 60, 30, 60, 140], fumble: [260, 80, 120] }
