@@ -76,7 +76,8 @@ export class DiceTable {
     const die = {
       model, body, radius: shape.radius, lastHit: 0,
       normals: shape.faces.map(f => new CANNON.Vec3(f.normal.x, f.normal.y, f.normal.z)),
-      corners: shape.V.map(v => new CANNON.Vec3(v.x, v.y, v.z))
+      corners: shape.V.map(v => new CANNON.Vec3(v.x, v.y, v.z)),
+      restPos: new CANNON.Vec3(), restQuat: new CANNON.Quaternion(), restTime: 0
     };
     body.addEventListener('collide', ev => this.impact(die, ev));
     this.world.addBody(body);
@@ -117,9 +118,41 @@ export class DiceTable {
     return die.normals.some(n => q.vmult(n).y < -.97);
   }
 
+  // Dado parado torto rola de novo, como na mesa de verdade: um pulinho com giro novo, para longe
+  // da borda (ou do outro dado) em que ficou apoiado.
   nudge(die) {
-    die.body.velocity.set(rand(-1.5, 1.5), rand(3, 5), rand(-1.5, 1.5));
-    die.body.angularVelocity.set(rand(-9, 9), rand(-9, 9), rand(-9, 9));
+    const { hw, zMin, zMax } = this.arena, p = die.body.position;
+    const near = [[1, 0, p.x + hw], [-1, 0, hw - p.x], [0, 1, p.z - zMin], [0, -1, zMax - p.z]];   // [direção x, direção z, distância]
+    for (const o of this.dice) {
+      if (o === die) continue;
+      const ox = p.x - o.body.position.x, oz = p.z - o.body.position.z, d = Math.hypot(ox, oz) || 1;
+      near.push([ox / d, oz / d, d - o.radius]);
+    }
+    // soma as direções de tudo o que estiver encostado: preso num canto, sai na diagonal
+    let ax = 0, az = 0;
+    for (const [nx, nz, dist] of near) if (dist < die.radius + .3) { ax += nx; az += nz; }
+    if (!ax && !az) [ax, az] = near.reduce((a, b) => (b[2] < a[2] ? b : a));
+    const len = Math.hypot(ax, az) || 1;
+    ax /= len; az /= len;
+    const turn = rand(-.5, .5), push = rand(1.6, 2.6);
+    const dx = ax * Math.cos(turn) - az * Math.sin(turn), dz = ax * Math.sin(turn) + az * Math.cos(turn);
+    die.body.velocity.set(dx * push, rand(3.5, 5), dz * push);
+    die.body.angularVelocity.set(rand(-10, 10), rand(-10, 10), rand(-10, 10));
+    die.body.wakeUp();
+  }
+
+  // Conta há quanto tempo o dado está de fato parado, olhando a posição e o giro (e não a
+  // velocidade): uma tremidinha da simulação, sem sair do lugar, não segura mais o resultado.
+  watch(die, dt) {
+    const p = die.body.position, q = die.body.quaternion, r = die.restQuat;
+    const turned = Math.abs(q.x * r.x + q.y * r.y + q.z * r.z + q.w * r.w) < .99995;   // mais de ~1°
+    if (turned || p.distanceTo(die.restPos) > .015) {
+      die.restPos.copy(p);
+      r.copy(q);
+      die.restTime = 0;
+    } else {
+      die.restTime += dt;
+    }
   }
 
   // Lança todos os dados da beira mais próxima em direção ao ponto tocado, com força e giro sorteados.
@@ -135,8 +168,9 @@ export class DiceTable {
       d.body.velocity.set(dx / len * speed, rand(1, 4), dz / len * speed);
       d.body.angularVelocity.set(rand(-26, 26), rand(-26, 26), rand(-26, 26));
       d.body.wakeUp();
+      d.restTime = 0;
     });
-    this.roll = { time: 0, still: 0, report: true };
+    this.roll = { time: 0, report: true };
   }
 
   // Ao trocar de dado: ele cai devagar no meio da mesa. Não conta como lançamento.
@@ -147,8 +181,9 @@ export class DiceTable {
       d.body.velocity.set(rand(-.6, .6), 0, rand(-.6, .6));
       d.body.angularVelocity.set(rand(-7, 7), rand(-7, 7), rand(-7, 7));
       d.body.wakeUp();
+      d.restTime = 0;
     });
-    this.roll = { time: 0, still: 0, report: false };
+    this.roll = { time: 0, report: false };
   }
 
   // Mesma queda, mas simulada na hora e em silêncio (para a mesa já abrir com os dados parados).
@@ -169,21 +204,21 @@ export class DiceTable {
     if (this.roll) this.track(dt);
   }
 
-  // Espera os dados pararem. Dado parado torto leva um empurrãozinho; quando todos estão
-  // deitados numa face, os valores são lidos.
+  // Espera os dados pararem. Dado parado torto rola de novo; quando todos estão deitados numa
+  // face, os valores são lidos. Depois de 10 s, dado deitado numa face vale mesmo que ainda se mexa.
   track(dt) {
     const r = this.roll;
     r.time += dt;
-    const still = this.dice.every(d => d.body.velocity.lengthSquared() < .004 && d.body.angularVelocity.lengthSquared() < .02);
-    r.still = still ? r.still + dt : 0;
-    if (r.still > .3 && r.time > .6) {
-      const leaning = this.dice.filter(d => !this.isFlat(d));
-      if (leaning.length) { leaning.forEach(d => this.nudge(d)); r.still = 0; return; }
-      this.roll = null;
-      if (r.report) this.onSettled(this.dice.map(d => this.read(d)));
-    } else if (r.time > 12) {
-      this.dice.forEach(d => this.nudge(d));
-      r.time = 6;
+    for (const d of this.dice) this.watch(d, dt);
+    const still = r.time > .6 && this.dice.every(d => d.restTime > .35);
+    if (!still && r.time < 10) return;
+    const leaning = this.dice.filter(d => !this.isFlat(d));
+    if (leaning.length) {
+      leaning.forEach(d => this.nudge(d));
+      if (r.time >= 10) r.time = 7;
+      return;
     }
+    this.roll = null;
+    if (r.report) this.onSettled(this.dice.map(d => this.read(d)));
   }
 }
