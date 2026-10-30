@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=IM+Fell+English+SC&family=Special+Elite&display=swap');
+
+/* Tema Arkham: luz de vela, papel envelhecido e um verde que não é deste mundo. */
+:root {
+  --c-void: #060807;
+  --c-text: #dccfa8;
+  --c-text-dim: #9a907a;
+  --c-accent: #c9a24f;
+  --c-accent-soft: rgba(201, 162, 79, .13);
+  --c-critical: #b2e0a6;
+  --c-fumble: #c8432b;
+  --c-panel: rgba(8, 10, 8, .62);
+  --c-line: rgba(220, 207, 168, .16);
+  --c-line-strong: rgba(201, 162, 79, .38);
+  --font-title: "IM Fell English SC", "IM Fell English", Georgia, serif;
+  --font-ui: "Special Elite", "Courier New", Courier, monospace;
+  --font-number: "Cinzel", "Trajan Pro", Georgia, serif;
+}
+.vignette {
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 45%, rgba(0,0,0,.5) 78%, rgba(0,0,0,.88) 100%);
+}
+.verdict-num { text-shadow: 0 0 28px rgba(0,0,0,.95), 0 0 4px #000, 0 0 40px rgba(201,162,79,.25); }
+.verdict.is-critical .verdict-num { text-shadow: 0 0 30px rgba(140,230,140,.55), 0 0 4px #000; }
+.verdict.is-fumble .verdict-num { text-shadow: 0 0 30px rgba(200,40,20,.5), 0 0 4px #000; }

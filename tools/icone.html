@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Ícone · Dados de Arkham</title>
+<style>html, body { margin: 0; background: #030504; overflow: hidden; } canvas { display: block; }</style>
+</head>
+<body>
+<canvas id="icon"></canvas>
+<script>
+// Desenha o ícone do app: um d20 de osso com um olho que não deveria estar ali, tentáculos e um
+// círculo de sigilos. Tudo inventado aqui, nada oficial de nenhum jogo.
+// Uso: icone.html?size=512 (ou ?size=512&mask=1 para a versão que o Android recorta em círculo).
+const params = new URLSearchParams(location.search);
+const S = Number(params.get('size')) || 512;
+const masked = params.get('mask') === '1';
+const canvas = document.getElementById('icon');
+canvas.width = canvas.height = S;
+const x = canvas.getContext('2d');
+x.scale(S / 512, S / 512);
+
+const TAU = Math.PI * 2;
+let seed = 1931;   // sorteio com semente fixa: todos os tamanhos saem com o mesmo desenho
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const path = pts => { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath(); };
+
+/* ---------------------------------------------------------------- fundo */
+const bg = x.createRadialGradient(256, 240, 20, 256, 256, 370);
+bg.addColorStop(0, '#1d3024'); bg.addColorStop(.5, '#0d1610'); bg.addColorStop(1, '#030504');
+x.fillStyle = bg;
+x.fillRect(0, 0, 512, 512);
+for (let i = 0; i < 1400; i++) {
+  x.fillStyle = rnd() < .5 ? `rgba(170,200,160,${rnd() * .05})` : `rgba(0,0,0,${rnd() * .25})`;
+  x.beginPath(); x.arc(rnd() * 512, rnd() * 512, .5 + rnd() * 2, 0, TAU); x.fill();
+}
+
+x.translate(256, 256);
+x.scale(masked ? .72 : .94, masked ? .72 : .94);
+x.translate(-256, -256);
+
+/* ---------------------------------------------------------------- círculo de sigilos */
+x.strokeStyle = 'rgba(201,162,79,.6)';
+x.lineWidth = 3.5; x.beginPath(); x.arc(256, 256, 240, 0, TAU); x.stroke();
+x.lineWidth = 1.6; x.beginPath(); x.arc(256, 256, 216, 0, TAU); x.stroke();
+x.lineCap = 'round';
+for (let i = 0; i < 30; i++) {
+  x.save();
+  x.translate(256, 256); x.rotate(i / 30 * TAU); x.translate(0, -228);
+  x.strokeStyle = 'rgba(201,162,79,.5)'; x.lineWidth = 1.6;
+  x.beginPath();
+  x.moveTo(0, -7); x.lineTo(0, 7);
+  const kind = Math.floor(rnd() * 4);
+  if (kind === 0) { x.moveTo(-5, -3); x.lineTo(0, -7); x.lineTo(5, -3); }
+  else if (kind === 1) { x.moveTo(0, 0); x.arc(0, 0, 4, -Math.PI / 2, Math.PI / 2); }
+  else if (kind === 2) { x.moveTo(-5, 4); x.lineTo(5, -4); }
+  else { x.moveTo(-4, 7); x.lineTo(4, 7); x.moveTo(-3, -1); x.lineTo(3, -1); }
+  x.stroke();
+  x.restore();
+}
+
+/* ---------------------------------------------------------------- aura */
+const aura = x.createRadialGradient(256, 266, 10, 256, 266, 230);
+aura.addColorStop(0, 'rgba(120,230,130,.26)'); aura.addColorStop(1, 'rgba(120,230,130,0)');
+x.fillStyle = aura;
+x.beginPath(); x.arc(256, 266, 230, 0, TAU); x.fill();
+
+/* ---------------------------------------------------------------- tentáculos (atrás do dado) */
+function tentacle({ x0, y0, a0, len, w0, k0, k1, mirror }) {
+  const n = 260, ds = len / n, pts = [];
+  let px = x0, py = y0, a = a0;
+  // trecho reto vindo de baixo da borda, para o tentáculo nunca terminar "no ar"
+  for (let lead = 300; lead > 0; lead -= ds) {
+    pts.push({ px: mirror ? 512 - (px - Math.cos(a) * lead) : px - Math.cos(a) * lead, py: py - Math.sin(a) * lead, a: mirror ? Math.PI - a : a, s: 0 });
+  }
+  for (let i = 0; i <= n; i++) {
+    const s = i / n;
+    pts.push({ px: mirror ? 512 - px : px, py, a: mirror ? Math.PI - a : a, s });
+    a += (k0 + k1 * s ** 5) * ds;   // quase reto no começo, enrolando forte na ponta
+    px += Math.cos(a) * ds;
+    py += Math.sin(a) * ds;
+  }
+  const side = mirror ? -1 : 1;
+  const width = s => w0 * Math.pow(1 - s, .8) + 1.2;
+  const normal = p => [-Math.sin(p.a) * side, Math.cos(p.a) * side];
+  const outer = pts.map(p => { const [nx, ny] = normal(p), w = width(p.s); return [p.px + nx * w, p.py + ny * w]; });
+  const inner = pts.map(p => { const [nx, ny] = normal(p), w = width(p.s); return [p.px - nx * w, p.py - ny * w]; });
+  path([...outer, ...inner.reverse()]);
+  x.fillStyle = '#2b4d31'; x.fill();
+  x.strokeStyle = 'rgba(5,10,7,.9)'; x.lineWidth = 3; x.stroke();
+  x.beginPath(); outer.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b)));
+  x.strokeStyle = 'rgba(150,200,140,.5)'; x.lineWidth = 2.2; x.stroke();
+  // ventosas do lado de dentro da curva
+  for (let i = 14; i < pts.length - 10; i += 10) {
+    const p = pts[i], [nx, ny] = normal(p), w = width(p.s), r = Math.max(1.4, w * .26);
+    const cx = p.px - nx * w * .5, cy = p.py - ny * w * .5;
+    x.fillStyle = '#a3b48a'; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
+    x.fillStyle = '#34452e'; x.beginPath(); x.arc(cx, cy, r * .45, 0, TAU); x.fill();
+  }
+}
+const left = { x0: 126, y0: 560, a0: -Math.PI / 2 - .02, len: 430, w0: 30, k0: -.0003, k1: -.13 };
+tentacle(left);
+tentacle({ ...left, x0: 130, len: 410, w0: 28, k1: -.135, mirror: true });
+
+/* ---------------------------------------------------------------- o d20 */
+const cx = 256, cy = 266, R = 150, rt = R * .56;
+const H = [...Array(6)].map((_, i) => { const a = (-90 + 60 * i) * Math.PI / 180; return [cx + R * Math.cos(a), cy + R * Math.sin(a)]; });
+const T = [-90, 30, 150].map(d => { const a = d * Math.PI / 180; return [cx + rt * Math.cos(a), cy + rt * Math.sin(a)]; });
+// sombra no chão
+const shadow = x.createRadialGradient(cx, cy + R * .95, 10, cx, cy + R * .95, R * 1.1);
+shadow.addColorStop(0, 'rgba(0,0,0,.55)'); shadow.addColorStop(1, 'rgba(0,0,0,0)');
+x.fillStyle = shadow; x.beginPath(); x.ellipse(cx, cy + R * .95, R * 1.1, R * .35, 0, 0, TAU); x.fill();
+// faces, com a luz vindo do alto à esquerda
+const facets = [
+  [[T[0], T[1], T[2]], 1], [[T[0], H[5], H[0]], 1.12], [[T[0], H[0], H[1]], 1.03],
+  [[T[2], T[0], H[5]], .98], [[T[0], T[1], H[1]], .86], [[T[2], H[4], H[5]], .84],
+  [[T[1], H[1], H[2]], .7], [[T[1], T[2], H[3]], .66], [[T[2], H[3], H[4]], .62], [[T[1], H[2], H[3]], .55]
+];
+for (const [pts, b] of facets) {
+  path(pts);
+  x.fillStyle = `rgb(${Math.min(255, 216 * b)},${Math.min(255, 201 * b)},${Math.min(255, 160 * b)})`;
+  x.fill();
+  x.save(); path(pts); x.clip();
+  for (let i = 0; i < 90; i++) {
+    x.fillStyle = rnd() < .5 ? 'rgba(120,95,55,.18)' : 'rgba(255,245,220,.12)';
+    x.beginPath(); x.arc(cx - R + rnd() * 2 * R, cy - R + rnd() * 2 * R, .6 + rnd() * 2.4, 0, TAU); x.fill();
+  }
+  x.restore();
+}
+x.lineJoin = 'round';
+x.strokeStyle = 'rgba(48,33,16,.9)'; x.lineWidth = 3.4;
+for (const [pts] of facets) { path(pts); x.stroke(); }
+path(H); x.strokeStyle = '#1a1109'; x.lineWidth = 6; x.stroke();
+x.strokeStyle = 'rgba(255,248,225,.55)'; x.lineWidth = 2;
+x.beginPath(); x.moveTo(...H[4]); x.lineTo(...H[5]); x.lineTo(...H[0]); x.stroke();
+
+/* ---------------------------------------------------------------- o olho */
+x.save();
+x.translate(cx, cy + 9);
+const eye = () => { x.beginPath(); x.moveTo(-44, 0); x.quadraticCurveTo(0, -36, 44, 0); x.quadraticCurveTo(0, 36, -44, 0); x.closePath(); };
+x.shadowColor = 'rgba(130,255,140,.95)'; x.shadowBlur = 26;
+eye(); x.fillStyle = '#d6d39c'; x.fill();
+x.shadowBlur = 0;
+x.save(); eye(); x.clip();
+const iris = x.createRadialGradient(0, 0, 2, 0, 0, 20);
+iris.addColorStop(0, '#eaffb0'); iris.addColorStop(.45, '#6fdc6a'); iris.addColorStop(1, '#1b5426');
+x.fillStyle = iris; x.beginPath(); x.arc(0, 0, 20, 0, TAU); x.fill();
+x.fillStyle = '#050805'; x.beginPath(); x.ellipse(0, 0, 3.8, 17, 0, 0, TAU); x.fill();
+x.fillStyle = 'rgba(255,255,255,.85)'; x.beginPath(); x.arc(-6, -6, 2.6, 0, TAU); x.fill();
+x.restore();
+eye(); x.strokeStyle = '#1b1208'; x.lineWidth = 3.4; x.stroke();
+x.restore();
+</script>
+</body>
+</html>

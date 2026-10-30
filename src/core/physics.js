@@ -1,0 +1,189 @@
+import { CANNON } from '../vendor.js';
+import { rnd, rand, clamp, TAU } from '../lib/util.js';
+
+// A física: gravidade, quiques, atrito e paredes invisíveis na borda da tela.
+// Nenhum número é sorteado: o resultado é lido da face (ou ponta) que ficou de fato para cima.
+
+const STEP = 1 / 120;
+
+function randomQuat() {
+  const u1 = rnd(), u2 = rnd(), u3 = rnd(), a = Math.sqrt(1 - u1), b = Math.sqrt(u1);
+  return new CANNON.Quaternion(a * Math.sin(TAU * u2), a * Math.cos(TAU * u2), b * Math.sin(TAU * u3), b * Math.cos(TAU * u3));
+}
+
+// Reposiciona um corpo de uma vez, sem o desenho "deslizar" da posição antiga até a nova.
+function teleport(body, x, y, z, q) {
+  body.position.set(x, y, z);
+  body.previousPosition.copy(body.position);
+  body.interpolatedPosition.copy(body.position);
+  body.quaternion.copy(q);
+  body.previousQuaternion.copy(q);
+  body.interpolatedQuaternion.copy(q);
+}
+
+export class DiceTable {
+  constructor() {
+    const world = this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -34, 0) });
+    world.broadphase = new CANNON.NaiveBroadphase();
+    world.solver.iterations = 16;
+    const die = this.dieMaterial = new CANNON.Material('die');
+    const top = new CANNON.Material('table'), wall = new CANNON.Material('wall');
+    world.addContactMaterial(new CANNON.ContactMaterial(die, top, { friction: .32, restitution: .36 }));
+    world.addContactMaterial(new CANNON.ContactMaterial(die, die, { friction: .18, restitution: .45 }));
+    world.addContactMaterial(new CANNON.ContactMaterial(die, wall, { friction: .08, restitution: .5 }));
+    this.floor = new CANNON.Body({ mass: 0, material: top, shape: new CANNON.Plane() });
+    this.floor.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+    world.addBody(this.floor);
+    // esquerda, direita, fundo, frente
+    this.walls = [Math.PI / 2, -Math.PI / 2, 0, Math.PI].map(yaw => {
+      const b = new CANNON.Body({ mass: 0, material: wall, shape: new CANNON.Plane() });
+      b.quaternion.setFromEuler(0, yaw, 0);
+      world.addBody(b);
+      return b;
+    });
+    this.arena = { hw: 3, zMin: -4, zMax: 4 };
+    this.dice = [];
+    this.roll = null;
+    this.muted = false;
+    this.onImpact = () => {};   // (força, 'table' | 'wall' | 'die', posição de -1 a 1 da esquerda à direita)
+    this.onSettled = () => {};  // (valores lidos, um por dado)
+  }
+
+  setArena(arena) {
+    Object.assign(this.arena, arena);
+    const { hw, zMin, zMax } = this.arena;
+    this.walls[0].position.set(-hw, 0, 0);
+    this.walls[1].position.set(hw, 0, 0);
+    this.walls[2].position.set(0, 0, zMin);
+    this.walls[3].position.set(0, 0, zMax);
+    if (!this.roll) for (const d of this.dice) {
+      const p = d.body.position, m = d.radius + .05;
+      p.x = clamp(p.x, -hw + m, hw - m);
+      p.z = clamp(p.z, zMin + m, zMax - m);
+    }
+  }
+
+  addDie(model) {
+    const { shape } = model;
+    const body = new CANNON.Body({
+      mass: 1, material: this.dieMaterial, linearDamping: .1, angularDamping: shape.angularDamping,
+      shape: new CANNON.ConvexPolyhedron({
+        vertices: shape.V.map(v => new CANNON.Vec3(v.x, v.y, v.z)),
+        faces: shape.faces.map(f => f.idx)
+      })
+    });
+    body.isDie = true;
+    const die = {
+      model, body, radius: shape.radius, lastHit: 0,
+      normals: shape.faces.map(f => new CANNON.Vec3(f.normal.x, f.normal.y, f.normal.z)),
+      corners: shape.V.map(v => new CANNON.Vec3(v.x, v.y, v.z))
+    };
+    body.addEventListener('collide', ev => this.impact(die, ev));
+    this.world.addBody(body);
+    this.dice.push(die);
+    return die;
+  }
+
+  removeDie(die) {
+    this.world.removeBody(die.body);
+    this.dice = this.dice.filter(d => d !== die);
+    this.roll = null;
+  }
+
+  impact(die, ev) {
+    if (this.muted) return;
+    const other = ev.body;
+    // batida entre dois dados: só um deles avisa, para o som não sair dobrado
+    if (other.isDie && this.dice.findIndex(d => d.body === other) < this.dice.indexOf(die)) return;
+    const v = Math.abs(ev.contact.getImpactVelocityAlongNormal());
+    const now = performance.now();
+    if (v < .7 || now - die.lastHit < 45) return;
+    die.lastHit = now;
+    const kind = other.isDie ? 'die' : other === this.floor ? 'table' : 'wall';
+    this.onImpact(v, kind, clamp(die.body.position.x / Math.max(this.arena.hw, 1), -1, 1));
+  }
+
+  // Valor que ficou para cima: a face mais virada para o alto (ou a ponta mais alta, no d4).
+  read(die) {
+    const q = die.body.quaternion, list = die.model.shape.read === 'vertex' ? die.corners : die.normals;
+    let best = -Infinity, at = 0;
+    list.forEach((v, i) => { const y = q.vmult(v).y; if (y > best) { best = y; at = i; } });
+    return die.model.values[at];
+  }
+
+  // O dado está deitado numa face, e não apoiado torto em outro dado ou na borda?
+  isFlat(die) {
+    const q = die.body.quaternion;
+    return die.normals.some(n => q.vmult(n).y < -.97);
+  }
+
+  nudge(die) {
+    die.body.velocity.set(rand(-1.5, 1.5), rand(3, 5), rand(-1.5, 1.5));
+    die.body.angularVelocity.set(rand(-9, 9), rand(-9, 9), rand(-9, 9));
+  }
+
+  // Lança todos os dados da beira mais próxima em direção ao ponto tocado, com força e giro sorteados.
+  throw(target) {
+    const { hw, zMin, zMax } = this.arena, n = this.dice.length;
+    const tx = clamp(target.x, -hw + 1.2, hw - 1.2), tz = clamp(target.z, zMin + 1, zMax - 2.6);
+    this.dice.forEach((d, i) => {
+      const off = (i - (n - 1) / 2) * 1.7, m = d.radius + .1;
+      const sx = clamp(tx * .35 + off + rand(-.3, .3), -hw + m, hw - m), sz = zMax - m;
+      teleport(d.body, sx, rand(2.2, 3.1), sz, randomQuat());
+      const dx = tx + off * .6 + rand(-.6, .6) - sx, dz = tz + rand(-.6, .6) - sz;
+      const len = Math.hypot(dx, dz) || 1, speed = rand(8, 13);
+      d.body.velocity.set(dx / len * speed, rand(1, 4), dz / len * speed);
+      d.body.angularVelocity.set(rand(-26, 26), rand(-26, 26), rand(-26, 26));
+      d.body.wakeUp();
+    });
+    this.roll = { time: 0, still: 0, report: true };
+  }
+
+  // Ao trocar de dado: ele cai devagar no meio da mesa. Não conta como lançamento.
+  drop() {
+    const { zMin, zMax } = this.arena, n = this.dice.length;
+    this.dice.forEach((d, i) => {
+      teleport(d.body, (i - (n - 1) / 2) * 1.8 + rand(-.2, .2), rand(2.2, 2.8), (zMin + zMax) / 2 + rand(0, .6), randomQuat());
+      d.body.velocity.set(rand(-.6, .6), 0, rand(-.6, .6));
+      d.body.angularVelocity.set(rand(-7, 7), rand(-7, 7), rand(-7, 7));
+      d.body.wakeUp();
+    });
+    this.roll = { time: 0, still: 0, report: false };
+  }
+
+  // Mesma queda, mas simulada na hora e em silêncio (para a mesa já abrir com os dados parados).
+  settleNow() {
+    this.muted = true;
+    this.drop();
+    for (let i = 0; i < 4000 && this.roll; i++) {
+      this.world.step(STEP);
+      this.track(STEP);
+    }
+    for (const d of this.dice) { d.body.velocity.setZero(); d.body.angularVelocity.setZero(); }
+    this.roll = null;
+    this.muted = false;
+  }
+
+  step(dt) {
+    this.world.step(STEP, dt, 8);
+    if (this.roll) this.track(dt);
+  }
+
+  // Espera os dados pararem. Dado parado torto leva um empurrãozinho; quando todos estão
+  // deitados numa face, os valores são lidos.
+  track(dt) {
+    const r = this.roll;
+    r.time += dt;
+    const still = this.dice.every(d => d.body.velocity.lengthSquared() < .004 && d.body.angularVelocity.lengthSquared() < .02);
+    r.still = still ? r.still + dt : 0;
+    if (r.still > .3 && r.time > .6) {
+      const leaning = this.dice.filter(d => !this.isFlat(d));
+      if (leaning.length) { leaning.forEach(d => this.nudge(d)); r.still = 0; return; }
+      this.roll = null;
+      if (r.report) this.onSettled(this.dice.map(d => this.read(d)));
+    } else if (r.time > 12) {
+      this.dice.forEach(d => this.nudge(d));
+      r.time = 6;
+    }
+  }
+}

@@ -1,0 +1,7 @@
+# configurações locais de ferramentas
+.claude/
+__pycache__/
+
+# arquivos que o Windows cria sozinho
+desktop.ini
+Thumbs.db
