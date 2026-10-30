@@ -42,6 +42,26 @@ function extraTens(tone, count) {
   };
 }
 
+// O 1d3 de Call of Cthulhu: rola-se um d6 comum, e 1-2 vale 1, 3-4 vale 2, 5-6 vale 3.
+// Entra nas fórmulas como qualquer outro dado (por exemplo, "1d3 + 1d4").
+export const kinds = {
+  d3: {
+    name: 'd3', subtitle: 'Três faces (rolado com um d6)', shape: 'd6', faces: 6,
+    points: v => Math.ceil(v / 2),
+    explain: 'no 1d3, o d6 vale: 1-2 → 1 · 3-4 → 2 · 5-6 → 3'
+  }
+};
+
+// Atalhos prontos, comuns em Call of Cthulhu.
+export const shortcuts = [
+  { formula: '3d6', note: 'FOR CON DES APA POD' },
+  { formula: '2d6+6', note: 'TAM INT EDU' },
+  { formula: '1d3', note: 'soco' },
+  { formula: '1d4' },
+  { formula: '1d6' },
+  { formula: '1d10' }
+];
+
 // Opções do d100, da esquerda para a direita. A que não põe dados a mais na mesa é a normal.
 export const modes = {
   d100: {

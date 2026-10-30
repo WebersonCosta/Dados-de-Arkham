@@ -1,16 +1,18 @@
 import { THREE } from './vendor.js';
 import { createStage } from './core/stage.js';
 import { DiceTable } from './core/physics.js';
-import { DICE_SETS } from './core/dice-sets.js';
+import { DIE_KINDS, D100 } from './core/dice-sets.js';
+import { createFormulas, MAX_DICE } from './core/formula.js';
 import { createDieModel } from './core/polyhedra.js';
 import { THEMES, DEFAULT_THEME } from './themes/index.js';
 import { VERSION, PLACE } from './version.js';
 
-// Liga as peças: carrega o tema, monta a mesa e cuida do toque, da escolha do dado e do resultado.
+// Liga as peças: carrega o tema, monta a mesa e cuida do toque, da escolha dos dados e do resultado.
 
 const $ = id => document.getElementById(id);
 const canvas = $('scene'), hudTop = $('hudTop'), hudBottom = $('hudBottom');
-const hint = $('hint'), verdict = $('verdict'), tray = $('tray'), modesBox = $('modes');
+const hint = $('hint'), verdict = $('verdict'), tray = $('tray');
+const modesBox = $('modes'), composeBox = $('compose'), sheet = $('sheet');
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // versão no canto da tela; fora do endereço oficial, diz também onde o app está aberto
@@ -19,8 +21,11 @@ $('version').dataset.place = PLACE;
 
 // o endereço de teste guarda as suas escolhas à parte, sem mexer nas do app oficial
 const PREFS_KEY = PLACE === 'teste' ? 'arkham-dice-prefs-teste' : 'arkham-dice-prefs';
-const prefs = { sfx: true, amb: true, die: 'd100' };
+const MAX_FAVORITES = 12;
+// roll: o que estava na mesa ('d100' ou uma fórmula, como '2d6+6'); favorites: as fórmulas salvas
+const prefs = { sfx: true, amb: true, die: 'd100', roll: null, favorites: [] };
 try { Object.assign(prefs, JSON.parse(localStorage.getItem(PREFS_KEY) || '{}')); } catch (e) {}
+if (!Array.isArray(prefs.favorites)) prefs.favorites = [];
 const savePrefs = () => { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) {} };
 const buzz = pattern => { try { if (pattern && navigator.vibrate) navigator.vibrate(pattern); } catch (e) {} };
 
@@ -52,53 +57,79 @@ if (!stage) {
 }
 const look = theme.createScene({ stage });
 const audio = theme.createAudio({ prefs });
+const formulas = createFormulas(theme.kinds);   // os dados comuns e os do tema (no Arkham, o d3)
 const table = new DiceTable();
 table.onImpact = (strength, kind, pan) => audio.hit(strength, kind, pan);
 table.onSettled = () => showResult(current.dice.map(d => table.read(d.die)));
 const dim = (d, amount) => theme.dimDie?.(d.mesh.material, amount);
 
 /* ---------------------------------------------------------------- dados */
-// Cada tipo de dado (conjunto + papel) é montado uma vez. Cada dado na mesa tem a sua própria
-// malha e o seu material, para poder ficar apagado sozinho quando for descartado.
-const kinds = new Map();
-function placeDie(set, spec) {
-  const key = `${set.id}/${spec.role}`;
-  if (!kinds.has(key)) {
+// Cada tipo de dado (forma, números e pintura) é montado uma vez. Cada dado na mesa tem a sua
+// própria malha e o seu material, para poder ficar apagado sozinho quando for descartado.
+const molds = new Map();
+function placeDie(spec) {
+  if (!molds.has(spec.key)) {
     const model = createDieModel(spec.shape, spec.values, spec.label);
-    const material = theme.dieMaterial({ layout: model.layout, setId: set.id, role: spec.role, maxAniso: stage.maxAniso });
-    kinds.set(key, { model, material, spare: [] });
+    const material = theme.dieMaterial({ layout: model.layout, setId: spec.setId, role: spec.role, maxAniso: stage.maxAniso });
+    molds.set(spec.key, { model, material, spare: [] });
   }
-  const kind = kinds.get(key);
-  let mesh = kind.spare.pop();
+  const mold = molds.get(spec.key);
+  let mesh = mold.spare.pop();
   if (!mesh) {
-    mesh = new THREE.Mesh(kind.model.geometry, kind.material.clone());
+    mesh = new THREE.Mesh(mold.model.geometry, mold.material.clone());
     mesh.castShadow = mesh.receiveShadow = true;
   }
   stage.scene.add(mesh);
-  return { spec, kind, mesh, die: table.addDie(kind.model), dim: 0, dropped: false };
+  return { spec, mold, mesh, die: table.addDie(mold.model), dim: 0, dropped: false };
 }
 
 // Guarda a malha de um dado que saiu da mesa, para usar de novo depois.
 function putAway(d) {
   stage.scene.remove(d.mesh);
   dim(d, 0);
-  d.kind.spare.push(d.mesh);
+  d.mold.spare.push(d.mesh);
 }
 
-let state = 'loading', current = null, verdictTimer = 0, leaving = [];
+// current.set: o que vai para a mesa (o d100 ou uma fórmula). formula: a fórmula dos dados comuns.
+// building: enquanto a fórmula é montada, cada toque num dado soma mais um; depois de lançar, um
+// dado que ainda não está na fórmula começa outra.
+let state = 'loading', current = { set: null, dice: [] }, verdictTimer = 0, leaving = [];
+let formula = formulas.single('d20'), building = false, lastKind = 'd20';
 
-function select(setId, { instant = false } = {}) {
-  const set = DICE_SETS.find(s => s.id === setId) || DICE_SETS.find(s => s.id === 'd100');
-  if (current) for (const d of current.dice) { table.removeDie(d.die); putAway(d); }
-  current = { set, dice: set.dice.map(spec => placeDie(set, spec)) };
-  if (instant) table.settleNow(); else table.drop();
-  syncMeshes(false);
-  for (const b of tray.children) b.setAttribute('aria-pressed', String(b.dataset.set === set.id));
-  $('subtitle').textContent = `${set.subtitle} · ${set.name}`;
-  buildModes(set);
-  prefs.die = set.id;
+// Troca o que vai para a mesa. Os dados que continuam ficam onde estão; os que saem afundam e os
+// que entram caem num lugar livre.
+function chooseSet(set, { instant = false } = {}) {
+  if (current.set?.id !== set.id) buildModes(set);
+  current.set = set;
+  refreshUI();
+  prefs.roll = set.id;
+  prefs.die = set === D100 ? 'd100' : formula.groups[0].kind;   // o que a versão 1.0 entende, se for preciso voltar a ela
   savePrefs();
-  toIdle();
+  toIdle({ instant });
+}
+
+function setFormula(f, options) {
+  formula = f;
+  chooseSet(formulas.toSet(f), options);
+}
+
+// Toque num dado da bandeja. Enquanto se monta, cada toque soma mais um dado. Depois de lançar,
+// tocar num dado que já está na fórmula aumenta a quantidade, e um dado novo começa outra fórmula.
+function tapKind(kind) {
+  audio.unlock();
+  let next = formulas.single(kind);
+  if (current.set !== D100 && (building || formulas.has(formula, kind))) {
+    next = formulas.add(formula, kind);
+    if (!next) return flashHint(`No máximo ${MAX_DICE} dados na mesa`);
+  }
+  building = true;
+  lastKind = kind;
+  setFormula(next);
+}
+
+function pickD100() {
+  audio.unlock();
+  if (current.set !== D100) chooseSet(D100);
 }
 
 function syncMeshes(interpolated) {
@@ -108,10 +139,137 @@ function syncMeshes(interpolated) {
   }
 }
 
+// Bandeja (dados escolhidos e quantos), subtítulo e a faixa acima da bandeja: as opções do d100
+// ou a fórmula montada.
+function refreshUI() {
+  const { set } = current, isD100 = set === D100, hasModes = !!theme.modes?.[set.id];
+  for (const b of tray.children) {
+    const id = b.dataset.set;
+    const n = isD100 ? Number(id === 'd100') : formula.groups.find(g => g.kind === id)?.count || 0;
+    b.setAttribute('aria-pressed', String(n > 0));
+    b.lastChild.textContent = n > 1 ? n : '';
+  }
+  // com vários dados, a fórmula já aparece na faixa de baixo
+  $('subtitle').textContent = !isD100 && set.dice.length > 1 ? set.subtitle : `${set.subtitle} · ${set.name}`;
+  modesBox.classList.toggle('is-off', !hasModes);
+  composeBox.classList.toggle('is-off', isD100 || hasModes);
+  if (isD100) return;
+  const text = $('formulaText');
+  text.textContent = set.name;
+  text.dataset.size = set.name.length > 17 ? 's' : set.name.length > 11 ? 'm' : '';
+  $('btnClear').disabled = formulas.count(formula) === 1 && !formula.fixed;
+}
+
+let hintTimer = 0;
+function flashHint(text) {
+  hint.textContent = text;
+  hint.hidden = false;
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => { if (state === 'idle') hint.textContent = theme.texts.hint; }, 2200);
+}
+
+/* ---------------------------------------------------------------- a fórmula: número fixo, limpar, atalhos */
+function stepFixed(delta) {
+  if (current.set === D100) return;
+  const next = formulas.withFixed(formula, formula.fixed + delta);
+  if (next.fixed === formula.fixed) return;
+  building = true;
+  setFormula(next);
+}
+
+// Limpar: volta a um dado só (o último escolhido).
+function clearFormula() {
+  audio.unlock();
+  building = false;
+  setFormula(formulas.single(lastKind));
+}
+
+function useFormula(text) {
+  const f = formulas.parse(text);
+  if (!f) return;
+  building = true;   // ainda dá para somar dados (1d3 e depois o d4: o soco com bônus de dano)
+  lastKind = f.groups[f.groups.length - 1].kind;
+  closeSheet();
+  setFormula(f);
+}
+
+// Botão que repete enquanto está apertado, para chegar rápido a +6, por exemplo.
+function holdRepeat(button, action) {
+  let timer = 0;
+  const stop = () => clearTimeout(timer);
+  const run = delay => { action(); timer = setTimeout(run, delay, 90); };
+  button.addEventListener('pointerdown', ev => { ev.preventDefault(); audio.unlock(); stop(); run(450); });
+  for (const type of ['pointerup', 'pointerleave', 'pointercancel']) button.addEventListener(type, stop);
+  button.addEventListener('click', ev => { if (!ev.detail) action(); });   // pelo teclado
+}
+
+function openSheet() {
+  audio.unlock();
+  renderSheet();
+  sheet.hidden = false;
+  $('btnCloseSheet').focus();
+}
+function closeSheet() { sheet.hidden = true; }
+
+// Atalhos do tema e as fórmulas salvas no aparelho.
+function renderSheet() {
+  const chip = (text, note) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'shortcut';
+    const name = document.createElement('b');
+    name.textContent = formulas.text(formulas.parse(text));
+    b.append(name);
+    if (note) b.append(Object.assign(document.createElement('small'), { textContent: note }));
+    b.addEventListener('click', () => useFormula(text));
+    return b;
+  };
+  const shortcuts = (theme.shortcuts || []).filter(s => formulas.parse(s.formula));
+  $('presets').replaceChildren(...shortcuts.map(s => chip(s.formula, s.note)));
+  $('presetsTitle').hidden = !shortcuts.length;
+
+  const saved = prefs.favorites.filter(t => formulas.parse(t));
+  $('favorites').replaceChildren(...saved.map(t => {
+    const wrap = document.createElement('div');
+    wrap.className = 'favorite';
+    const forget = document.createElement('button');
+    forget.type = 'button';
+    forget.className = 'forget';
+    forget.textContent = '×';
+    forget.setAttribute('aria-label', `Apagar ${formulas.text(formulas.parse(t))}`);
+    forget.addEventListener('click', () => {
+      prefs.favorites = prefs.favorites.filter(x => x !== t);
+      savePrefs();
+      renderSheet();
+    });
+    wrap.append(chip(t), forget);
+    return wrap;
+  }));
+  $('favoritesEmpty').hidden = saved.length > 0;
+
+  const id = formulas.text(formula, ''), name = formulas.text(formula), save = $('btnSave');
+  const isSaved = prefs.favorites.includes(id), full = prefs.favorites.length >= MAX_FAVORITES;
+  save.textContent = isSaved ? `★ ${name} já está salva` : full ? 'Apague uma fórmula para salvar outra' : `☆ Salvar ${name}`;
+  save.disabled = isSaved || full;
+}
+
+$('btnSave').addEventListener('click', () => {
+  prefs.favorites = [formulas.text(formula, ''), ...prefs.favorites].slice(0, MAX_FAVORITES);
+  savePrefs();
+  renderSheet();
+});
+$('btnShortcuts').addEventListener('click', openSheet);
+$('btnCloseSheet').addEventListener('click', closeSheet);
+sheet.addEventListener('click', ev => { if (ev.target === sheet) closeSheet(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !sheet.hidden) closeSheet(); });
+$('btnClear').addEventListener('click', clearFormula);
+holdRepeat($('btnMinus'), () => stepFixed(-1));
+holdRepeat($('btnPlus'), () => stepFixed(1));
+
 /* ---------------------------------------------------------------- bônus, penalidade e afins */
-// O tema pode oferecer jeitos especiais de rolar um conjunto (no Arkham, os dados de bônus e de
-// penalidade do d100). Cada opção diz quantos dados a mais vão para a mesa e como contar o
-// resultado; a opção sem dados a mais é a normal. Depois de cada lançamento, volta para a normal.
+// O tema pode oferecer jeitos especiais de rolar (no Arkham, os dados de bônus e de penalidade do
+// d100). Cada opção diz quantos dados a mais vão para a mesa e como contar o resultado; a opção
+// sem dados a mais é a normal. Depois de cada lançamento, volta para a normal.
 const PLAIN = { id: 'normal' };
 const themeModes = Object.values(theme.modes || {});
 let options = null, mode = PLAIN, rolled = PLAIN;
@@ -122,8 +280,7 @@ function buildModes(set) {
   const list = theme.modes?.[set?.id];
   options = list?.options || null;
   mode = normalMode();
-  modesBox.classList.toggle('is-off', !list);
-  // num dado sem opções a faixa fica invisível, mas no mesmo lugar: a mesa não muda de tamanho
+  // sem opções, a faixa fica invisível mas no mesmo lugar: a mesa não muda de tamanho
   const shown = list || (!modesBox.childElementCount && themeModes[0]);
   if (shown) {
     modesBox.replaceChildren();
@@ -169,7 +326,7 @@ function chooseMode(option) {
 
 // Deixa na mesa os dados que a próxima jogada vai usar: os do conjunto mais os que a opção pede.
 // Dado descartado na jogada anterior é o primeiro a sair; os que faltam caem num lugar livre.
-function arrange() {
+function arrange({ instant = false } = {}) {
   const { set } = current, extra = mode.extra;
   const wanted = [...set.dice];
   const copy = extra && set.dice.find(s => s.role === extra.role);
@@ -179,13 +336,15 @@ function arrange() {
   current.dice = wanted.map(spec => {
     const i = free.findIndex(d => d.spec === spec);
     if (i >= 0) return free.splice(i, 1)[0];
-    const d = placeDie(set, spec);
+    const d = placeDie(spec);
     fresh.push(d.die);
     return d;
   });
   free.forEach(vanish);
   for (const d of current.dice) d.dropped = false;
-  if (fresh.length) { table.drop(fresh); syncMeshes(false); }
+  if (instant) table.settleNow();
+  else if (fresh.length) table.drop(fresh);
+  if (instant || fresh.length) syncMeshes(false);
 }
 
 // O dado que sai da mesa afunda na madeira e some.
@@ -222,10 +381,10 @@ function showResult(values, how = rolled) {
   const crit = theme.critical(set.id, result);
   $('vNum').textContent = result.text;
   showParts(result.pieces, result.detail || set.name);
-  const note = $('vNote');
-  note.textContent = how.extra ? how.name : '';
+  const note = $('vNote'), noteText = result.note || (how.extra ? how.name : '');
+  note.textContent = noteText;
   note.className = 'verdict-note' + (how.tone ? ` tone-${how.tone}` : '');
-  note.hidden = !how.extra;
+  note.hidden = !noteText;
   $('vLabel').textContent = crit ? crit.label : '';
   verdict.className = 'verdict' + (crit ? ` is-${crit.kind}` : '');
   for (const i of result.discard || []) if (current.dice[i]) current.dice[i].dropped = true;
@@ -269,7 +428,7 @@ function showParts(pieces, text) {
   }));
 }
 
-function toIdle() {
+function toIdle({ instant = false } = {}) {
   clearTimeout(verdictTimer);
   verdict.hidden = true;
   verdict.classList.remove('show');
@@ -277,7 +436,7 @@ function toIdle() {
   hint.textContent = theme.texts.hint;
   hint.hidden = false;
   state = 'idle';
-  arrange();
+  arrange({ instant });
 }
 
 /* ---------------------------------------------------------------- toques e botões */
@@ -292,22 +451,20 @@ canvas.addEventListener('pointerdown', ev => {
     rolled = mode;
     mode = normalMode();
     syncModes();
+    building = false;   // depois de lançar, um dado novo começa outra fórmula
   } else if (state === 'result') {
     toIdle();
   }
 });
 
-for (const set of DICE_SETS) {
+for (const id of [...Object.keys(DIE_KINDS), D100.id]) {
   const b = document.createElement('button');
   b.type = 'button';
   b.className = 'die-chip';
-  b.textContent = set.name;
-  b.dataset.set = set.id;
+  b.dataset.set = id;
   b.setAttribute('aria-pressed', 'false');
-  b.addEventListener('click', () => {
-    audio.unlock();
-    if (current?.set.id !== set.id) select(set.id);
-  });
+  b.append(id === D100.id ? D100.name : DIE_KINDS[id].name, Object.assign(document.createElement('span'), { className: 'count' }));
+  b.addEventListener('click', () => (id === D100.id ? pickD100() : tapKind(id)));
   tray.appendChild(b);
 }
 
@@ -349,9 +506,16 @@ function frame() {
   requestAnimationFrame(frame);
 }
 
-buildModes(DICE_SETS.find(s => s.id === prefs.die));   // a faixa de opções já ocupa o seu lugar ao medir a tela
+// Abre com o que estava na mesa da última vez (o d100 não é fórmula: parse devolve null).
+buildModes(D100);   // a faixa de opções já ocupa o seu lugar ao medir a tela
 relayout();
-select(prefs.die, { instant: true });
+const saved = formulas.parse(prefs.roll ?? prefs.die);
+if (saved) {
+  lastKind = saved.groups[saved.groups.length - 1].kind;
+  setFormula(saved, { instant: true });
+} else {
+  chooseSet(D100, { instant: true });
+}
 window.addEventListener('resize', relayout);
 document.fonts.ready.then(relayout);
 requestAnimationFrame(frame);
@@ -362,7 +526,9 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.se
 // Atalho só para testes no computador (localhost): permite simular resultados e opções.
 if (location.hostname === 'localhost') {
   window.__dados = {
-    showResult, select, chooseMode, tick, table, stage, theme, THREE,
-    get current() { return current; }, get state() { return state; }, get mode() { return mode; }
+    showResult, chooseSet, setFormula, tapKind, pickD100, chooseMode, stepFixed, clearFormula, useFormula,
+    formulas, tick, table, stage, theme, THREE, D100,
+    get current() { return current; }, get state() { return state; }, get mode() { return mode; },
+    get formula() { return formula; }, get building() { return building; }
   };
 }

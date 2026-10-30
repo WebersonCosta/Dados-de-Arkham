@@ -62,10 +62,47 @@
 
   <footer class="hud-bottom" id="hudBottom">
     <p class="hint" id="hint">Preparando a mesa…</p>
-    <div class="modes" id="modes" role="group"></div>
-    <nav class="tray" id="tray" aria-label="Escolha o dado"></nav>
+    <div class="slot">
+      <div class="modes" id="modes" role="group"></div>
+      <div class="compose is-off" id="compose" role="group" aria-label="Montar a rolagem">
+        <div class="mode-group">
+          <span class="mode-caption">atalhos</span>
+          <div class="mode-buttons"><button type="button" class="mode-chip" id="btnShortcuts" aria-label="Atalhos e fórmulas salvas">★</button></div>
+        </div>
+        <div class="mode-group formula-group">
+          <span class="mode-caption">fórmula</span>
+          <div class="formula">
+            <span id="formulaText" aria-live="polite"></span>
+            <button type="button" id="btnClear" aria-label="Limpar e voltar a um dado só">×</button>
+          </div>
+        </div>
+        <div class="mode-group">
+          <span class="mode-caption">número fixo</span>
+          <div class="mode-buttons">
+            <button type="button" class="mode-chip" id="btnMinus" aria-label="Diminuir o número fixo">−</button>
+            <button type="button" class="mode-chip" id="btnPlus" aria-label="Aumentar o número fixo">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="tray" id="tray" aria-label="Escolha os dados"></nav>
   </footer>
   <p class="version" id="version"></p>
+
+  <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="presetsHead">
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <p class="sheet-title" id="presetsHead">Atalhos</p>
+        <button type="button" class="toggle" id="btnCloseSheet">Fechar</button>
+      </div>
+      <p class="sheet-label" id="presetsTitle">Prontos</p>
+      <div class="sheet-grid" id="presets"></div>
+      <p class="sheet-label">Minhas fórmulas</p>
+      <div class="sheet-grid" id="favorites"></div>
+      <p class="sheet-empty" id="favoritesEmpty">Nenhuma ainda. Monte uma fórmula e salve aqui.</p>
+      <button type="button" class="sheet-save" id="btnSave"></button>
+    </div>
+  </div>
 
   <script type="module" src="src/main.js"></script>
 </body>

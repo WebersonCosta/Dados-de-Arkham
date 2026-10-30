@@ -1,12 +1,39 @@
 # Dados de Arkham
 
 Rolador de dados 3D para RPG, feito para abrir no navegador do celular e instalar na tela inicial.
-Dados: d4, d6, d8, d10, d12, d20 e d100 (dois d10: dezenas + unidades), com dados de bônus e de
-penalidade no d100, como em Call of Cthulhu (7ª edição).
+Dados: d4, d6, d8, d10, d12, d20 e d100 (dois d10: dezenas + unidades). Dá para rolar vários dados
+juntos com um número fixo (como "2d6 + 6"), e há o 1d3 e os dados de bônus e de penalidade de
+Call of Cthulhu (7ª edição).
 
 **Endereço do app:** https://webersoncosta.github.io/Dados-de-Arkham/
 
 **Endereço de teste** (próxima versão, ainda em teste): https://webersoncosta.github.io/Dados-de-Arkham-teste/
+
+## Rolar vários dados
+
+- **Um dado só (como sempre):** toque no dado da bandeja e depois na mesa.
+- **Mais dados iguais:** toque de novo no mesmo dado. Cada toque soma mais um (d6, d6, d6 dá
+  **3d6**), e o número em cima do botão mostra quantos são.
+- **Dados diferentes:** enquanto monta, toque em outros dados (d8 e depois d4 dá **1d8 + 1d4**).
+- **Número fixo:** os botões **−** e **+** somam ou tiram um número fixo (segure para ir mais
+  rápido), como em **2d6 + 6** ou **1d10 + 2**.
+- A fórmula montada aparece no meio da faixa acima da bandeja. O **×** limpa a montagem e volta
+  a um dado só.
+- Depois de lançar, tocar na mesa de novo repete a mesma fórmula. Tocar num dado que já está na
+  fórmula aumenta a quantidade; tocar num dado que não está nela começa outra (para voltar ao
+  d20, por exemplo, basta tocar no d20).
+- **Atalhos (★):** fórmulas prontas de Call of Cthulhu (3d6 para FOR, CON, DES, APA e POD; 2d6+6
+  para TAM, INT e EDU; 1d3 para o soco; 1d4, 1d6 e 1d10) e as suas fórmulas favoritas. Para
+  guardar uma, monte a fórmula, abra os atalhos e toque em **Salvar**. Ficam guardadas no
+  aparelho (até 12), e o **×** de cada uma apaga.
+- **1d3:** como em Call of Cthulhu, é rolado com um d6 (de pedra, para não se confundir com os
+  outros d6): 1-2 vale 1, 3-4 vale 2 e 5-6 vale 3. O resultado mostra a conversão (por exemplo,
+  "5→3") e lembra a regra.
+- **No resultado:** o total grande e, embaixo, a conta com o valor de cada dado e o número fixo
+  ("5 + 3 + 6 = 14").
+- **Limite de 8 dados na mesa de uma vez.** Com mais que isso, a mesa do celular vira um
+  amontoado e o resultado demora para sair.
+- O d100 continua à parte, com os dados de bônus e de penalidade.
 
 ## Dados de bônus e de penalidade (d100)
 
@@ -118,8 +145,9 @@ O projeto tem duas metades que não se misturam:
 | Arquivo | O que faz |
 | --- | --- |
 | `polyhedra.js` | A forma de cada dado e em que face fica cada número |
-| `dice-sets.js` | O que cada botão rola (o d100 são dois d10) e como somar |
-| `physics.js` | Gravidade, quiques, paredes e a leitura da face que ficou para cima, com quantos dados vierem |
+| `dice-sets.js` | Os tipos de dado (d4 a d20) e o d100 (dois d10: dezenas + unidades) |
+| `formula.js` | As fórmulas de vários dados: montar, escrever ("2d6 + 6"), ler e somar; o limite de 8 dados |
+| `physics.js` | Gravidade, quiques, paredes, os dados tortos que rolam de novo e a leitura da face que ficou para cima |
 | `stage.js` | Câmera e área da mesa, ajustadas ao tamanho da tela |
 
 **O tema** (`src/themes/arkham/`) é tudo o que se vê e se ouve, e as regras do jogo:
@@ -127,7 +155,7 @@ O projeto tem duas metades que não se misturam:
 | Arquivo | O que faz |
 | --- | --- |
 | `theme.js` | Ficha do tema: nome, textos, vibração e quais regras e peças ele usa |
-| `rules.js` | Regras de Call of Cthulhu: crítico, desastre, dados de bônus e de penalidade |
+| `rules.js` | Regras de Call of Cthulhu: crítico, desastre, dados de bônus e de penalidade, o 1d3 e os atalhos prontos |
 | `theme.css` | Cores e fontes da interface |
 | `scene.js` | Mesa, velas, tomo, papéis, névoa, luz e a reação aos críticos |
 | `dice-look.js` | Material e pintura dos dados (pedra, osso, números) e o dado descartado apagado |
@@ -141,7 +169,7 @@ O restante:
 - `src/version.js`: o número da versão, mostrado no canto da tela.
 - `sw.js`: guarda o app no aparelho para abrir rápido e funcionar sem internet.
 - `icons/`: os ícones do app (gerados por `tools/icone.html`).
-- `src/main.js`: liga as peças (toque, escolha do dado, resultado).
+- `src/main.js`: liga as peças (toque, escolha dos dados, fórmula, atalhos, resultado).
 - `src/app.css`: posição dos elementos na tela.
 - `src/themes/index.js`: a lista de temas (hoje só "arkham").
 - `src/lib/`: ferramentas pequenas usadas em todo o app.
@@ -151,16 +179,23 @@ O restante:
 ## Para criar um tema no futuro
 
 1. Copie a pasta `src/themes/arkham` com outro nome (por exemplo `src/themes/fantasia`).
-2. Troque o visual, os sons, os textos e as regras (`rules.js`) dentro dela.
-   Em D&D, por exemplo, a regra de crítico olharia o d20: 20 é crítico e 1 é falha.
+2. Troque o visual, os sons, os textos e as regras (`rules.js`) dentro dela. Em D&D, por
+   exemplo, a regra de crítico olharia o d20: 20 é crítico e 1 é falha.
 3. Registre o tema novo em `src/themes/index.js`.
 
-A física, as formas dos dados e a leitura do resultado não precisam mudar.
+A física, as formas dos dados, a leitura do resultado e a montagem de vários dados não precisam
+mudar: valem para qualquer tema. O que é de cada jogo fica no `rules.js` do tema:
+
+- `kinds`: tipos de dado a mais, que entram nas fórmulas. O Arkham tem o d3, rolado com um d6
+  (`shape: 'd6'`) e convertido por `points` (1-2 → 1, 3-4 → 2, 5-6 → 3).
+- `shortcuts`: os atalhos prontos, escritos como fórmulas (`'2d6+6'`), com uma nota opcional.
 
 ### Rolagens especiais: bônus, penalidade, vantagem…
 
-Cada tema pode oferecer jeitos especiais de rolar um dado, que aparecem como botões acima da
-bandeja. São as opções em `modes` (na ficha `theme.js`, vindas de `rules.js`). Cada opção diz:
+Cada tema pode oferecer jeitos especiais de rolar o d100 ou uma fórmula, que aparecem como botões
+acima da bandeja, no lugar da fórmula. São as opções em `modes` (na ficha `theme.js`, vindas de
+`rules.js`), guardadas pelo nome do que vai para a mesa: `'d100'`, ou a fórmula escrita sem
+espaços, como `'1d20'`. Cada opção diz:
 
 - `extra`: quantos dados a mais vão para a mesa, e iguais a qual dado do conjunto;
 - `combine`: como contar depois que todos param. A função devolve o total, os números da tela,
@@ -170,7 +205,7 @@ A opção sem `extra` é a normal, e a escolha volta para ela depois de cada lan
 põe os dados na mesa, lança todos com a mesma física e lê as faces; o tema decide o que valem.
 
 No Arkham, as opções do d100 são os dados de bônus e de penalidade. Num tema de D&D, vantagem e
-desvantagem (2d20, fica o maior ou o menor) ficariam assim no `rules.js` do tema:
+desvantagem no 1d20 (rola 2d20 e fica o maior ou o menor) ficariam assim no `rules.js` do tema:
 
 ```js
 const keep = (tone, name, pick) => ({
@@ -187,7 +222,7 @@ const keep = (tone, name, pick) => ({
 });
 
 export const modes = {
-  d20: {
+  '1d20': {
     title: 'Vantagem e desvantagem',
     options: [keep('penalty', 'Desvantagem', Math.min), { id: 'normal', chip: 'Normal' }, keep('bonus', 'Vantagem', Math.max)]
   }
