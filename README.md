@@ -81,9 +81,14 @@ mexer no app oficial que os amigos têm na tela inicial.
 - `main` é a versão oficial: o GitHub Pages deste repositório publica a `main`.
 - `desenvolvimento` é a versão em teste. O repositório
   [Dados-de-Arkham-teste](https://github.com/WebersonCosta/Dados-de-Arkham-teste) existe só para
-  o endereço de teste e recebe uma cópia dela: `git push teste desenvolvimento:main` (o atalho
-  `teste` é criado uma vez com
-  `git remote add teste https://github.com/WebersonCosta/Dados-de-Arkham-teste.git`).
+  o endereço de teste. Para atualizá-lo, a `main` dele ganha um commit com os arquivos da
+  `desenvolvimento`, sem reescrever histórico (o atalho `teste` é criado uma vez com
+  `git remote add teste https://github.com/WebersonCosta/Dados-de-Arkham-teste.git`):
+  ```sh
+  git fetch teste
+  c=$(git commit-tree "desenvolvimento^{tree}" -p teste/main -m "Teste: $(git log -1 --format='%s (%h)' desenvolvimento)")
+  git push teste "$c:refs/heads/main"
+  ```
 - O número da versão fica em `src/version.js`; na `desenvolvimento` ele já é o da próxima versão.
 - Publicar a versão X.Y (só depois do "pode publicar"). A `main` vira uma cópia exata da
   `desenvolvimento`, sem misturar históricos:
