@@ -85,11 +85,12 @@
   </div>
 
   <footer class="hud-bottom" id="hudBottom">
-    <!-- mesa compartilhada: os avisos das rolagens dos outros, por cima da mesa, e a linha com o
-         rótulo da próxima rolagem e o atalho para as rolagens (room-panel.js) -->
+    <!-- mesa compartilhada: os avisos das rolagens dos outros, por cima da mesa, e a linha com quem
+         vê a próxima rolagem, o rótulo dela e o atalho para as rolagens (room-panel.js) -->
     <div class="notices" id="notices" aria-live="polite"></div>
     <p class="hint" id="hint">Preparando a mesa…</p>
     <div class="room-row" id="roomRow" hidden>
+      <button type="button" class="toggle room-chip" id="btnVis">Aberta</button>
       <button type="button" class="toggle room-chip" id="btnLabel">Rótulo</button>
       <button type="button" class="toggle room-chip" id="btnLog">Rolagens<span class="count" id="logCount"></span></button>
     </div>
@@ -194,7 +195,7 @@
         <p class="sheet-title" id="labelHead">Rótulo da rolagem</p>
         <button type="button" class="toggle" id="btnCloseLabel">Fechar</button>
       </div>
-      <p class="table-note">Vale só para a próxima rolagem, e a mesa toda vê. Por exemplo: Furtividade, Dano, Sanidade.</p>
+      <p class="table-note">Vale só para a próxima rolagem e vai junto com ela para a mesa. Por exemplo: Furtividade, Dano, Sanidade.</p>
       <form class="label-form" id="labelForm" autocomplete="off">
         <label class="field">
           <span>Rótulo</span>

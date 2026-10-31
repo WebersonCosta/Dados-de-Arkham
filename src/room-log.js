@@ -23,16 +23,20 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
     return !m ? '?' : m.role === 'guardian' ? texts.guardian : m.name;
   };
   const hidden = roll => !Number.isInteger(roll.total);   // o sinal de suspense: não traz o número
+  const VEIL = { private: 'privada', secret: 'secreta' };   // as que nem todos veem
+  const secretly = roll => (roll.vis === 'secret' ? 'rolou em segredo' : `rolou só para o ${texts.guardian}`);
   const crit = roll => (hidden(roll) ? null : critical(roll.set, roll));
   const time = at => new Date(at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const kind = roll => {
     const c = crit(roll);
-    return (c ? ` is-${c.kind}` : '') + (hidden(roll) ? ' is-hidden' : '');
+    return (c ? ` is-${c.kind}` : '') + (hidden(roll) ? ' is-hidden' : '') + (VEIL[roll.vis] ? ' is-veiled' : '');
   };
 
   // Uma rolagem no histórico: o número à esquerda; ao lado, quem rolou e o rótulo, e embaixo o que
-  // foi rolado e como deu aquele número ("d100 · 1 dado de bônus · 20 30 + 7"). A de outra pessoa
-  // que acabou de chegar acende uma vez, quando aparece (com a gaveta fechada, ao abrir).
+  // foi rolado e como deu aquele número ("d100 · 1 dado de bônus · 20 30 + 7"). A que nem todos
+  // veem leva a marca "privada" ou "secreta"; a que este aparelho não pode ver mostra só "?" e
+  // quem rolou. A de outra pessoa que acabou de chegar acende uma vez, quando aparece (com a gaveta
+  // fechada, ao abrir).
   function entry(roll, fresh) {
     const li = el('li', 'roll' + kind(roll) + (roll.seat === you ? ' is-me' : ''));
     if (fresh && roll.seat !== you) {
@@ -43,10 +47,12 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
     const top = el('p', 'roll-who'), title = el('span');
     title.append(el('span', 'roll-name', who(roll.seat)));
     if (roll.label) title.append(` · ${roll.label}`);
-    top.append(title, el('time', '', time(roll.at)));
+    top.append(title);
+    if (VEIL[roll.vis] && !hidden(roll)) top.append(el('small', 'roll-veil', VEIL[roll.vis]));
+    top.append(el('time', '', time(roll.at)));
     const bottom = el('p', 'roll-what');
     if (hidden(roll)) {
-      bottom.textContent = roll.vis === 'secret' ? 'rolagem secreta' : 'rolagem privada';
+      bottom.textContent = secretly(roll);
     } else {
       const name = nameOf(roll.set);
       bottom.append([name, roll.note].filter(Boolean).join(' · '));
@@ -69,11 +75,14 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
     empty.hidden = rolls.length > 0;
   }
 
-  // O aviso perto da bandeja: quem rolou, o rótulo (ou o que foi rolado) e o número.
+  // O aviso perto da bandeja: quem rolou, o rótulo (ou o que foi rolado) e o número. O sinal de
+  // suspense diz só quem rolou ("Ana rolou só para o Guardião"), com um "?" no lugar do número.
   function notice(roll) {
     const p = el('p', 'notice' + kind(roll));
-    p.append(el('span', '', [who(roll.seat), roll.label || (hidden(roll) ? '' : nameOf(roll.set))].filter(Boolean).join(' · ')),
-      el('b', '', hidden(roll) ? '?' : roll.text));
+    const text = hidden(roll)
+      ? `${who(roll.seat)} ${secretly(roll)}`
+      : [who(roll.seat), roll.label || nameOf(roll.set), VEIL[roll.vis]].filter(Boolean).join(' · ');
+    p.append(el('span', '', text), el('b', '', hidden(roll) ? '?' : roll.text));
     notices.append(p);
     while (notices.childElementCount > MAX_NOTICES) notices.firstElementChild.remove();
     setTimeout(() => p.remove(), NOTICE_MS);

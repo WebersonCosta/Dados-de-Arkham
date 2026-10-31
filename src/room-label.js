@@ -20,8 +20,9 @@ export function createRoomLabel({ saved, save, unlock }) {
     close();
   }
 
+  // escolhido, o rótulo aparece no próprio botão, aceso (ao lado de quem vê a rolagem, não cabe mais nada)
   function render() {
-    pill.textContent = label ? `Rótulo: ${label}` : 'Rótulo';
+    pill.textContent = label || 'Rótulo';
     pill.classList.toggle('is-set', !!label);
     pill.setAttribute('aria-label', label ? `Rótulo da próxima rolagem: ${label}. Trocar` : 'Pôr um rótulo na próxima rolagem');
   }

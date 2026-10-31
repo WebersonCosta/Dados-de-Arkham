@@ -305,7 +305,7 @@ holdRepeat($('btnPlus'), () => stepFixed(1));
 // sem dados a mais é a normal. Depois de cada lançamento, volta para a normal.
 const PLAIN = { id: 'normal' };
 const themeModes = Object.values(theme.modes || {});
-let options = null, mode = PLAIN, rolled = PLAIN, rolledLabel = '';
+let options = null, mode = PLAIN, rolled = PLAIN, sharing = null;
 const normalMode = () => options?.find(o => !o.extra) || PLAIN;
 modesBox.hidden = !themeModes.length;
 
@@ -422,8 +422,8 @@ function fade(dt) {
 
 /* ---------------------------------------------------------------- resultado */
 // how: a opção com que os dados foram lançados (normal, bônus…), que decide como contar.
-// label: o rótulo que foi junto com a jogada, na mesa compartilhada.
-function showResult(values, how = rolled, label = rolledLabel) {
+// table: na mesa compartilhada, o rótulo e quem vê esta jogada (roomPanel.take); fora dela, null.
+function showResult(values, how = rolled, table = sharing) {
   const { set } = current;
   const result = how.combine ? how.combine(values, set) : set.combine(values);
   const crit = theme.critical(set.id, result);
@@ -433,8 +433,11 @@ function showResult(values, how = rolled, label = rolledLabel) {
   note.textContent = noteText;
   note.className = 'verdict-note' + (how.tone ? ` tone-${how.tone}` : '');
   note.hidden = !noteText;
-  $('vTag').textContent = label;
-  $('vTag').hidden = !label;
+  // o rótulo e, quando nem todos veem, a marca ("Furtividade · secreta")
+  const tag = [table?.label, table?.veil].filter(Boolean).join(' · ');
+  $('vTag').textContent = tag;
+  $('vTag').hidden = !tag;
+  $('vTag').classList.toggle('is-veiled', !!table?.veil);
   $('vLabel').textContent = crit ? crit.label : '';
   verdict.className = 'verdict' + (crit ? ` is-${crit.kind}` : '');
   for (const i of result.discard || []) if (current.dice[i]) current.dice[i].dropped = true;
@@ -448,10 +451,10 @@ function showResult(values, how = rolled, label = rolledLabel) {
   clearTimeout(verdictTimer);
   verdictTimer = setTimeout(toIdle, crit ? 4200 : 3000);
   state = 'result';
-  // dentro de uma mesa compartilhada, a rolagem vai para todos
-  roomPanel.share({
+  // dentro de uma mesa compartilhada, a rolagem vai para a mesa
+  if (table) roomPanel.share(table, {
     set: set.id, total: result.total, text: result.text, detail: result.detail || set.name,
-    note: how.extra ? how.name : '', pieces: result.pieces, label
+    note: how.extra ? how.name : '', pieces: result.pieces
   });
 }
 
@@ -503,11 +506,11 @@ canvas.addEventListener('pointerdown', ev => {
     buzz(theme.haptics.throw);
     state = 'rolling';
     // a jogada leva a opção escolhida, e a escolha volta para a normal (ninguém esquece o bônus ligado);
-    // o rótulo da mesa compartilhada também vai com ela e se apaga
+    // na mesa compartilhada, o rótulo e quem vê também vão com ela e voltam ao padrão
     rolled = mode;
     mode = normalMode();
     syncModes();
-    rolledLabel = roomPanel.takeLabel();
+    sharing = roomPanel.take();
     swap = null;   // a fórmula montada continua (para rolar o mesmo dano de novo), até limpar no ×
   } else if (state === 'result') {
     toIdle();

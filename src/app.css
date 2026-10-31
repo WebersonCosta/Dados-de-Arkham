@@ -178,6 +178,7 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   font-family: var(--font-ui); font-size: .78rem; letter-spacing: .22em; text-transform: uppercase;
   color: var(--c-accent); text-shadow: 0 0 8px #000, 0 0 3px #000;
 }
+.verdict-tag.is-veiled { color: var(--c-penalty); }   /* privada ou secreta: nem todos viram */
 .verdict-label {
   font-family: var(--font-title); font-size: 1.35rem; letter-spacing: .14em; min-height: 1.2em;
   text-shadow: 0 0 12px #000;
@@ -316,6 +317,7 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 .roll-who { display: flex; align-items: baseline; gap: 8px; font-family: var(--font-title); font-size: 1rem; line-height: 1.25; }
 .roll-who > span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .roll-who time { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .06em; color: var(--c-text-dim); }
+.roll-veil { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .08em; color: var(--c-penalty); }
 .roll.is-me .roll-name { color: var(--c-accent); }
 .roll-what { margin-top: 2px; font-family: var(--font-ui); font-size: .66rem; line-height: 1.45; letter-spacing: .04em; color: var(--c-text-dim); }
 .roll-what span { color: var(--c-text); }   /* números que contam */
@@ -323,6 +325,8 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 .roll.is-critical .roll-num, .roll.is-critical .roll-crit { color: var(--c-critical); }
 .roll.is-fumble .roll-num, .roll.is-fumble .roll-crit { color: var(--c-fumble); }
 .roll.is-hidden .roll-num { color: var(--c-text-dim); }
+.roll.is-hidden .roll-what { font-style: italic; }
+.roll.is-veiled { border-style: dashed; }   /* nem todos veem */
 .roll.is-new { animation: arrive 1.6s ease-out; }
 @keyframes arrive { from { border-color: var(--c-accent); background-color: var(--c-accent-soft); } }
 
@@ -342,14 +346,19 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 .notice b { flex: none; font: 700 1.1rem/1 var(--font-number); color: var(--c-accent); }
 .notice.is-critical b { color: var(--c-critical); }
 .notice.is-fumble b { color: var(--c-fumble); }
-.notice.is-hidden b { color: var(--c-text-dim); }
+.notice.is-veiled { border-style: dashed; }
+/* o sinal de suspense: alguém rolou, e o "?" pulsa no lugar do número */
+.notice.is-hidden span { font-style: italic; color: var(--c-text-dim); }
+.notice.is-hidden b { color: var(--c-penalty); animation: breathe 1.8s ease-in-out infinite; }
 @keyframes notice { from { opacity: 0; transform: translateY(6px); } 8%, 85% { opacity: 1; transform: none; } to { opacity: 0; } }
 
-/* Perto da bandeja, dentro de uma mesa: o rótulo da próxima rolagem e (no celular) as rolagens. */
+/* Perto da bandeja, dentro de uma mesa: quem vê a próxima rolagem (aberta, privada ou secreta), o
+   rótulo dela e (no celular) as rolagens. Se faltar espaço, quem encolhe é o rótulo. */
 .room-row { display: flex; justify-content: center; gap: 8px; pointer-events: none; }
-.room-chip { position: relative; pointer-events: auto; }
-#btnLabel { max-width: 62%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.room-chip { position: relative; flex: none; pointer-events: auto; }
+#btnLabel { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .room-chip.is-set { color: var(--c-accent); border-color: var(--c-accent); background: var(--c-accent-soft); }
+.room-chip.is-veiled { color: var(--c-penalty); border-color: var(--c-penalty); background: var(--c-penalty-soft); }
 
 /* A folha do rótulo: o campo, e os últimos usados para escolher com um toque. */
 .label-form { display: flex; align-items: flex-end; gap: 8px; }
@@ -377,5 +386,5 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 }
 @media (prefers-reduced-motion: reduce) {
   .hint, .table-button { animation: none !important; opacity: .85; }
-  .verdict.show > *, .notice, .roll.is-new { animation: none; }
+  .verdict.show > *, .notice, .notice.is-hidden b, .roll.is-new { animation: none; }
 }

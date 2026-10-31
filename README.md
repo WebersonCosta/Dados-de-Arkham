@@ -86,9 +86,18 @@ endereço de teste; o plano completo está em `docs/plano-mesa-compartilhada.md`
   rolagens novas). No computador, com a janela larga, ele fica sempre à vista, à direita; o botão
   **Mesa** esconde e mostra. Com a mesa ligada, o botão mostra quantos estão conectados
   (**Mesa · 3**).
-- Toda rolagem feita dentro da mesa vai para todos (por enquanto todas são abertas, inclusive as do
-  Guardião). Quando outra pessoa rola, aparece um aviso pequeno logo acima da bandeja, com o nome,
-  o rótulo e o número, que some sozinho.
+- Toda rolagem feita dentro da mesa vai para a mesa. Quando outra pessoa rola, aparece um aviso
+  pequeno logo acima da bandeja, com o nome, o rótulo e o número, que some sozinho.
+- **Quem vê a rolagem**: o primeiro botão perto da bandeja diz quem vai ver a próxima rolagem, e
+  um toque troca:
+  - jogador: **Aberta** (todos veem; é o normal) ou **Privada** (só o jogador e o Guardião);
+  - Guardião: **Secreta** (só ele vê; é o normal) ou **Aberta**.
+
+  Depois de cada lançamento a escolha volta para o normal, como o bônus e o rótulo. Quem não pode
+  ver recebe só um sinal de suspense ("Guardião rolou em segredo", "Ana rolou só para o Guardião"),
+  com um "?" no lugar do número. A proteção é feita na própria mesa, no servidor: o número e o
+  rótulo nunca chegam ao aparelho de quem não pode ver. O Guardião vê todas as rolagens, e as que
+  nem todos viram aparecem marcadas ("privada" ou "secreta").
 - **Rótulo**: antes de lançar, toque em **Rótulo** (perto da bandeja) e escreva para que é a
   rolagem, como "Furtividade". Ele vai junto com a próxima rolagem e depois se apaga. Os últimos
   usados ficam guardados no aparelho, para escolher com um toque.
@@ -260,7 +269,8 @@ O restante:
 - `icons/`: os ícones do app (gerados por `tools/icone.html`).
 - `src/main.js`: liga as peças (toque, escolha dos dados, fórmula, atalhos, resultado).
 - `src/room-panel.js`: o botão "Mesa" e o painel da mesa compartilhada (criar, entrar, quem está
-  na mesa, convite, sair; gaveta no celular, ao lado no PC) e o envio das rolagens para a mesa.
+  na mesa, convite, sair; gaveta no celular, ao lado no PC), quem vê cada rolagem (aberta, privada
+  ou secreta) e o envio das rolagens para a mesa.
 - `src/room-log.js`: as rolagens da mesa: o histórico e o aviso perto da bandeja.
 - `src/room-label.js`: o rótulo da próxima rolagem e os últimos usados.
 - `src/app.css`: posição dos elementos na tela.

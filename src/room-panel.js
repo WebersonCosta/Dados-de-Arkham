@@ -5,8 +5,8 @@ import { createRoomLabel } from './room-label.js';
 // O painel da mesa compartilhada. O botão "Mesa", no alto da tela, abre a folha de entrar numa mesa
 // com o código (os jogadores) ou de criar uma (o Guardião). Dentro de uma mesa, ele abre o painel
 // dela: o código e o convite, quem está na mesa e as rolagens de todos (room-log.js). No celular o
-// painel é uma gaveta; no PC ele fica à vista, ao lado da mesa de dados. Perto da bandeja ficam o
-// rótulo da próxima rolagem (room-label.js) e, no celular, o atalho para as rolagens.
+// painel é uma gaveta; no PC ele fica à vista, ao lado da mesa de dados. Perto da bandeja ficam
+// quem vê a próxima rolagem, o rótulo dela (room-label.js) e, no celular, o atalho para as rolagens.
 // O nome do personagem, a chave do aparelho e a mesa atual ficam guardados no aparelho: ao abrir o
 // app, ele volta sozinho para a mesa em que estava.
 
@@ -24,7 +24,8 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   const $ = id => document.getElementById(id);
   const button = $('btnTable'), joinSheet = $('tableSheet'), panel = $('roomPanel'), row = $('roomRow');
   const nameInput = $('tableName'), codeInput = $('tableCodeInput'), errorBox = $('tableError');
-  const btnJoin = $('btnJoin'), btnCreate = $('btnCreate'), btnInvite = $('btnInvite'), btnLeave = $('btnLeave'), btnLog = $('btnLog');
+  const btnJoin = $('btnJoin'), btnCreate = $('btnCreate'), btnInvite = $('btnInvite'), btnLeave = $('btnLeave');
+  const btnLog = $('btnLog'), btnVis = $('btnVis');
   const server = SERVERS[place] || SERVERS.teste;
   const wide = matchMedia(WIDE);
   const MESSAGES = {
@@ -64,6 +65,18 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   const log = createRoomLog({ list: $('roomLog'), empty: $('roomLogEmpty'), notices: $('notices'), texts, critical, nameOf });
   const label = createRoomLabel({ saved, save, unlock });
 
+  // Quem vê a próxima rolagem. O jogador escolhe entre aberta (o padrão: todos veem) e privada (só
+  // ele e o Guardião); o Guardião, entre secreta (o padrão: só ele vê) e aberta. Quem não pode ver
+  // recebe da mesa só o sinal de que alguém rolou, sem o número. Depois de cada lançamento a escolha
+  // volta para o padrão, como o bônus e o rótulo: ninguém revela um segredo por esquecimento.
+  const VIS = {
+    open: { chip: 'Aberta', aria: 'Rolagem aberta: todos veem. Trocar' },
+    private: { chip: 'Privada', veil: 'privada', aria: `Rolagem privada: só você e o ${texts.guardian} veem. Trocar` },
+    secret: { chip: 'Secreta', veil: 'secreta', aria: 'Rolagem secreta: só você vê. Trocar' }
+  };
+  let flipped = false;   // a outra escolha, só para a próxima rolagem
+  const visibility = () => (saved.room?.guardian ? ['secret', 'open'] : ['open', 'private'])[flipped ? 1 : 0];
+
   /* ------------------------------------------------------------ entrar, criar, sair */
   function enter() {
     link?.leave();
@@ -80,7 +93,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     link = null;
     room = null;
     status = 'out';
-    joining = drawer = folded = false;
+    joining = drawer = folded = flipped = false;
     saved.room = null;
     save();
     label.clear();
@@ -186,12 +199,22 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   }
 
   /* ------------------------------------------------------------ as rolagens deste aparelho */
-  // Uma rolagem que acabou de parar, para a mesa: { set, total, text, detail, note, pieces, label }.
-  // Por enquanto todas são abertas (a escolha de privada e secreta vem no próximo passo). Sem
-  // conexão, ela fica só neste aparelho, e um aviso diz isso.
-  function share(roll) {
+  // Na hora de lançar: o rótulo e quem vê esta jogada ({ label, vis, veil }, em que veil é a marca
+  // "privada" ou "secreta"); null fora de uma mesa. A próxima começa sem rótulo e com o padrão.
+  function take() {
+    if (!saved.room || joining) return null;
+    const vis = visibility();
+    flipped = false;
+    render();
+    return { label: label.take(), vis, veil: VIS[vis].veil || '' };
+  }
+
+  // A rolagem que acabou de parar, para a mesa: o que take() devolveu na hora de lançar e o
+  // resultado ({ set, total, text, detail, note, pieces }). Sem conexão, ela fica só neste
+  // aparelho, e um aviso diz isso.
+  function share(table, roll) {
     if (!saved.room || joining) return;
-    const sent = status === 'online' && link?.send({ type: 'roll', id: newRollId(), vis: 'open', ...roll });
+    const sent = status === 'online' && link?.send({ type: 'roll', id: newRollId(), vis: table.vis, label: table.label, ...roll });
     if (!sent) notify('Sem conexão: a mesa não recebeu esta rolagem');
   }
 
@@ -220,6 +243,10 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     panel.setAttribute('aria-modal', String(!docked));
     document.body.classList.toggle('docked', docked && !folded);
     row.hidden = !inside;
+    const vis = VIS[visibility()];
+    btnVis.textContent = vis.chip;
+    btnVis.classList.toggle('is-veiled', !!vis.veil);
+    btnVis.setAttribute('aria-label', vis.aria);
     btnLog.hidden = docked && !folded;
     if (shown) seen = log.last;
     const unseen = log.unseen(seen);
@@ -306,6 +333,11 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
 
   button.addEventListener('click', open);
   btnLog.addEventListener('click', showLog);
+  btnVis.addEventListener('click', () => {
+    unlock();
+    flipped = !flipped;
+    render();
+  });
   $('btnCloseTable').addEventListener('click', closeJoin);
   $('btnCloseRoom').addEventListener('click', closePanel);
   joinSheet.addEventListener('click', ev => { if (ev.target === joinSheet) closeJoin(); });
@@ -345,10 +377,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   takeInvite();
 
   return {
-    open, share,
-    // o rótulo da rolagem que está sendo lançada ('' fora de uma mesa); a próxima começa sem rótulo
-    takeLabel: () => (saved.room && !joining ? label.take() : ''),
-    log,
+    open, take, share, log,
     get room() { return room; }, get status() { return status; }
   };
 }

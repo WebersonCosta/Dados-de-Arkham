@@ -28,13 +28,13 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 3 (rolagens ao vivo, com rótulo) em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 7` |
+| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 4 (privada, secreta e suspense) em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 8` |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 8.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 9.
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -58,11 +58,14 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   Workers: `wrangler login --scopes account:read user:read workers:write workers_scripts:write`.
 - Fase 2, passo 2 (entrar na mesa) testado e aprovado por Weberson em 31/10/2026 (PC como
   Guardião, celular como jogador, `?aba` para um terceiro).
-- Fase 2, passo 3 (rolagens ao vivo, com rótulo) no endereço de teste em 31/10/2026 (envio
-  `teste 7`), esperando o teste de Weberson: o histórico (gaveta no celular, ao lado no PC), o
-  aviso perto da bandeja e o rótulo com os últimos usados (veja "Mesa compartilhada: o app").
-  Todas as rolagens ainda vão abertas, inclusive as do Guardião: privada, secreta e o sinal de
-  suspense são o passo 4.
+- Fase 2, passo 3 (rolagens ao vivo, com rótulo) testado e aprovado por Weberson em 31/10/2026.
+- Fase 2, passo 4 (privada, secreta e suspense) no endereço de teste em 31/10/2026 (envio
+  `teste 8`), esperando o teste de Weberson: a escolha de quem vê perto da bandeja (o Guardião
+  rola secreta por padrão), o sinal de suspense para quem não vê e as marcas "privada" e
+  "secreta" (veja "Mesa compartilhada: o app"). O servidor não mudou; o teste dos três aparelhos
+  passou de novo contra a mesa de teste (11 de 11; o da sala que se apaga sozinha só roda com o
+  tempo sem uso reduzido). O passo 5 é quedas e encerramento (a rolagem feita sem sinal mandada
+  quando a conexão volta, o aviso de versão).
 
 ## Decisões tomadas (e por quê)
 
@@ -202,9 +205,11 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   `clamp(280px, 26vw, 360px)`), e a mesa de dados, o cabeçalho, a bandeja e o resultado ocupam o
   resto (`stage.fit` usa a largura do `canvas`). No PC, o "Mesa" e o "Fechar" escondem e mostram o
   painel. Quem está na mesa virou uma fileira de etiquetas, para caber junto com as rolagens.
-- Rolagens (passo 3): cada uma é mandada quando os dados param (`showResult` → `roomPanel.share`),
-  com `{ id, vis: 'open', set, total, text, detail, note, pieces, label }`: `note` é só a opção do
-  d100 ("1 dado de bônus"), `pieces` as dezenas com as descartadas. O nome de quem rolou vem de
+- Rolagens (passo 3): no toque que lança, `roomPanel.take()` pega o rótulo e quem vê
+  (`{ label, vis, veil }`; null fora de uma mesa) e volta os dois ao padrão; quando os dados param,
+  `showResult` → `roomPanel.share(table, roll)` manda `{ id, vis, label, set, total, text, detail,
+  note, pieces }`: `note` é só a opção do d100 ("1 dado de bônus"), `pieces` as dezenas com as
+  descartadas. O nome de quem rolou vem de
   `members`; o "2d6 + 6" é escrito a partir do `set` (o `name` do servidor corta em 40 letras);
   crítico e desastre são calculados em cada aparelho com `theme.critical`. A própria rolagem só
   entra no histórico quando a mesa devolve (o histórico é o que a mesa recebeu). Sem conexão, a
@@ -212,17 +217,29 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   esta rolagem".
 - Histórico (`room-log.js`): a mais nova em cima, até 100 (como o servidor); ao entrar ou voltar,
   o servidor manda tudo de novo. A rolagem de outra pessoa que acabou de chegar acende uma vez,
-  quando aparece. O sinal de suspense (sem `total`) já aparece como "?" ("rolagem secreta" ou
-  "privada"), pronto para o passo 4.
+  quando aparece.
+- Quem vê (passo 4, em `room-panel.js`): um botão na linha perto da bandeja, que troca com um
+  toque. Jogador: "Aberta" (padrão) ou "Privada"; Guardião: "Secreta" (padrão) ou "Aberta" (o
+  Guardião não tem privada: para ele, a mesa já trata privada como secreta). Depois de cada
+  lançamento volta ao padrão, como o bônus e o rótulo (decisão: um segredo nunca é revelado por
+  esquecimento; se Weberson preferir que fique, é só não voltar). Privada e secreta ficam em
+  vermelho (`--c-penalty`) e tracejadas: o botão, a marca no resultado ("Furtividade · privada"),
+  a marca no histórico de quem vê e o aviso. O sinal de suspense (rolagem sem `total`, a lista
+  fechada de campos do servidor) aparece como "?" e "Guardião rolou em segredo" / "Ana rolou só
+  para o Guardião", no histórico e no aviso (o "?" pulsa). Testado com três abas, guardando tudo o
+  que chegava ao aparelho de um jogador: nenhum número nem rótulo de rolagem que ele não podia ver,
+  nem ao vivo nem no histórico mandado ao voltar.
 - Aviso perto da bandeja: só das rolagens dos outros, ao vivo (não das que chegam ao voltar de uma
   queda); some em 5 s; até 3 empilhados. No celular, o botão "Rolagens" conta as que chegaram
   desde a última vez que o histórico esteve à vista (as que já estavam na mesa ao entrar contam
   como vistas).
-- Rótulo (`room-label.js`): a linha "Rótulo · Rolagens" aparece acima da bandeja só dentro de uma
-  mesa (a área dos dados encolhe uns 44 px; `relayout` é chamado ao entrar e sair). O rótulo vai
-  com a próxima jogada (pego no toque que lança, como o bônus) e se apaga; aparece também no
-  resultado, acima do número. Até 30 letras; os 8 últimos usados ficam em `saved.labels` (sem
-  repetir, sem diferenciar maiúsculas). Sair da mesa apaga o rótulo escolhido.
+- Rótulo (`room-label.js`): a linha "quem vê · Rótulo · Rolagens" aparece acima da bandeja só
+  dentro de uma mesa (a área dos dados encolhe uns 44 px; `relayout` é chamado ao entrar e sair).
+  O rótulo vai com a próxima jogada (pego no toque que lança, como o bônus) e se apaga; aparece
+  também no resultado, acima do número. Escolhido, ele aparece no próprio botão, aceso; se faltar
+  espaço na linha, é ele que encolhe (com reticências). Até 30 letras; os 8 últimos usados ficam
+  em `saved.labels` (sem repetir, sem diferenciar maiúsculas). Sair da mesa apaga o rótulo e a
+  escolha de quem vê.
 
 ## Fluxo: desenvolver, testar e publicar
 
