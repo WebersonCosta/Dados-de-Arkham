@@ -23,18 +23,18 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 - Quando Weberson pedir para avisar de problemas antes de implementar, explicar o problema e
   perguntar antes de mexer.
 
-## Estado atual (30/10/2026)
+## Estado atual (31/10/2026)
 
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**, começando: mesa compartilhada, fase 2, passo 1 (o servidor de salas; o app ainda não mudou) | `desenvolvimento`; o endereço de teste ainda mostra a 1.1 (envio `teste 5`) |
+| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 2 (entrar na mesa) em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 6` |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 6.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 7.
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -56,7 +56,11 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   `mesa-arkham.workers.dev` foi criado pelo wrangler no primeiro envio. Este PC guarda o login do
   wrangler (fora do projeto, em `%APPDATA%\xdg.config\.wrangler`), feito só com as permissões de
   Workers: `wrangler login --scopes account:read user:read workers:write workers_scripts:write`.
-- Próximo: passo 2 (entrar na mesa).
+- Fase 2, passo 2 (entrar na mesa) no endereço de teste em 31/10/2026 (envio `teste 6`), esperando
+  o teste de Weberson (PC como Guardião, celular como jogador, `?aba` para um terceiro): o botão
+  "Mesa", criar e entrar com código e nome, a lista de quem está na mesa, o nome guardado, a volta
+  sozinha depois de uma queda, o convite e sair/encerrar (veja "Mesa compartilhada: o app"). Ainda
+  não há rolagens na mesa: elas são o passo 3.
 
 ## Decisões tomadas (e por quê)
 
@@ -164,6 +168,30 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   (`send_metrics = false`).
 - O wrangler roda por `npx wrangler@4.151.3` (versão fixa): fica no cache do npm, fora do
   OneDrive, e o projeto não tem `node_modules`.
+
+**Mesa compartilhada: o app** (`src/core/room-link.js` e `src/room-panel.js`)
+- `room-link.js` (mecânica, sem tela): `createRoom` (POST com corpo em texto simples, para o
+  navegador não fazer a consulta prévia de CORS) e `connect`, que manda o `hello`, guarda um
+  "ping" a cada 25 s (sem "pong" em 8 s, abre outra conexão), tenta de novo depois de 0,5, 1, 2,
+  4, 8 e 15 s, e reconecta na hora quando o app volta para a tela ou a internet volta. Recusa na
+  entrada (`room-not-found`, `room-full`, `version`, `name`, `invalid`) e `ended` encerram a
+  ligação (`final: true`). Medido: uma queda é percebida na hora e a conexão volta em ~1 s.
+- `room-panel.js` (a tela): o servidor vem do `PLACE` (`oficial` → mesa oficial; `teste` e
+  `local` → mesa de teste). Guardado no aparelho em `arkham-mesa` (no teste, `arkham-mesa-teste`):
+  `{ device, name, room: { code, guardian } }`. Ao abrir o app, volta sozinho para `room`.
+  Fora do oficial, `?aba` no endereço faz da aba um aparelho à parte (tudo da mesa em
+  `sessionStorage`), e o título da aba mostra quem é quem.
+- Convite: `<endereço do app>#mesa=K7QX3M` (no fim do endereço, depois do `#`: não chega ao
+  GitHub nem muda a cópia guardada). Abre o painel com o código preenchido, também com o app já
+  aberto (`hashchange`), e sai do endereço depois de lido. No celular (toque e `navigator.share`)
+  abre o compartilhar; no PC, copia o texto com o link.
+- O Guardião entra com o nome `texts.guardian`; os nomes do papel e do personagem vêm do tema
+  (`texts.guardian` = "Guardião", `texts.character` = "investigador"), porque são termos de Call
+  of Cthulhu. "Sair da mesa" guarda o lugar; o "Encerrar a mesa" do Guardião (previsto para o
+  passo 5, trazido antes porque o Guardião precisa de uma saída) pede confirmação e apaga a mesa.
+- Cabeçalho: o título não quebra mais; em tela estreita os botões descem, e o "Mesa", último da
+  fila, fica embaixo do "Som" e do "Ambiente". Medido em 375 e 360 px: título numa linha,
+  subtítulo inteiro, cabeçalho de 58 para 78 px.
 
 ## Fluxo: desenvolver, testar e publicar
 

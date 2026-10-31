@@ -6,6 +6,7 @@ import { createFormulas, MAX_DICE } from './core/formula.js';
 import { createDieModel } from './core/polyhedra.js';
 import { THEMES, DEFAULT_THEME } from './themes/index.js';
 import { VERSION, PLACE } from './version.js';
+import { createRoomPanel } from './room-panel.js';
 
 // Liga as peças: carrega o tema, monta a mesa e cuida do toque, da escolha dos dados e do resultado.
 
@@ -529,6 +530,11 @@ function bindToggle(button, key, label, apply) {
 bindToggle($('btnSfx'), 'sfx', theme.texts.sound, on => audio.setSfx(on));
 bindToggle($('btnAmb'), 'amb', theme.texts.ambient, on => audio.setAmbient(on));
 
+/* ---------------------------------------------------------------- mesa compartilhada */
+// O botão "Mesa" e o painel dela (room-panel.js). Fora de uma mesa nada disso usa a internet:
+// rolar sozinho continua igual, mesmo sem conexão.
+const roomPanel = createRoomPanel({ place: PLACE, texts: theme.texts, unlock: () => audio.unlock(), notify: flashHint });
+
 /* ---------------------------------------------------------------- tela e animação */
 function relayout() {
   const arena = stage.fit({
@@ -573,7 +579,7 @@ requestAnimationFrame(frame);
 if (location.hostname === 'localhost') {
   window.__dados = {
     showResult, chooseSet, setFormula, tapKind, pickD100, chooseMode, stepFixed, clearFormula, useFormula,
-    formulas, tick, table, stage, theme, THREE, D100,
+    formulas, tick, table, stage, theme, THREE, D100, roomPanel,
     get current() { return current; }, get state() { return state; }, get mode() { return mode; },
     get formula() { return formula; }, get building() { return building; }, get leaving() { return leaving; }
   };

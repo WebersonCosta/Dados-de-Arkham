@@ -72,6 +72,7 @@
     <div class="toggles">
       <button id="btnSfx" class="toggle" type="button" aria-pressed="true">Som</button>
       <button id="btnAmb" class="toggle" type="button" aria-pressed="true">Ambiente</button>
+      <button id="btnTable" class="toggle table-button" type="button">Mesa</button>
     </div>
   </header>
 
@@ -123,6 +124,48 @@
       <div class="sheet-grid" id="favorites"></div>
       <p class="sheet-empty" id="favoritesEmpty">Nenhuma ainda. Monte uma fórmula e salve aqui.</p>
       <button type="button" class="sheet-save" id="btnSave"></button>
+    </div>
+  </div>
+
+  <!-- mesa compartilhada: criar ou entrar numa mesa, quem está nela e o convite (room-panel.js) -->
+  <div class="sheet at-top" id="tableSheet" hidden role="dialog" aria-modal="true" aria-labelledby="tableHead">
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <p class="sheet-title" id="tableHead">Mesa compartilhada</p>
+        <button type="button" class="toggle" id="btnCloseTable">Fechar</button>
+      </div>
+      <p class="table-note" id="tablePerTab" hidden>Esta aba conta como um aparelho à parte (modo de teste).</p>
+
+      <div class="table-box" id="tableOut">
+        <form class="table-box" id="tableForm" autocomplete="off">
+          <label class="field">
+            <span id="tableCharacter">Nome do personagem</span>
+            <input id="tableName" maxlength="30" enterkeyhint="next" autocapitalize="words" spellcheck="false">
+          </label>
+          <label class="field">
+            <span>Código da mesa</span>
+            <input id="tableCodeInput" maxlength="7" enterkeyhint="go" autocapitalize="characters" spellcheck="false" placeholder="6 letras e números">
+          </label>
+          <button type="submit" class="sheet-save" id="btnJoin">Entrar na mesa</button>
+        </form>
+        <p class="table-error" id="tableError" role="alert" hidden></p>
+        <p class="sheet-label" id="tableGuardian">É o Guardião?</p>
+        <button type="button" class="sheet-save is-quiet" id="btnCreate">Criar uma mesa nova</button>
+        <p class="table-note">Sem cadastro: na mesa vai só o nome do personagem. A mesa se apaga sozinha
+          6 horas depois do último uso.</p>
+      </div>
+
+      <div class="table-box" id="tableIn" hidden>
+        <p class="sheet-label">Código da mesa</p>
+        <div class="table-code">
+          <b id="tableCode"></b>
+          <button type="button" class="toggle" id="btnInvite">Copiar convite</button>
+        </div>
+        <p class="table-status" id="tableStatus" aria-live="polite"></p>
+        <p class="sheet-label">Na mesa</p>
+        <ol class="members" id="tableMembers"></ol>
+        <button type="button" class="sheet-save is-danger" id="btnLeave">Sair da mesa</button>
+      </div>
     </div>
   </div>
 

@@ -16,7 +16,10 @@ export default {
     loading: 'Acendendo as velas…',
     hint: 'Toque na mesa para lançar',
     sound: 'Som',
-    ambient: 'Ambiente'
+    ambient: 'Ambiente',
+    // na mesa compartilhada: quem conduz o jogo e o personagem de cada jogador
+    guardian: 'Guardião',
+    character: 'investigador'
   },
   // câmera, e a faixa no fundo da mesa reservada para as velas e o tomo
   view: { fov: 36, tilt: 22, reserveTop: .2 },

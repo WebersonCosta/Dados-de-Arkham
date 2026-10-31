@@ -5,8 +5,9 @@ e até 6 jogadores rolarem dados juntos durante uma sessão de Call of Cthulhu (
 no seu celular ou PC. O uso principal será numa call do Discord entre amigos.
 
 Andamento: fase 1 (plano) aprovada em 31/10/2026. Fase 2, passo 1 (preparação) pronto em
-31/10/2026: a mesa de teste está no ar e passou no teste dos três aparelhos. **Próximo: fase 2,
-passo 2 (entrar na mesa).** As decisões e os passos da fase 2 estão no fim deste arquivo.
+31/10/2026: a mesa de teste está no ar e passou no teste dos três aparelhos. **Fase 2, passo 2
+(entrar na mesa) no endereço de teste desde 31/10/2026, esperando o teste de Weberson.** As
+decisões e os passos da fase 2 estão no fim deste arquivo.
 
 ## Sala e entrada
 

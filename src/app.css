@@ -51,18 +51,21 @@ body {
 }
 .hud-top > * { pointer-events: auto; }
 .brand h1 {
-  margin: 0; font-family: var(--font-title); font-weight: 400;
+  margin: 0; font-family: var(--font-title); font-weight: 400; white-space: nowrap;
   font-size: 1.4rem; letter-spacing: .05em; line-height: 1.05;
   text-shadow: 0 0 14px #000, 0 0 3px #000;
 }
-.brand { min-width: 0; }
+/* O título fica sempre numa linha; em tela estreita, quem cede são os botões, que descem para uma
+   segunda linha (o "Mesa" embaixo do "Som" e do "Ambiente"). O subtítulo usa a largura do título
+   e corta com reticências se precisar. */
+.brand { flex: 1 1 auto; }
 .brand p {
+  width: 0; min-width: 100%;
   margin: .3rem 0 0; font-family: var(--font-ui); font-size: .72rem;
   letter-spacing: .08em; color: var(--c-text-dim); text-shadow: 0 0 6px #000;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.toggles { flex: none; }
-.toggles { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.toggles { flex: 0 1 auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .toggle {
   font-family: var(--font-ui); font-size: .72rem; letter-spacing: .04em;
   color: var(--c-text); background: var(--c-panel);
@@ -233,6 +236,49 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   cursor: pointer; touch-action: manipulation;
 }
 .sheet-save:disabled { color: var(--c-text-dim); border-color: var(--c-line); background: none; cursor: default; }
+.sheet-save.is-quiet { color: var(--c-text); background: var(--c-panel); border-color: var(--c-line-strong); }
+.sheet-save.is-danger { margin-top: 10px; color: var(--c-penalty); background: none; border-color: var(--c-penalty); }
+
+/* Mesa compartilhada: o botão "Mesa" (aceso dentro de uma mesa, pulsando enquanto conecta) e o
+   painel dela. O painel fica no alto da tela, para o teclado do celular não cobrir os campos. */
+.table-button.is-in { color: var(--c-accent); border-color: var(--c-accent); background: var(--c-accent-soft); }
+.table-button[data-status="connecting"], .table-button[data-status="reconnecting"] { animation: breathe 1.8s ease-in-out infinite; }
+.sheet.at-top { align-items: flex-start; padding-top: calc(env(safe-area-inset-top, 0px) + 14px); }
+.table-box { display: flex; flex-direction: column; gap: 8px; }
+.table-box > p { margin: 0; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field span { font-family: var(--font-ui); font-size: .66rem; letter-spacing: .16em; color: var(--c-text-dim); }
+.field input {
+  box-sizing: border-box; width: 100%; padding: .6rem .7rem;
+  font: 16px/1.2 var(--font-ui);   /* 16px: o iPhone não aproxima a tela ao tocar no campo */
+  color: var(--c-text); background: var(--c-panel); border: 1px solid var(--c-line-strong); border-radius: 2px;
+  -webkit-user-select: text; user-select: text;
+}
+.field input:focus { outline: none; border-color: var(--c-accent); }
+#tableCodeInput { font-family: var(--font-number); letter-spacing: .18em; text-transform: uppercase; }
+#tableCodeInput::placeholder { font-family: var(--font-ui); letter-spacing: .04em; text-transform: none; }
+.table-note { font-family: var(--font-ui); font-size: .68rem; line-height: 1.5; color: var(--c-text-dim); }
+.table-error { font-family: var(--font-ui); font-size: .78rem; line-height: 1.4; color: var(--c-penalty); }
+.table-code { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.table-code b {
+  font-family: var(--font-number); font-size: 1.9rem; letter-spacing: .12em; color: var(--c-accent);
+  -webkit-user-select: text; user-select: text;
+}
+.table-status { font-family: var(--font-ui); font-size: .72rem; color: var(--c-text-dim); }
+.members { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.member {
+  display: flex; align-items: center; gap: 10px; padding: .55rem .65rem;
+  background: var(--c-panel); border: 1px solid var(--c-line); border-radius: 2px;
+}
+.member .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-line-strong); }
+.member.is-online .dot { background: var(--c-bonus); box-shadow: 0 0 6px var(--c-bonus); }
+.member-name {
+  flex: 1; min-width: 0; font-family: var(--font-title); font-size: 1.05rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.member.is-me .member-name { color: var(--c-accent); }
+.member:not(.is-online) .member-name { opacity: .55; }
+.member small { flex: none; font-family: var(--font-ui); font-size: .62rem; letter-spacing: .06em; color: var(--c-text-dim); }
 
 /* Número da versão, discreto no canto de baixo. No endereço de teste ele aparece em outra cor. */
 .version {
@@ -247,6 +293,6 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   font-family: var(--font-ui); text-align: center; line-height: 1.5; background: var(--c-void);
 }
 @media (prefers-reduced-motion: reduce) {
-  .hint { animation: none; opacity: .85; }
+  .hint, .table-button { animation: none !important; opacity: .85; }
   .verdict.show > * { animation: none; }
 }
