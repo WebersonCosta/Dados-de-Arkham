@@ -318,6 +318,8 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 .roll-who > span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .roll-who time { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .06em; color: var(--c-text-dim); }
 .roll-veil { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .08em; color: var(--c-penalty); }
+.roll-wait { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .08em; color: var(--c-text-dim); }
+.roll.is-pending { opacity: .62; border-style: dotted; }   /* deste aparelho, esperando a mesa confirmar */
 .roll.is-me .roll-name { color: var(--c-accent); }
 .roll-what { margin-top: 2px; font-family: var(--font-ui); font-size: .66rem; line-height: 1.45; letter-spacing: .04em; color: var(--c-text-dim); }
 .roll-what span { color: var(--c-text); }   /* números que contam */
@@ -350,6 +352,16 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 /* o sinal de suspense: alguém rolou, e o "?" pulsa no lugar do número */
 .notice.is-hidden span { font-style: italic; color: var(--c-text-dim); }
 .notice.is-hidden b { color: var(--c-penalty); animation: breathe 1.8s ease-in-out infinite; }
+/* O aviso que fica (a mesa sem conexão, o app desatualizado): não some sozinho e fica embaixo dos
+   outros, mais perto da bandeja. O do app desatualizado é um botão: um toque atualiza. */
+.notice.is-held {
+  display: block; text-align: center; border-style: dashed; color: var(--c-text-dim);
+  animation: breathe 2.6s ease-in-out infinite;
+}
+.notice.is-action {
+  animation: none; pointer-events: auto; cursor: pointer; touch-action: manipulation;
+  color: var(--c-accent); border-color: var(--c-accent); background: rgba(0, 0, 0, .78);
+}
 @keyframes notice { from { opacity: 0; transform: translateY(6px); } 8%, 85% { opacity: 1; transform: none; } to { opacity: 0; } }
 
 /* Perto da bandeja, dentro de uma mesa: quem vê a próxima rolagem (aberta, privada ou secreta), o
@@ -386,5 +398,5 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 }
 @media (prefers-reduced-motion: reduce) {
   .hint, .table-button { animation: none !important; opacity: .85; }
-  .verdict.show > *, .notice, .notice.is-hidden b, .roll.is-new { animation: none; }
+  .verdict.show > *, .notice, .notice.is-hidden b, .notice.is-held, .roll.is-new { animation: none; }
 }

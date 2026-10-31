@@ -10,6 +10,17 @@ export const MAX_DICE = 8;        // como no app (src/core/formula.js)
 export const MAX_FIXED = 99;
 export const VISIBILITY = ['open', 'private', 'secret'];
 
+// Versão do app ('1.2', a de src/version.js). Aparelhos com versões diferentes se entendem enquanto
+// o PROTOCOL for o mesmo, mas quem está com uma versão mais velha que a de alguém na mesa recebe o
+// aviso para atualizar: publicar com gente jogando deixa aparelhos com a versão anterior até o app
+// ser aberto de novo. Sem versão, ou fora do formato, conta como a mais velha de todas.
+export const cleanVersion = input => (typeof input === 'string' && /^\d{1,3}\.\d{1,3}$/.test(input) ? input : '0.0');
+export function compareVersions(a, b) {
+  const [a1, a2] = a.split('.').map(Number), [b1, b2] = b.split('.').map(Number);
+  return a1 - b1 || a2 - b2;   // número, e não letra: 1.10 vem depois de 1.9
+}
+export const newest = versions => versions.reduce((top, v) => (compareVersions(v, top) > 0 ? v : top), '0.0');
+
 // Código da sala: 6 letras e números, sem os que se confundem (0 e O, 1, I e L).
 export const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 export const CODE_LENGTH = 6;

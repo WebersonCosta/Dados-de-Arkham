@@ -1,7 +1,8 @@
 import { DurableObject } from 'cloudflare:workers';
 import {
   PROTOCOL, GUARDIAN, HISTORY,
-  newCode, cleanCode, cleanName, validDevice, digest, readRoll, seenBy, nextSeat, publicSeat
+  newCode, cleanCode, cleanName, cleanVersion, compareVersions, newest,
+  validDevice, digest, readRoll, seenBy, nextSeat, publicSeat
 } from './room.js';
 
 // Servidor da mesa compartilhada, no Cloudflare. Cada sala é um Durable Object: um pequeno programa
@@ -12,8 +13,9 @@ import {
 // - POST /rooms, com { protocol, device, name }: cria uma sala e devolve { code }. Quem cria é o
 //   Guardião.
 // - /rooms/<código>: a conexão ao vivo (WebSocket). A primeira mensagem do app é
-//   { type: 'hello', protocol, device, name }, e a resposta é a sala ({ type: 'room' }). Depois
-//   chegam 'members', 'roll', 'error' e 'ended'; o app manda 'roll' e, o Guardião, 'end'.
+//   { type: 'hello', protocol, device, name, app }, e a resposta é a sala ({ type: 'room' }).
+//   Depois chegam 'members', 'roll', 'outdated' (o app ficou para trás), 'error' e 'ended'; o app
+//   manda 'roll' e, o Guardião, 'end'.
 
 export default {
   async fetch(request, env) {
@@ -135,11 +137,18 @@ export class Room extends DurableObject {
     } else if (name && name !== me.name) {
       this.sql.exec('UPDATE seats SET name = ? WHERE seat = ?', name, me.seat);
     }
-    ws.serializeAttachment({ seat: me.seat });
+    ws.serializeAttachment({ seat: me.seat, app: cleanVersion(msg.app) });
     await this.touch();
     const { code } = this.sql.exec('SELECT code FROM room').one();
     this.send(ws, { type: 'room', protocol: PROTOCOL, code, you: me.seat, members: this.members(), rolls: this.history(me.seat) });
     this.announceMembers({ skip: ws });
+    this.checkVersions();
+  }
+
+  // Quem está com o app mais velho que o mais novo da mesa recebe o aviso para atualizar.
+  checkVersions() {
+    const all = this.connections(), top = newest(all.map(c => c.app));
+    for (const c of all) if (compareVersions(c.app, top) < 0) this.send(c.ws, { type: 'outdated', newest: top });
   }
 
   // Uma rolagem nova: guardada e entregue a cada conexão do jeito que aquele lugar pode ver. Quem
@@ -206,11 +215,12 @@ export class Room extends DurableObject {
       .toArray().map(r => seenBy(fromRow(r), seat));
   }
 
-  // As conexões abertas que já disseram de que lugar são (menos `gone`, a que está caindo).
+  // As conexões abertas que já disseram de que lugar são (menos `gone`, a que está caindo), com a
+  // versão do app de cada uma.
   connections(gone) {
     return this.ctx.getWebSockets().flatMap(ws => {
-      const seat = ws !== gone && ws.readyState === 1 && ws.deserializeAttachment()?.seat;
-      return seat ? [{ ws, seat }] : [];
+      const me = ws !== gone && ws.readyState === 1 && ws.deserializeAttachment();
+      return me?.seat ? [{ ws, seat: me.seat, app: me.app || '0.0' }] : [];
     });
   }
 

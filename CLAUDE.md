@@ -28,13 +28,13 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 4 (privada, secreta e suspense) em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 8` |
+| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 5 (quedas e versão) em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 9` |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 9.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 10.
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -59,13 +59,17 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - Fase 2, passo 2 (entrar na mesa) testado e aprovado por Weberson em 31/10/2026 (PC como
   Guardião, celular como jogador, `?aba` para um terceiro).
 - Fase 2, passo 3 (rolagens ao vivo, com rótulo) testado e aprovado por Weberson em 31/10/2026.
-- Fase 2, passo 4 (privada, secreta e suspense) no endereço de teste em 31/10/2026 (envio
-  `teste 8`), esperando o teste de Weberson: a escolha de quem vê perto da bandeja (o Guardião
-  rola secreta por padrão), o sinal de suspense para quem não vê e as marcas "privada" e
-  "secreta" (veja "Mesa compartilhada: o app"). O servidor não mudou; o teste dos três aparelhos
-  passou de novo contra a mesa de teste (11 de 11; o da sala que se apaga sozinha só roda com o
-  tempo sem uso reduzido). O passo 5 é quedas e encerramento (a rolagem feita sem sinal mandada
-  quando a conexão volta, o aviso de versão).
+- Fase 2, passo 4 (privada, secreta e suspense) testado e aprovado por Weberson em 31/10/2026: a
+  escolha de quem vê perto da bandeja (o Guardião rola secreta por padrão), o sinal de suspense
+  e as marcas "privada" e "secreta".
+- Fase 2, passo 5 (quedas e encerramento) no endereço de teste em 31/10/2026 (envio `teste 9`),
+  esperando o teste de Weberson: a fila das rolagens feitas sem conexão, o aviso "Sem conexão
+  com a mesa" perto da bandeja e o aviso de versão (veja "Mesa compartilhada: o app"). A mesa de
+  teste foi enviada de novo, com a conferência de versão (`outdated`), e passou no teste dos
+  aparelhos (12 de 12, com o caso novo da versão; o da sala que se apaga sozinha só roda com o
+  tempo sem uso reduzido, e essa parte do servidor não mudou desde o passo 1). "Encerrar a mesa"
+  e a sala que se apaga sozinha já vinham dos passos 1 e 2. Falta o passo 6: a sessão real no
+  Discord, pelo endereço de teste.
 
 ## Decisões tomadas (e por quê)
 
@@ -154,10 +158,17 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - Aparelho: o app sorteia uma chave (22 a 64 caracteres, base64url) e a guarda só nele; o
   servidor guarda só o SHA-256 dela, e a chave nunca volta em mensagem nenhuma.
 - Conversa: `POST /rooms` cria a sala (`{ protocol, device, name }` → `{ code }`); `/rooms/<código>`
-  é o WebSocket. Primeira mensagem do app: `hello`; resposta: `room` (o lugar, os membros e as
-  últimas 100 rolagens, já filtradas). Depois chegam `members`, `roll`, `error` e `ended`; o app
-  manda `roll` e, o Guardião, `end`. `PROTOCOL` (hoje 1) muda quando app e servidor deixam de se
-  entender. "ping" recebe "pong" sem acordar a sala.
+  é o WebSocket. Primeira mensagem do app: `hello` (`{ protocol, device, name, app }`); resposta:
+  `room` (o lugar, os membros e as últimas 100 rolagens, já filtradas). Depois chegam `members`,
+  `roll`, `outdated`, `error` e `ended`; o app manda `roll` e, o Guardião, `end`. `PROTOCOL` (hoje
+  1) muda quando app e servidor deixam de se entender (o `hello` é recusado com `version`). "ping"
+  recebe "pong" sem acordar a sala.
+- Versão do app (passo 5): o `hello` leva `app` (o `VERSION` de `src/version.js`, como '1.2';
+  sem ele, ou fora do formato, conta como '0.0'), guardado junto com o lugar na conexão
+  (`serializeAttachment({ seat, app })`). A cada chegada, quem está conectado com uma versão mais
+  velha que a mais nova da mesa recebe `{ type: 'outdated', newest }` (`compareVersions` compara
+  número, então 1.10 vem depois de 1.9). Só a versão publicada conta: os envios de teste da mesma
+  versão não se avisam.
 - Rolagem: `{ id, vis, set, name, total, text, label?, detail?, note?, pieces? }`. `set` é
   `'d100'` ou a fórmula sem espaços (`'2d6+6'`; guardada com `-` comum no lugar de `−`). O
   servidor confere o formato, recusa total fora do mínimo e do máximo da fórmula (`impossible`) e
@@ -212,9 +223,24 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   descartadas. O nome de quem rolou vem de
   `members`; o "2d6 + 6" é escrito a partir do `set` (o `name` do servidor corta em 40 letras);
   crítico e desastre são calculados em cada aparelho com `theme.critical`. A própria rolagem só
-  entra no histórico quando a mesa devolve (o histórico é o que a mesa recebeu). Sem conexão, a
-  rolagem não é guardada para depois (isso é o passo 5): aparece "Sem conexão: a mesa não recebeu
-  esta rolagem".
+  entra no histórico quando a mesa devolve (o histórico é o que a mesa recebeu).
+- Fila (passo 5): toda rolagem entra em `saved.pending` (`[{ at, msg }]`, até 20, guardada no
+  aparelho) e sai quando a mesa a devolve. Enquanto espera, aparece no histórico em cima de todas,
+  apagada, com "enviando…". A cada `room` (entrar, voltar de uma queda, abrir o app), as que a
+  mesa já tem (pelo id, no histórico que ela manda) saem da fila e as outras vão de novo; a mesa
+  conta uma rolagem repetida uma vez só. Sem conexão na hora de rolar: "Sem conexão: a rolagem vai
+  para a mesa quando a conexão voltar". Se a conexão parecia aberta mas a mesa não devolve em 4 s,
+  o app confere na hora (`link.check()`: um "ping"; sem "pong" em 8 s, abre outra conexão), em
+  vez de esperar o próximo "ping" (até 33 s). Recusada pela mesa: sai da fila. Sair da mesa
+  esvazia a fila. Testado: sem conexão, com o app fechado e aberto, com a confirmação perdida
+  (não repete) e com a conexão morta sem avisar (volta em ~15 s).
+- Aviso que fica perto da bandeja (`log.banner`, embaixo dos avisos que passam): "Sem conexão com
+  a mesa · reconectando…" (com "· N rolagens esperando") quando a conexão some por mais de 3 s
+  (as quedas rápidas passam sem aviso); "Versão nova do app · toque para atualizar" com o
+  `outdated`; e, se a mesa recusar o `hello` com `version` ao voltar, "App desatualizado · toque
+  para atualizar e voltar à mesa" (status `old`: a mesa e a fila continuam guardadas). Os dois de
+  versão são botões: um toque recarrega a página, a versão nova chega pelo `sw.js` e o app volta
+  sozinho para a mesa. Entrando pela folha, a recusa `version` continua sendo um erro na folha.
 - Histórico (`room-log.js`): a mais nova em cima, até 100 (como o servidor); ao entrar ou voltar,
   o servidor manda tudo de novo. A rolagem de outra pessoa que acabou de chegar acende uma vez,
   quando aparece.

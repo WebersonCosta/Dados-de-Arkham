@@ -1,6 +1,7 @@
 import { newDevice, newRollId, cleanCode, showCode, createRoom, connect } from './core/room-link.js';
 import { createRoomLog } from './room-log.js';
 import { createRoomLabel } from './room-label.js';
+import { VERSION } from './version.js';
 
 // O painel da mesa compartilhada. O botão "Mesa", no alto da tela, abre a folha de entrar numa mesa
 // com o código (os jogadores) ou de criar uma (o Guardião). Dentro de uma mesa, ele abre o painel
@@ -17,6 +18,9 @@ const SERVERS = {
 };
 const MAX_NAME = 30;
 const WIDE = '(min-width: 960px)';   // a partir dessa largura (PC, tablet deitado), o painel fica ao lado
+const MAX_PENDING = 20;              // rolagens guardadas esperando a conexão
+const DROP_NOTICE = 3000;            // sem conexão por mais que isso, aparece o aviso perto da bandeja
+const CONFIRM_WAIT = 4000;           // a mesa não confirmou a rolagem nesse tempo: a conexão é conferida
 
 // critical e nameOf: para o histórico (veja room-log.js); relayout: refaz a área onde os dados rolam,
 // quando a bandeja ganha a linha do rótulo ou o painel passa a ocupar o lado da tela.
@@ -45,19 +49,24 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   const store = perTab ? sessionStorage : localStorage;
   const KEY = place === 'teste' ? 'arkham-mesa-teste' : 'arkham-mesa';
   // device: a chave do aparelho; name: o nome do personagem; room: { code, guardian } da mesa atual;
-  // labels: os últimos rótulos usados
-  const saved = { device: '', name: '', room: null, labels: [] };
+  // labels: os últimos rótulos usados; pending: as rolagens que a mesa ainda não confirmou
+  const saved = { device: '', name: '', room: null, labels: [], pending: [] };
   try { Object.assign(saved, JSON.parse(store.getItem(KEY) || '{}')); } catch (e) {}
   if (!saved.device) saved.device = newDevice();
   if (saved.room && !cleanCode(saved.room.code)) saved.room = null;
+  if (!saved.room || !Array.isArray(saved.pending)) saved.pending = [];
   const save = () => { try { store.setItem(KEY, JSON.stringify(saved)); } catch (e) {} };
   save();
   $('tablePerTab').hidden = !perTab;
 
-  // room: { you, members }, depois que a mesa respondeu. joining: entrando pela folha, que fica
-  // aberta até a mesa responder. drawer: a gaveta aberta (celular); folded: o painel recolhido (PC).
-  // seen: a última rolagem que esteve à vista, para contar as novas no botão "Rolagens".
+  // room: { you, members }, depois que a mesa respondeu. status: 'out', 'connecting', 'reconnecting',
+  // 'online' ou 'old' (a mesa recusou este app, que ficou para trás). joining: entrando pela folha,
+  // que fica aberta até a mesa responder. drawer: a gaveta aberta (celular); folded: o painel
+  // recolhido (PC). seen: a última rolagem que esteve à vista, para contar as novas no botão
+  // "Rolagens". dropped: sem conexão há mais que alguns segundos; outdated: a mesa avisou que há
+  // uma versão mais nova do app.
   let link = null, room = null, status = 'out', joining = false, drawer = false, folded = false, seen = 0, layout = 'out';
+  let dropped = false, dropTimer = 0, outdated = false;
   const title = document.title;
   const canShare = !!navigator.share && matchMedia('(pointer: coarse)').matches;
   const inviteLabel = canShare ? 'Convidar' : 'Copiar convite';
@@ -82,32 +91,53 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     link?.leave();
     room = null;
     status = 'connecting';
-    const { code, guardian } = saved.room;
-    link = connect({ server, code, device: saved.device, name: guardian ? texts.guardian : saved.name, onEvent });
+    outdated = false;
+    link = connect({ server, code: saved.room.code, device: saved.device, name: mine(), app: VERSION, onEvent });
+    watchDrop();
     render();
   }
+  const mine = () => (saved.room?.guardian ? texts.guardian : saved.name);   // o nome deste aparelho na mesa
 
-  // Esquece a mesa neste aparelho (o lugar continua guardado nela, se ela ainda existir).
+  // Esquece a mesa neste aparelho (o lugar continua guardado nela, se ela ainda existir). As
+  // rolagens que ainda esperavam a conexão ficam de fora.
   function forget() {
     link?.leave();
     link = null;
     room = null;
     status = 'out';
-    joining = drawer = folded = flipped = false;
+    joining = drawer = folded = flipped = outdated = false;
     saved.room = null;
+    saved.pending = [];
     save();
+    watchDrop();
     label.clear();
     log.clear();
     render();
   }
 
+  // Sem conexão por mais que alguns segundos (uma queda rápida passa sem aviso), aparece o aviso
+  // perto da bandeja; ele sai quando a mesa responde.
+  function watchDrop() {
+    clearTimeout(dropTimer);
+    if (status !== 'connecting' && status !== 'reconnecting') {
+      dropped = false;
+      return;
+    }
+    dropTimer = setTimeout(() => {
+      dropped = true;
+      render();
+    }, DROP_NOTICE);
+  }
+
   function onEvent(ev) {
-    if (ev.type === 'status') status = ev.status;
+    if (ev.type === 'status' && ev.status !== status) {
+      status = ev.status;
+      watchDrop();
+    }
     if (ev.type === 'room') {
       const fresh = !room;   // a primeira resposta (ao entrar ou ao abrir o app), e não a volta depois de uma queda
       room = { you: ev.you, members: ev.members };
       saved.room.guardian = ev.you === 'g';
-      save();
       log.reset(ev);
       if (fresh) seen = log.last;   // o que já estava na mesa conta como visto
       if (joining) {                // entrou pela folha: ela fecha e, no celular, a gaveta da mesa abre
@@ -115,19 +145,37 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
         joinSheet.hidden = true;
         drawer = true;
       }
+      // as rolagens feitas sem conexão: as que a mesa já tinha recebido saem da fila, e o resto vai
+      // de novo (a mesa reconhece uma rolagem repetida e conta uma vez só)
+      const got = new Set(ev.rolls.map(r => r.id));
+      setPending(saved.pending.filter(p => !got.has(p.msg.id)));
+      for (const p of saved.pending) link.send(p.msg);
     }
     if (ev.type === 'members' && room) {
       room.members = ev.members;
       log.setMembers(ev.members);
     }
-    if (ev.type === 'roll' && room) log.add(ev.roll);
-    if (ev.type === 'error' && ev.id) notify('A mesa não aceitou esta rolagem');
+    if (ev.type === 'roll' && room) {
+      if (saved.pending.some(p => p.msg.id === ev.roll.id)) setPending(saved.pending.filter(p => p.msg.id !== ev.roll.id));
+      log.add(ev.roll);
+    }
+    if (ev.type === 'outdated') outdated = true;
+    if (ev.type === 'error' && ev.id) {   // a mesa recusou uma rolagem: mandar de novo não adianta
+      setPending(saved.pending.filter(p => p.msg.id !== ev.id));
+      notify('A mesa não aceitou esta rolagem');
+    }
     if (ev.type === 'ended') {
       forget();
       notify(ev.reason === 'idle' ? 'A mesa se apagou depois de horas sem uso' : `O ${texts.guardian} encerrou a mesa`);
       return;
     }
-    if (ev.type === 'error' && ev.final) {
+    if (ev.type === 'error' && ev.final && ev.error === 'version' && !joining) {
+      // O app ficou para trás de um jeito que a mesa não entende mais. A mesa continua guardada (e as
+      // rolagens que esperavam também): depois de atualizar, o app volta sozinho para ela.
+      link = null;
+      status = 'old';
+      watchDrop();
+    } else if (ev.type === 'error' && ev.final) {
       const code = saved.room.code, wasJoining = joining;
       forget();
       if (wasJoining) showError(ev.error);
@@ -136,6 +184,21 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
       return;
     }
     render();
+  }
+
+  // A fila das rolagens que a mesa ainda não confirmou ([{ at, msg }]): guardada no aparelho (vale
+  // também se o app for fechado) e mostrada no histórico com "enviando…".
+  function setPending(list) {
+    saved.pending = list;
+    save();
+    log.waiting(list, mine());
+  }
+
+  // Atualizar o app: a página abre de novo, a versão nova chega pela cópia do app no aparelho
+  // (sw.js; veja o index.html) e o app volta sozinho para a mesa.
+  function update() {
+    unlock();
+    location.reload();
   }
 
   async function create() {
@@ -210,12 +273,20 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   }
 
   // A rolagem que acabou de parar, para a mesa: o que take() devolveu na hora de lançar e o
-  // resultado ({ set, total, text, detail, note, pieces }). Sem conexão, ela fica só neste
-  // aparelho, e um aviso diz isso.
+  // resultado ({ set, total, text, detail, note, pieces }). Ela entra na fila até a mesa confirmar:
+  // sem conexão, vai quando a conexão voltar (mesmo que o app seja fechado e aberto de novo). Se a
+  // conexão parecia aberta mas a mesa não confirma, ela é conferida na hora (pode ter caído sem
+  // avisar, como no celular que troca de rede).
   function share(table, roll) {
     if (!saved.room || joining) return;
-    const sent = status === 'online' && link?.send({ type: 'roll', id: newRollId(), vis: table.vis, label: table.label, ...roll });
-    if (!sent) notify('Sem conexão: a mesa não recebeu esta rolagem');
+    const msg = { type: 'roll', id: newRollId(), vis: table.vis, label: table.label, ...roll };
+    setPending([...saved.pending, { at: Date.now(), msg }].slice(-MAX_PENDING));
+    if (status === 'online' && link?.send(msg)) {
+      setTimeout(() => { if (saved.pending.some(p => p.msg.id === msg.id)) link?.check(); }, CONFIRM_WAIT);
+    } else {
+      notify('Sem conexão: a rolagem vai para a mesa quando a conexão voltar');
+    }
+    render();
   }
 
   /* ------------------------------------------------------------ a tela */
@@ -258,11 +329,19 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
       layout = now;
       relayout();
     }
+    // o aviso que fica perto da bandeja: o app desatualizado (um toque atualiza), ou a mesa sem conexão
+    const waiting = saved.pending.length;
+    log.banner(!inside ? null
+      : status === 'old' ? { text: 'App desatualizado · toque para atualizar e voltar à mesa', action: update }
+      : outdated ? { text: 'Versão nova do app · toque para atualizar', action: update }
+      : dropped ? { text: 'Sem conexão com a mesa · reconectando…' + (waiting ? ` · ${waiting} ${waiting === 1 ? 'rolagem esperando' : 'rolagens esperando'}` : '') }
+      : null);
 
     if (!inside) return;
     $('tableCode').textContent = showCode(saved.room.code);
     $('tableStatus').textContent = {
-      connecting: 'Entrando na mesa…', reconnecting: 'A conexão caiu. Reconectando…', online: 'Conectado'
+      connecting: 'Entrando na mesa…', reconnecting: 'A conexão caiu. Reconectando…', online: 'Conectado',
+      old: 'Este app está desatualizado: atualize para voltar à mesa.'
     }[status] || '';
     btnLeave.textContent = saved.room.guardian ? 'Encerrar a mesa' : 'Sair da mesa';
     renderMembers();
@@ -372,8 +451,12 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     else open();
   }
   addEventListener('hashchange', takeInvite);
-  if (saved.room) enter();   // volta sozinho para a mesa em que estava
-  else render();
+  if (saved.room) {   // volta sozinho para a mesa em que estava, com as rolagens que esperavam a conexão
+    log.waiting(saved.pending, mine());
+    enter();
+  } else {
+    render();
+  }
   takeInvite();
 
   return {

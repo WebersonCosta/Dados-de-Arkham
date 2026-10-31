@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   GUARDIAN, MAX_PLAYERS, CODE_CHARS, CODE_LENGTH,
-  newCode, cleanCode, validDevice, digest, cleanName, bounds, readRoll, seenBy, nextSeat, publicSeat
+  newCode, cleanCode, validDevice, digest, cleanName, bounds, readRoll, seenBy, nextSeat, publicSeat,
+  cleanVersion, compareVersions, newest
 } from '../room.js';
 
 test('código da sala: 6 letras e números, sem os que se confundem', () => {
@@ -120,4 +121,18 @@ test('lugares: j1 a j6 na ordem de entrada, depois a mesa está cheia', () => {
 test('a lista de quem está na mesa não leva a chave do aparelho', () => {
   const row = { seat: 'j1', device: 'f'.repeat(64), name: 'Ana', role: 'player', ord: 1 };
   assert.deepEqual(publicSeat(row, true), { seat: 'j1', name: 'Ana', role: 'player', order: 1, online: true });
+});
+
+test('versão do app: a mais nova da mesa e quem ficou para trás', () => {
+  assert.equal(cleanVersion('1.2'), '1.2');
+  assert.equal(cleanVersion('1.10'), '1.10');
+  assert.equal(cleanVersion(undefined), '0.0');    // app antigo, que não manda a versão
+  assert.equal(cleanVersion('1.2.3'), '0.0');
+  assert.equal(cleanVersion('v1.2'), '0.0');
+  assert.ok(compareVersions('1.10', '1.9') > 0);   // número, e não letra
+  assert.ok(compareVersions('2.0', '1.12') > 0);
+  assert.ok(compareVersions('0.0', '1.2') < 0);
+  assert.equal(compareVersions('1.2', '1.2'), 0);
+  assert.equal(newest(['1.2', '1.10', '0.0', '1.9']), '1.10');
+  assert.equal(newest([]), '0.0');
 });

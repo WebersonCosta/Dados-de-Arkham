@@ -101,9 +101,16 @@ endereço de teste; o plano completo está em `docs/plano-mesa-compartilhada.md`
 - **Rótulo**: antes de lançar, toque em **Rótulo** (perto da bandeja) e escreva para que é a
   rolagem, como "Furtividade". Ele vai junto com a próxima rolagem e depois se apaga. Os últimos
   usados ficam guardados no aparelho, para escolher com um toque.
-- Rolagem feita sem conexão fica só no aparelho, e um aviso diz que a mesa não a recebeu.
 - Se a conexão cair, ou se o app for fechado e aberto de novo, ele volta sozinho para o mesmo
-  lugar, e o histórico volta junto.
+  lugar, e o histórico volta junto. Sem conexão por mais que alguns segundos, aparece um aviso
+  acima da bandeja ("Sem conexão com a mesa · reconectando…"), que some quando ela volta.
+- Rolagem feita sem conexão não se perde: ela aparece no histórico com "enviando…" e vai para a
+  mesa quando a conexão voltar, mesmo que o app seja fechado e aberto de novo nesse meio tempo. A
+  mesa reconhece uma rolagem mandada duas vezes e conta uma vez só.
+- **Versão do app**: se alguém na mesa estiver com uma versão mais nova do app, quem ficou com a
+  antiga vê o aviso "Versão nova do app · toque para atualizar"; um toque atualiza e o app volta
+  sozinho para a mesa. Se a diferença for grande demais para os dois se entenderem, o aviso diz
+  "App desatualizado", e a mesa continua guardada até a pessoa atualizar.
 - **Sair da mesa** guarda o lugar: entrando de novo com o código, o jogador volta para ele. O
   Guardião tem **Encerrar a mesa**, que tira todos e apaga a mesa. Uma mesa sem uso se apaga
   sozinha 6 horas depois.
@@ -253,7 +260,7 @@ o que ela pode ver e se apaga sozinho:
 | `worker.js` | A parte do Cloudflare: criar a sala, as conexões ao vivo, guardar, entregar e apagar |
 | `wrangler.toml` | Os dois servidores: a mesa oficial e a mesa de teste |
 | `test/room.test.js` | Testes das regras, sem servidor |
-| `test/three-devices.test.js` | O Guardião e os jogadores simulados, conferindo que ninguém recebe o que não pode ver |
+| `test/three-devices.test.js` | O Guardião e os jogadores simulados, conferindo que ninguém recebe o que não pode ver, e o aviso para quem está com o app mais velho |
 
 O restante:
 

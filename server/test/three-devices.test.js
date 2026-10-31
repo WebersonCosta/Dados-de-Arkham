@@ -26,14 +26,15 @@ async function createRoom(device) {
   return (await res.json()).code;
 }
 
-// Um aparelho na sala. `raw` guarda o texto de cada mensagem exatamente como chegou.
+// Um aparelho na sala (app: a versão do app dele). `raw` guarda o texto de cada mensagem exatamente
+// como chegou.
 const devices = [];
-function join(code, device, name) {
+function join(code, device, name, app) {
   return new Promise(resolve => {
     const ws = new WebSocket(`${BASE.replace(/^http/, 'ws')}/rooms/${code}`, { headers: { Origin: ORIGIN } });
     const me = { name, device, ws, raw: [], messages: [] };
     devices.push(me);
-    ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', protocol: 1, device, name }));
+    ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', protocol: 1, device, name, app }));
     ws.onmessage = ev => {
       me.raw.push(ev.data);
       const msg = JSON.parse(ev.data);
@@ -164,6 +165,25 @@ test('a mesa só entrega a cada um o que ele pode ver', { skip: !BASE && 'defina
       for (const me of [g, a, b]) assert.equal((await until(me, msg => msg.type === 'ended')).reason, 'guardian');
       assert.equal((await join(code, keys.a, 'Ana')).error, 'room-not-found');
     });
+  } finally {
+    for (const d of devices) d.ws.close();
+  }
+});
+
+test('quem está com o app mais velho que o de alguém na mesa recebe o aviso', { skip: !BASE && 'defina MESA_URL' }, async () => {
+  const keys = { g: newDevice(), a: newDevice(), b: newDevice() };
+  const code = await createRoom(keys.g);
+  const g = await join(code, keys.g, 'Guardião', '1.2');
+  const a = await join(code, keys.a, 'Ana', '1.1');
+  try {
+    assert.equal((await until(a, msg => msg.type === 'outdated')).newest, '1.2');
+    const b = await join(code, keys.b, 'Bento', '1.10');   // 1.10 é mais nova que 1.2
+    for (const me of [g, a]) await until(me, msg => msg.type === 'outdated' && msg.newest === '1.10');
+    await wait(300);
+    assert.ok(!b.messages.some(msg => msg.type === 'outdated'));
+    assert.ok(!g.messages.some(msg => msg.type === 'outdated' && msg.newest === '1.2'));   // ninguém avisa da própria versão
+    send(g, { type: 'end' });
+    await until(b, msg => msg.type === 'ended');
   } finally {
     for (const d of devices) d.ws.close();
   }

@@ -10,7 +10,8 @@ const MAX_NOTICES = 3;     // vários de uma vez (todos rolando Sanidade, por ex
 // critical: a regra do tema (crítico e desastre); nameOf: como se escreve o que foi rolado ('2d6+6'
 // vira '2d6 + 6').
 export function createRoomLog({ list, empty, notices, texts, critical, nameOf }) {
-  let rolls = [], members = [], you = null, names = '';
+  // waiting: as rolagens deste aparelho que a mesa ainda não confirmou; held: o aviso que fica
+  let rolls = [], waiting = [], members = [], you = null, names = '', held = null;
 
   const el = (tag, className, text) => {
     const e = document.createElement(tag);
@@ -18,9 +19,9 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
     if (text !== undefined) e.textContent = text;
     return e;
   };
-  const who = seat => {
+  const who = (seat, fallback = '?') => {
     const m = members.find(m => m.seat === seat);
-    return !m ? '?' : m.role === 'guardian' ? texts.guardian : m.name;
+    return !m ? fallback : m.role === 'guardian' ? texts.guardian : m.name;
   };
   const hidden = roll => !Number.isInteger(roll.total);   // o sinal de suspense: não traz o número
   const VEIL = { private: 'privada', secret: 'secreta' };   // as que nem todos veem
@@ -35,20 +36,21 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
   // Uma rolagem no histórico: o número à esquerda; ao lado, quem rolou e o rótulo, e embaixo o que
   // foi rolado e como deu aquele número ("d100 · 1 dado de bônus · 20 30 + 7"). A que nem todos
   // veem leva a marca "privada" ou "secreta"; a que este aparelho não pode ver mostra só "?" e
-  // quem rolou. A de outra pessoa que acabou de chegar acende uma vez, quando aparece (com a gaveta
-  // fechada, ao abrir).
-  function entry(roll, fresh) {
-    const li = el('li', 'roll' + kind(roll) + (roll.seat === you ? ' is-me' : ''));
+  // quem rolou; a deste aparelho que a mesa ainda não confirmou (pending) leva "enviando…". A de
+  // outra pessoa que acabou de chegar acende uma vez, quando aparece (com a gaveta fechada, ao abrir).
+  function entry(roll, fresh, pending) {
+    const li = el('li', 'roll' + kind(roll) + (roll.seat === you || pending ? ' is-me' : '') + (pending ? ' is-pending' : ''));
     if (fresh && roll.seat !== you) {
       li.classList.add('is-new');
       li.addEventListener('animationend', () => li.classList.remove('is-new'), { once: true });
     }
     li.append(el('b', 'roll-num', hidden(roll) ? '?' : roll.text));
     const top = el('p', 'roll-who'), title = el('span');
-    title.append(el('span', 'roll-name', who(roll.seat)));
+    title.append(el('span', 'roll-name', who(roll.seat, roll.mine)));
     if (roll.label) title.append(` · ${roll.label}`);
     top.append(title);
     if (VEIL[roll.vis] && !hidden(roll)) top.append(el('small', 'roll-veil', VEIL[roll.vis]));
+    if (pending) top.append(el('small', 'roll-wait', 'enviando…'));
     top.append(el('time', '', time(roll.at)));
     const bottom = el('p', 'roll-what');
     if (hidden(roll)) {
@@ -70,9 +72,10 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
     return li;
   }
 
+  // As que esperam a mesa ficam em cima de todas.
   function render() {
-    list.replaceChildren(...rolls.map(r => entry(r)).reverse());
-    empty.hidden = rolls.length > 0;
+    list.replaceChildren(...waiting.map(r => entry(r, false, true)).reverse(), ...rolls.map(r => entry(r)).reverse());
+    empty.hidden = rolls.length + waiting.length > 0;
   }
 
   // O aviso perto da bandeja: quem rolou, o rótulo (ou o que foi rolado) e o número. O sinal de
@@ -83,8 +86,9 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
       ? `${who(roll.seat)} ${secretly(roll)}`
       : [who(roll.seat), roll.label || nameOf(roll.set), VEIL[roll.vis]].filter(Boolean).join(' · ');
     p.append(el('span', '', text), el('b', '', hidden(roll) ? '?' : roll.text));
-    notices.append(p);
-    while (notices.childElementCount > MAX_NOTICES) notices.firstElementChild.remove();
+    notices.insertBefore(p, held);   // o aviso que fica continua embaixo, perto da bandeja
+    const passing = () => notices.querySelectorAll('.notice:not(.is-held)');
+    while (passing().length > MAX_NOTICES) passing()[0].remove();
     setTimeout(() => p.remove(), NOTICE_MS);
   }
 
@@ -110,7 +114,7 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
     add(roll) {
       if (rolls.some(r => r.id === roll.id)) return;
       rolls.push(roll);
-      list.prepend(entry(roll, true));
+      list.insertBefore(entry(roll, true), list.children[waiting.length] || null);
       if (rolls.length > MAX) {
         rolls.shift();
         list.lastElementChild.remove();
@@ -118,14 +122,36 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
       empty.hidden = true;
       if (roll.seat !== you) notice(roll);
     },
+    // As rolagens deste aparelho que a mesa ainda não confirmou ([{ at, msg }], da mais velha para
+    // a mais nova); name: o nome de quem rola, para antes de a mesa responder.
+    waiting(list, name) {
+      waiting = list.map(p => ({ ...p.msg, at: p.at, seat: you, mine: name }));
+      render();
+    },
+    // O aviso que fica perto da bandeja até sair ({ text, action } ou null): a mesa sem conexão, o
+    // app desatualizado. Com action, ele é um botão.
+    banner(next) {
+      if ((next?.text || '') === (held?.textContent || '')) return;
+      held?.remove();
+      held = null;
+      if (!next) return;
+      held = el(next.action ? 'button' : 'p', 'notice is-held' + (next.action ? ' is-action' : ''), next.text);
+      if (next.action) {
+        held.type = 'button';
+        held.addEventListener('click', next.action);
+      }
+      notices.append(held);
+    },
     // Quantas rolagens dos outros chegaram depois da rolagem número `seq`.
     unseen: seq => rolls.filter(r => r.seq > seq && r.seat !== you).length,
     get last() { return rolls.length ? rolls[rolls.length - 1].seq : 0; },
     clear() {
       rolls = [];
+      waiting = [];
       members = [];
       you = null;
       names = '';
+      held = null;
       render();
       notices.replaceChildren();
     }

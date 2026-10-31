@@ -47,8 +47,9 @@ export async function createRoom(server, device, name) {
 // Entra numa mesa (ou volta para ela) e fica conectado até leave(). Se a conexão cai, tenta de
 // novo sozinho, com esperas cada vez maiores, e na hora em que o app volta para a tela ou a
 // internet volta. Uma recusa na entrada (mesa cheia, mesa que não existe…) ou o fim da mesa
-// encerram a ligação: o evento vem com final: true.
-export function connect({ server, code, device, name, onEvent }) {
+// encerram a ligação: o evento vem com final: true. app: a versão do app ('1.2'), para a mesa avisar
+// quem ficou com uma versão mais velha que a dos outros.
+export function connect({ server, code, device, name, app, onEvent }) {
   let ws = null, left = false, tries = 0, retryTimer = 0, pingTimer = 0, pongTimer = 0;
   const emit = (type, data) => onEvent({ ...data, type });
 
@@ -58,7 +59,7 @@ export function connect({ server, code, device, name, onEvent }) {
     const socket = ws = new WebSocket(`${server.replace(/^http/, 'ws')}/rooms/${code}`);
     let inside = false;   // esta conexão já recebeu a mesa
     emit('status', { status: tries ? 'reconnecting' : 'connecting' });
-    socket.onopen = () => socket.send(JSON.stringify({ type: 'hello', protocol: PROTOCOL, device, name }));
+    socket.onopen = () => socket.send(JSON.stringify({ type: 'hello', protocol: PROTOCOL, device, name, app }));
     socket.onclose = () => { if (socket === ws) retry(); };
     socket.onmessage = ev => {
       if (socket !== ws) return;
@@ -137,6 +138,8 @@ export function connect({ server, code, device, name, onEvent }) {
       ws.send(JSON.stringify(msg));
       return true;
     },
+    // Confere na hora se a conexão está viva (sem esperar o próximo "ping"): sem resposta, abre outra.
+    check: wake,
     // Sai da mesa neste aparelho. O lugar continua guardado na mesa, para quando ele voltar.
     leave() {
       stop();
