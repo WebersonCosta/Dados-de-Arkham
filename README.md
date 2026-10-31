@@ -166,10 +166,18 @@ mexer no app oficial que os amigos têm na tela inicial.
   git push origin main
   git switch desenvolvimento
   ```
+- **Servidor da mesa compartilhada** (pasta `server/`, no Cloudflare; precisa do Node.js e do
+  login feito uma vez com `npx wrangler@4.151.3 login`). Os comandos rodam dentro de `server/`:
+  ```sh
+  npm test                     # as regras da sala, sem servidor
+  npm run deploy:teste         # envia a mesa de teste (roda os testes antes)
+  MESA_URL=https://mesa-arkham-teste.mesa-arkham.workers.dev npm run test:mesa   # o teste dos três aparelhos
+  npm run deploy:oficial       # a mesa oficial: só junto com o "pode publicar"
+  ```
 
 ## Como o projeto está organizado
 
-O projeto tem duas metades que não se misturam:
+O app tem duas metades que não se misturam:
 
 **A mecânica** (`src/core/`) é igual para qualquer tema:
 
@@ -192,6 +200,18 @@ O projeto tem duas metades que não se misturam:
 | `dice-look.js` | Material e pintura dos dados (pedra, osso, números) e o dado descartado apagado |
 | `audio.js` | Som dos dados, vento, sussurros e presságios |
 
+**O servidor da mesa compartilhada** (`server/`) roda no Cloudflare e não faz parte do app que vai
+para o celular. Cada sala é um pequeno programa com memória própria, que entrega a cada pessoa só
+o que ela pode ver e se apaga sozinho:
+
+| Arquivo | O que faz |
+| --- | --- |
+| `room.js` | As regras da sala: o código, os lugares (Guardião e até 6 jogadores), a conferência de cada rolagem e quem vê o quê |
+| `worker.js` | A parte do Cloudflare: criar a sala, as conexões ao vivo, guardar, entregar e apagar |
+| `wrangler.toml` | Os dois servidores: a mesa oficial e a mesa de teste |
+| `test/room.test.js` | Testes das regras, sem servidor |
+| `test/three-devices.test.js` | O Guardião e os jogadores simulados, conferindo que ninguém recebe o que não pode ver |
+
 O restante:
 
 - `index.html`: a página.
@@ -202,6 +222,7 @@ O restante:
   nunca misturar arquivos de versões diferentes.
 - `CLAUDE.md`: notas do projeto (estado atual, decisões, fluxo de trabalho e ideias para o
   futuro), para continuar o trabalho numa conversa nova sem perder nada.
+- `docs/plano-mesa-compartilhada.md`: o plano da mesa compartilhada, com as decisões e as fases.
 - `icons/`: os ícones do app (gerados por `tools/icone.html`).
 - `src/main.js`: liga as peças (toque, escolha dos dados, fórmula, atalhos, resultado).
 - `src/app.css`: posição dos elementos na tela.

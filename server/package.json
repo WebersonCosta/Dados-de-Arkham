@@ -1,0 +1,13 @@
+{
+  "name": "mesa-arkham",
+  "private": true,
+  "description": "Servidor da mesa compartilhada dos Dados de Arkham (Cloudflare). O app não usa nada daqui.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/room.test.js",
+    "local": "npx --yes wrangler@4.151.3 dev --env teste --port 8787",
+    "test:mesa": "node --test test/three-devices.test.js",
+    "deploy:teste": "npm test && npx --yes wrangler@4.151.3 deploy --env teste",
+    "deploy:oficial": "npm test && npx --yes wrangler@4.151.3 deploy"
+  }
+}

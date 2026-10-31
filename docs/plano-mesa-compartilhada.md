@@ -4,7 +4,9 @@ Plano definido por Weberson em 30/10/2026, guardado aqui como ele escreveu. O ob
 e até 6 jogadores rolarem dados juntos durante uma sessão de Call of Cthulhu (7ª edição), cada um
 no seu celular ou PC. O uso principal será numa call do Discord entre amigos.
 
-Andamento: **fase 1 (plano)**. A fase 2 só começa com a aprovação de Weberson.
+Andamento: fase 1 (plano) aprovada em 31/10/2026. Fase 2, passo 1 (preparação) pronto em
+31/10/2026: a mesa de teste está no ar e passou no teste dos três aparelhos. **Próximo: fase 2,
+passo 2 (entrar na mesa).** As decisões e os passos da fase 2 estão no fim deste arquivo.
 
 ## Sala e entrada
 
@@ -69,3 +71,76 @@ Andamento: **fase 1 (plano)**. A fase 2 só começa com a aprovação de Weberso
 3. Painel do Guardião completo e regras da mesa.
 4. Mesa ritual 3D.
 5. Polimento: sons, efeitos, PC e celular, campo de perícia com nível de sucesso.
+
+## Decisões da fase 1 (aprovadas por Weberson em 31/10/2026)
+
+**Serviço: Cloudflare, plano gratuito** (Workers + Durable Objects). Cada sala é um Durable
+Object: um pequeno programa no servidor que guarda a sala, entrega a cada pessoa só o que ela
+pode ver e se apaga sozinho.
+- Por quê: a proteção vira uma entrega filtrada (o número nunca sai do servidor para quem não pode
+  ver); o apagamento automático é de graça (um alarme da própria sala); e o app não precisa de
+  biblioteca nenhuma para falar com o servidor.
+- Descartados: Firebase, porque a limpeza automática (TTL) só funciona com cobrança ativada, com
+  cartão, e as bibliotecas dele pesam uns 700 KB; Supabase, porque o projeto grátis é pausado
+  depois de 7 dias sem uso e precisa ser reativado à mão.
+- As salas rodam no leste dos Estados Unidos (o Cloudflare ainda não cria Durable Objects na
+  América do Sul). O atraso é de uma fração de segundo.
+
+**Custos**
+- Plano gratuito, sem cartão. Limites por dia: 100 mil pedidos, tempo de servidor e 5 GB
+  guardados; uma sessão usa uma pequena parte disso.
+- Se um limite estourar, a mesa compartilhada para até 21h de Brasília (00:00 UTC), sem
+  cobrança, e rolar sozinho continua funcionando. Nunca mudar para o plano pago.
+
+**Privacidade**
+- No servidor, só enquanto a sala existe: o código, os nomes dos investigadores, um resumo da
+  chave aleatória de cada aparelho (a chave em si nunca fica guardada) e as rolagens.
+- Ninguém da mesa cria conta. A única conta é a de Weberson no Cloudflare.
+- A sala se apaga 6 horas depois do último uso, ou na hora, pelo "Encerrar sessão" do Guardião.
+- O servidor não grava registros (logs) nem endereços de internet. O histórico não fica guardado
+  no aparelho: ao voltar, o servidor manda de novo o que aquela pessoa pode ver.
+
+**Visibilidade e proteção**
+- O servidor monta, para cada pessoa, a versão da rolagem que ela pode ver. Para os outros vai só
+  o sinal de suspense: quem rolou e quando, sem número, sem dados e sem rótulo. Vale também para
+  o histórico mandado a quem reconecta.
+- Jogador: Aberta ou Privada. Guardião: Secreta (o padrão) ou Aberta. A secreta é só do Guardião,
+  porque os dados rolam no aparelho de quem rola. Rolar por um jogador (fase 3) acontece no
+  aparelho do Guardião; nas secretas, nem para quem foi aparece.
+- O servidor confia no número que o aparelho manda, mas recusa números impossíveis (fora do
+  mínimo e do máximo da fórmula).
+- Um teste automático simula o Guardião e dois jogadores, registra tudo o que cada aparelho
+  recebe e falha se aparecer algo proibido. Ele roda antes de cada envio do servidor.
+
+**Teste e oficial**
+- Dois servidores separados, a mesa de teste e a mesa oficial, na mesma conta. O app escolhe pelo
+  endereço em que foi aberto (o `data-place`). No computador, um simulador local do servidor.
+- A mesa de teste é atualizada junto com o endereço de teste; a mesa oficial só muda com o "pode
+  publicar", junto com o app oficial. Publicar fora do dia de jogo: a sala confere a versão do
+  app e avisa quem estiver desatualizado.
+
+**Interface**
+- JavaScript puro, sem biblioteca. Reavaliar Preact + htm no começo da fase 3.
+- No celular, a lista vira uma gaveta (mais os avisos); ao lado, só no PC.
+- Link de convite além do código. No iPhone o link abre no Safari, e não no app instalado; por
+  isso o código continua sendo o caminho principal.
+- Mesa ritual 3D (fase 4): um protótipo simples medido no celular antes do visual completo, e a
+  vista em lista como opção para todos.
+
+## Fase 2 em passos
+
+Cada passo termina com o endereço de teste atualizado, o link e como testar.
+
+1. **Preparação** (o app não muda): a conta do Cloudflare; a mesa de teste no ar, com a sala e a
+   proteção; o teste automático dos três aparelhos.
+2. **Entrar na mesa**: o botão "Mesa"; o Guardião cria a sala e vê o código; o jogador entra com
+   o código e o nome do investigador; a lista de quem está na mesa, na ordem de entrada; o nome
+   guardado no aparelho; quem cai volta sozinho para o mesmo lugar; o link de convite.
+3. **Rolagens ao vivo, com rótulo**: o histórico (gaveta no celular, ao lado no PC), o aviso
+   discreto perto da bandeja e o rótulo opcional, com os últimos usados à mão.
+4. **Privada e secreta**: a escolha da visibilidade, o sinal de suspense, o Guardião rolando
+   oculto por padrão e vendo tudo.
+5. **Quedas e encerramento**: o "Encerrar sessão", a sala que se apaga sozinha, o aviso
+   "reconectando…", a rolagem feita sem sinal enviada quando a conexão volta, o aviso de versão.
+6. **Sessão real no Discord**, pelo endereço de teste. Depois dos ajustes, o "pode publicar" põe
+   no ar o app e a mesa oficial juntos.

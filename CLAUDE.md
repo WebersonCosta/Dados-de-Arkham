@@ -28,7 +28,7 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**, começando: mesa compartilhada, fase 1 (só o plano; o app ainda não mudou) | `desenvolvimento`; o endereço de teste ainda mostra a 1.1 (envio `teste 5`) |
+| Desenvolvimento | **1.2**, começando: mesa compartilhada, fase 2, passo 1 (o servidor de salas; o app ainda não mudou) | `desenvolvimento`; o endereço de teste ainda mostra a 1.1 (envio `teste 5`) |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
@@ -44,9 +44,19 @@ montagem, as atualizações sem mistura de versões e o número da versão no ca
 aparelho, numa call do Discord. O plano de Weberson (sala com código, visibilidade aberta, privada
 ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) está em
 [`docs/plano-mesa-compartilhada.md`](docs/plano-mesa-compartilhada.md): leia antes de mexer nisso.
-- Fase 1 (o plano, sem código): respostas técnicas apresentadas em 30/10/2026, aguardando
-  aprovação. A proposta: um servidor de salas no Cloudflare (Workers + Durable Objects, plano
-  gratuito), sem biblioteca de interface. Nenhum código da fase 2 antes do OK de Weberson.
+- Fase 1 (o plano) aprovada em 31/10/2026: as decisões e os 6 passos da fase 2 estão no fim do
+  plano. Resumo: um servidor de salas no Cloudflare (Workers + Durable Objects, plano gratuito,
+  sem cartão), JavaScript puro, sem biblioteca de interface.
+- Fase 2, passo 1 (preparação, o app não mudou) pronto em 31/10/2026: o servidor em `server/`
+  (veja "Mesa compartilhada: o servidor" abaixo). A mesa de teste está no ar em
+  https://mesa-arkham-teste.mesa-arkham.workers.dev e passou no teste dos três aparelhos (12 de
+  12, com o tempo sem uso reduzido a 20 s só para o teste). A mesa oficial ainda não existe; vai
+  ser https://mesa-arkham.mesa-arkham.workers.dev, só com o "pode publicar".
+- A conta do Cloudflare é de Weberson (plano gratuito, sem cartão). O subdomínio gratuito
+  `mesa-arkham.workers.dev` foi criado pelo wrangler no primeiro envio. Este PC guarda o login do
+  wrangler (fora do projeto, em `%APPDATA%\xdg.config\.wrangler`), feito só com as permissões de
+  Workers: `wrangler login --scopes account:read user:read workers:write workers_scripts:write`.
+- Próximo: passo 2 (entrar na mesa).
 
 ## Decisões tomadas (e por quê)
 
@@ -125,6 +135,36 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - O número no canto: `vX.Y` no oficial (`v1.1`); `vX.Y · teste N` no teste, em que N é o
   `RELEASE` (`v1.1 · teste 5`).
 
+**Mesa compartilhada: o servidor** (`server/`; o plano e o porquê em `docs/plano-mesa-compartilhada.md`)
+- Cloudflare Workers + Durable Objects (SQLite), plano gratuito. Cada sala é um Durable Object
+  (`Room`, em `worker.js`), achado pelo código (`idFromName`). As regras ficam em `room.js`, sem
+  nada do Cloudflare, para testar com `node --test`.
+- Código da sala: 6 caracteres de `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (sem 0, O, 1, I e L).
+  Lugares: `g` (o Guardião, quem criou a sala) e `j1` a `j6`, na ordem de entrada. O mesmo
+  aparelho volta sempre para o mesmo lugar.
+- Aparelho: o app sorteia uma chave (22 a 64 caracteres, base64url) e a guarda só nele; o
+  servidor guarda só o SHA-256 dela, e a chave nunca volta em mensagem nenhuma.
+- Conversa: `POST /rooms` cria a sala (`{ protocol, device, name }` → `{ code }`); `/rooms/<código>`
+  é o WebSocket. Primeira mensagem do app: `hello`; resposta: `room` (o lugar, os membros e as
+  últimas 100 rolagens, já filtradas). Depois chegam `members`, `roll`, `error` e `ended`; o app
+  manda `roll` e, o Guardião, `end`. `PROTOCOL` (hoje 1) muda quando app e servidor deixam de se
+  entender. "ping" recebe "pong" sem acordar a sala.
+- Rolagem: `{ id, vis, set, name, total, text, label?, detail?, note?, pieces? }`. `set` é
+  `'d100'` ou a fórmula sem espaços (`'2d6+6'`; guardada com `-` comum no lugar de `−`). O
+  servidor confere o formato, recusa total fora do mínimo e do máximo da fórmula (`impossible`) e
+  secreta de jogador (`guardian-only`); a privada do Guardião vira secreta. O crítico não viaja:
+  cada app calcula com o seu tema. A mesma `id` mandada de novo conta uma vez só.
+- Quem vê o quê (`seenBy`): aberta, todos; privada, quem rolou e o Guardião; secreta, só o
+  Guardião. Para os outros vai só `{ id, seq, seat, at, vis }`, uma lista fechada de campos.
+- A sala se apaga (`deleteAll()`) 6 horas depois do último `hello` ou `roll` (o alarme;
+  `IDLE_SECONDS`) ou no `end` do Guardião. Um código que não existe não grava nada: as tabelas
+  só nascem no `create`.
+- Pelo navegador, só a origem do app passa (`ORIGINS`; na mesa de teste, também localhost). Sem
+  registros no Cloudflare (`observability` desligada) e sem métricas do wrangler
+  (`send_metrics = false`).
+- O wrangler roda por `npx wrangler@4.151.3` (versão fixa): fica no cache do npm, fora do
+  OneDrive, e o projeto não tem `node_modules`.
+
 ## Fluxo: desenvolver, testar e publicar
 
 - Repositório principal: https://github.com/WebersonCosta/Dados-de-Arkham (`main` = oficial,
@@ -140,6 +180,10 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   e da tag, conferir o endereço oficial, voltar para a `desenvolvimento` e subir `VERSION`.
 - Voltar a uma versão anterior ("volte o app oficial para a versão 1.0"): `git restore
   --source=vX.Y ...` na `main`, commit e push. Os comandos estão no README.
+- Servidor da mesa (dentro de `server/`): a mesa de teste (`npm run deploy:teste`, que roda os
+  testes das regras antes) vai junto com o envio para o endereço de teste que precisar dela;
+  depois, o teste dos três aparelhos contra ela (`MESA_URL=... npm run test:mesa`). A mesa oficial
+  (`npm run deploy:oficial`) só com o "pode publicar", junto com o app oficial.
 
 ## Testar no computador
 
@@ -155,6 +199,11 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   e chame `__dados.tick(1/60)` quantas vezes precisar.
 - No painel de navegador do Claude, se o painel estiver escondido, as capturas de tela podem vir
   atrasadas (tire duas). Os avisos "Blocked call to navigator.vibrate" nos testes são normais.
+- Servidor da mesa: `npm test` (dentro de `server/`) testa as regras da sala sem servidor. O
+  simulador local (`npm run local`, que usa o `workerd`) não abre neste PC: o Visual C++ do
+  Windows é de 2017 (14.16) e o `workerd` quebra ao iniciar ("access violation"). Instalar o
+  Visual C++ Redistributable mais novo (x64) resolveria; até lá, o teste dos três aparelhos roda
+  contra a mesa de teste publicada.
 
 ## Ideias para o futuro
 
