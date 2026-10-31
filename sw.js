@@ -8,11 +8,12 @@
 // lugar de guardar: cada um usa nomes próprios e só apaga as suas próprias cópias antigas.
 const TEST = self.location.pathname.toLowerCase().startsWith('/dados-de-arkham-teste/');
 const PREFIX = TEST ? 'dados-de-arkham-teste-v' : 'dados-de-arkham-v';
-const RELEASE = 6;   // suba a cada envio (teste ou oficial): é o que avisa os aparelhos que há versão nova
+const RELEASE = 7;   // suba a cada envio (teste ou oficial): é o que avisa os aparelhos que há versão nova
 const CACHE = PREFIX + RELEASE;
 const APP_FILES = [
   './', 'index.html', TEST ? 'manifest-teste.webmanifest' : 'manifest.webmanifest',
-  'src/app.css', 'src/vendor.js', 'src/version.js', 'src/main.js', 'src/room-panel.js',
+  'src/app.css', 'src/vendor.js', 'src/version.js', 'src/main.js',
+  'src/room-panel.js', 'src/room-log.js', 'src/room-label.js',
   'src/lib/util.js', 'src/lib/canvas.js',
   'src/core/polyhedra.js', 'src/core/dice-sets.js', 'src/core/formula.js', 'src/core/physics.js', 'src/core/stage.js',
   'src/core/room-link.js',

@@ -9,12 +9,18 @@ const RETRY = [500, 1000, 2000, 4000, 8000, 15000];   // espera antes de cada no
 // recusas na entrada que não adianta tentar de novo
 const FINAL = new Set(['room-not-found', 'room-full', 'version', 'name', 'invalid']);
 
-// Chave do aparelho: 32 bytes sorteados, em base64url. Fica só no aparelho; o servidor guarda um
-// resumo dela, que serve para reconhecer o aparelho quando ele volta.
-export function newDevice() {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
+// Bytes sorteados, em base64url (letras, números, - e _).
+function randomKey(size) {
+  const bytes = crypto.getRandomValues(new Uint8Array(size));
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
+
+// Chave do aparelho: 32 bytes sorteados. Fica só no aparelho; o servidor guarda um resumo dela, que
+// serve para reconhecer o aparelho quando ele volta.
+export const newDevice = () => randomKey(32);
+
+// Número de uma rolagem: com ele, a mesa reconhece a mesma rolagem mandada duas vezes.
+export const newRollId = () => randomKey(16);
 
 // Código da mesa: 6 letras e números, sem os que se confundem (as mesmas regras do servidor).
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';

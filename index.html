@@ -77,6 +77,7 @@
   </header>
 
   <div class="verdict" id="verdict" hidden aria-live="polite">
+    <p class="verdict-tag" id="vTag" hidden></p>
     <p class="verdict-label" id="vLabel"></p>
     <p class="verdict-num" id="vNum"></p>
     <p class="verdict-parts" id="vParts"></p>
@@ -84,7 +85,14 @@
   </div>
 
   <footer class="hud-bottom" id="hudBottom">
+    <!-- mesa compartilhada: os avisos das rolagens dos outros, por cima da mesa, e a linha com o
+         rótulo da próxima rolagem e o atalho para as rolagens (room-panel.js) -->
+    <div class="notices" id="notices" aria-live="polite"></div>
     <p class="hint" id="hint">Preparando a mesa…</p>
+    <div class="room-row" id="roomRow" hidden>
+      <button type="button" class="toggle room-chip" id="btnLabel">Rótulo</button>
+      <button type="button" class="toggle room-chip" id="btnLog">Rolagens<span class="count" id="logCount"></span></button>
+    </div>
     <div class="slot">
       <div class="modes" id="modes" role="group"></div>
       <div class="compose is-off" id="compose" role="group" aria-label="Montar a rolagem">
@@ -127,7 +135,7 @@
     </div>
   </div>
 
-  <!-- mesa compartilhada: criar ou entrar numa mesa, quem está nela e o convite (room-panel.js) -->
+  <!-- mesa compartilhada: entrar numa mesa com o código, ou criar uma (room-panel.js) -->
   <div class="sheet at-top" id="tableSheet" hidden role="dialog" aria-modal="true" aria-labelledby="tableHead">
     <div class="sheet-card">
       <div class="sheet-head">
@@ -135,37 +143,68 @@
         <button type="button" class="toggle" id="btnCloseTable">Fechar</button>
       </div>
       <p class="table-note" id="tablePerTab" hidden>Esta aba conta como um aparelho à parte (modo de teste).</p>
+      <form class="table-box" id="tableForm" autocomplete="off">
+        <label class="field">
+          <span id="tableCharacter">Nome do personagem</span>
+          <input id="tableName" maxlength="30" enterkeyhint="next" autocapitalize="words" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Código da mesa</span>
+          <input id="tableCodeInput" maxlength="7" enterkeyhint="go" autocapitalize="characters" spellcheck="false" placeholder="6 letras e números">
+        </label>
+        <button type="submit" class="sheet-save" id="btnJoin">Entrar na mesa</button>
+      </form>
+      <p class="table-status" id="tableJoining" aria-live="polite" hidden></p>
+      <p class="table-error" id="tableError" role="alert" hidden></p>
+      <p class="sheet-label" id="tableGuardian">É o Guardião?</p>
+      <button type="button" class="sheet-save is-quiet" id="btnCreate">Criar uma mesa nova</button>
+      <p class="table-note">Sem cadastro: na mesa vai só o nome do personagem. A mesa se apaga sozinha
+        6 horas depois do último uso.</p>
+    </div>
+  </div>
 
-      <div class="table-box" id="tableOut">
-        <form class="table-box" id="tableForm" autocomplete="off">
-          <label class="field">
-            <span id="tableCharacter">Nome do personagem</span>
-            <input id="tableName" maxlength="30" enterkeyhint="next" autocapitalize="words" spellcheck="false">
-          </label>
-          <label class="field">
-            <span>Código da mesa</span>
-            <input id="tableCodeInput" maxlength="7" enterkeyhint="go" autocapitalize="characters" spellcheck="false" placeholder="6 letras e números">
-          </label>
-          <button type="submit" class="sheet-save" id="btnJoin">Entrar na mesa</button>
-        </form>
-        <p class="table-error" id="tableError" role="alert" hidden></p>
-        <p class="sheet-label" id="tableGuardian">É o Guardião?</p>
-        <button type="button" class="sheet-save is-quiet" id="btnCreate">Criar uma mesa nova</button>
-        <p class="table-note">Sem cadastro: na mesa vai só o nome do personagem. A mesa se apaga sozinha
-          6 horas depois do último uso.</p>
+  <!-- dentro de uma mesa: o código e o convite, quem está nela e as rolagens de todos. No celular é
+       uma gaveta; no PC fica ao lado da mesa de dados (room-panel.js e room-log.js) -->
+  <div class="sheet room-panel" id="roomPanel" hidden role="dialog" aria-modal="true" aria-labelledby="roomHead">
+    <div class="sheet-card room-card">
+      <div class="sheet-head">
+        <p class="sheet-title" id="roomHead">Mesa compartilhada</p>
+        <button type="button" class="toggle" id="btnCloseRoom">Fechar</button>
       </div>
+      <div class="table-code">
+        <b id="tableCode"></b>
+        <button type="button" class="toggle" id="btnInvite">Copiar convite</button>
+      </div>
+      <p class="table-status" id="tableStatus" aria-live="polite"></p>
+      <p class="sheet-label">Na mesa</p>
+      <ol class="members" id="tableMembers"></ol>
+      <p class="sheet-label">Rolagens</p>
+      <div class="log-box">
+        <ol class="log" id="roomLog"></ol>
+        <p class="sheet-empty" id="roomLogEmpty">Nenhuma rolagem ainda. As de todos aparecem aqui, a mais nova em cima.</p>
+      </div>
+      <button type="button" class="sheet-save is-danger" id="btnLeave">Sair da mesa</button>
+    </div>
+  </div>
 
-      <div class="table-box" id="tableIn" hidden>
-        <p class="sheet-label">Código da mesa</p>
-        <div class="table-code">
-          <b id="tableCode"></b>
-          <button type="button" class="toggle" id="btnInvite">Copiar convite</button>
-        </div>
-        <p class="table-status" id="tableStatus" aria-live="polite"></p>
-        <p class="sheet-label">Na mesa</p>
-        <ol class="members" id="tableMembers"></ol>
-        <button type="button" class="sheet-save is-danger" id="btnLeave">Sair da mesa</button>
+  <!-- o rótulo da próxima rolagem (room-label.js) -->
+  <div class="sheet at-top" id="labelSheet" hidden role="dialog" aria-modal="true" aria-labelledby="labelHead">
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <p class="sheet-title" id="labelHead">Rótulo da rolagem</p>
+        <button type="button" class="toggle" id="btnCloseLabel">Fechar</button>
       </div>
+      <p class="table-note">Vale só para a próxima rolagem, e a mesa toda vê. Por exemplo: Furtividade, Dano, Sanidade.</p>
+      <form class="label-form" id="labelForm" autocomplete="off">
+        <label class="field">
+          <span>Rótulo</span>
+          <input id="labelInput" maxlength="30" enterkeyhint="done" autocapitalize="sentences" spellcheck="false">
+        </label>
+        <button type="submit" class="sheet-save" id="btnUseLabel">Usar</button>
+      </form>
+      <p class="sheet-label" id="labelRecentTitle">Últimos usados</p>
+      <div class="label-chips" id="labelRecent"></div>
+      <button type="button" class="sheet-save is-quiet" id="btnNoLabel">Rolar sem rótulo</button>
     </div>
   </div>
 

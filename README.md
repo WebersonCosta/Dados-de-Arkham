@@ -80,9 +80,21 @@ endereço de teste; o plano completo está em `docs/plano-mesa-compartilhada.md`
 - **Os jogadores** tocam em **Mesa**, escrevem o nome do investigador e o código e tocam em
   **Entrar na mesa**. Quem toca no link do convite já encontra o código preenchido.
 - Ninguém faz cadastro: na mesa vai só o nome do investigador, que fica guardado no aparelho.
-- O painel da mesa mostra quem está nela, na ordem de entrada (o ponto aceso é quem está
-  conectado). Com a mesa ligada, o botão mostra quantos estão conectados (**Mesa · 3**).
-- Se a conexão cair, ou se o app for fechado e aberto de novo, ele volta sozinho para o mesmo lugar.
+- O painel da mesa mostra o código, quem está nela, na ordem de entrada (o ponto aceso é quem está
+  conectado), e as rolagens de todos, a mais nova em cima. No celular ele abre como uma gaveta,
+  pelo botão **Mesa** ou pelo **Rolagens**, perto da bandeja (o número em cima dele conta as
+  rolagens novas). No computador, com a janela larga, ele fica sempre à vista, à direita; o botão
+  **Mesa** esconde e mostra. Com a mesa ligada, o botão mostra quantos estão conectados
+  (**Mesa · 3**).
+- Toda rolagem feita dentro da mesa vai para todos (por enquanto todas são abertas, inclusive as do
+  Guardião). Quando outra pessoa rola, aparece um aviso pequeno logo acima da bandeja, com o nome,
+  o rótulo e o número, que some sozinho.
+- **Rótulo**: antes de lançar, toque em **Rótulo** (perto da bandeja) e escreva para que é a
+  rolagem, como "Furtividade". Ele vai junto com a próxima rolagem e depois se apaga. Os últimos
+  usados ficam guardados no aparelho, para escolher com um toque.
+- Rolagem feita sem conexão fica só no aparelho, e um aviso diz que a mesa não a recebeu.
+- Se a conexão cair, ou se o app for fechado e aberto de novo, ele volta sozinho para o mesmo
+  lugar, e o histórico volta junto.
 - **Sair da mesa** guarda o lugar: entrando de novo com o código, o jogador volta para ele. O
   Guardião tem **Encerrar a mesa**, que tira todos e apaga a mesa. Uma mesa sem uso se apaga
   sozinha 6 horas depois.
@@ -208,7 +220,7 @@ O app tem duas metades que não se misturam:
 | `dice-sets.js` | Os tipos de dado (d4 a d20) e o d100 (dois d10: dezenas + unidades) |
 | `formula.js` | As fórmulas de vários dados: montar, escrever ("2d6 + 6"), ler e somar; o limite de 8 dados |
 | `physics.js` | Gravidade, quiques, paredes, os dados tortos que rolam de novo e a leitura da face que ficou para cima |
-| `stage.js` | Câmera e área da mesa, ajustadas ao tamanho da tela |
+| `stage.js` | Câmera e área da mesa, ajustadas ao tamanho da tela (no PC, o painel da mesa compartilhada fica ao lado) |
 | `room-link.js` | A ligação com a mesa compartilhada: criar a mesa, entrar, manter a conexão viva e voltar sozinho quando ela cai |
 
 **O tema** (`src/themes/arkham/`) é tudo o que se vê e se ouve, e as regras do jogo:
@@ -248,7 +260,9 @@ O restante:
 - `icons/`: os ícones do app (gerados por `tools/icone.html`).
 - `src/main.js`: liga as peças (toque, escolha dos dados, fórmula, atalhos, resultado).
 - `src/room-panel.js`: o botão "Mesa" e o painel da mesa compartilhada (criar, entrar, quem está
-  na mesa, convite, sair).
+  na mesa, convite, sair; gaveta no celular, ao lado no PC) e o envio das rolagens para a mesa.
+- `src/room-log.js`: as rolagens da mesa: o histórico e o aviso perto da bandeja.
+- `src/room-label.js`: o rótulo da próxima rolagem e os últimos usados.
 - `src/app.css`: posição dos elementos na tela.
 - `src/themes/index.js`: a lista de temas (hoje só "arkham").
 - `src/lib/`: ferramentas pequenas usadas em todo o app.

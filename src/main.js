@@ -305,7 +305,7 @@ holdRepeat($('btnPlus'), () => stepFixed(1));
 // sem dados a mais é a normal. Depois de cada lançamento, volta para a normal.
 const PLAIN = { id: 'normal' };
 const themeModes = Object.values(theme.modes || {});
-let options = null, mode = PLAIN, rolled = PLAIN;
+let options = null, mode = PLAIN, rolled = PLAIN, rolledLabel = '';
 const normalMode = () => options?.find(o => !o.extra) || PLAIN;
 modesBox.hidden = !themeModes.length;
 
@@ -422,7 +422,8 @@ function fade(dt) {
 
 /* ---------------------------------------------------------------- resultado */
 // how: a opção com que os dados foram lançados (normal, bônus…), que decide como contar.
-function showResult(values, how = rolled) {
+// label: o rótulo que foi junto com a jogada, na mesa compartilhada.
+function showResult(values, how = rolled, label = rolledLabel) {
   const { set } = current;
   const result = how.combine ? how.combine(values, set) : set.combine(values);
   const crit = theme.critical(set.id, result);
@@ -432,6 +433,8 @@ function showResult(values, how = rolled) {
   note.textContent = noteText;
   note.className = 'verdict-note' + (how.tone ? ` tone-${how.tone}` : '');
   note.hidden = !noteText;
+  $('vTag').textContent = label;
+  $('vTag').hidden = !label;
   $('vLabel').textContent = crit ? crit.label : '';
   verdict.className = 'verdict' + (crit ? ` is-${crit.kind}` : '');
   for (const i of result.discard || []) if (current.dice[i]) current.dice[i].dropped = true;
@@ -445,13 +448,18 @@ function showResult(values, how = rolled) {
   clearTimeout(verdictTimer);
   verdictTimer = setTimeout(toIdle, crit ? 4200 : 3000);
   state = 'result';
+  // dentro de uma mesa compartilhada, a rolagem vai para todos
+  roomPanel.share({
+    set: set.id, total: result.total, text: result.text, detail: result.detail || set.name,
+    note: how.extra ? how.name : '', pieces: result.pieces, label
+  });
 }
 
 // O resultado vai para a altura da tela em que cobre menos os dados, entre o cabeçalho e a bandeja.
 function placeVerdict() {
   verdict.style.top = '0px';
   const h = verdict.offsetHeight, w = Math.max(...[...verdict.children].map(el => el.offsetWidth)) + 32;
-  const x0 = (innerWidth - w) / 2, x1 = x0 + w;
+  const x0 = (canvas.clientWidth - w) / 2, x1 = x0 + w;   // a mesa de dados (no PC, o painel da mesa fica ao lado)
   const boxes = current.dice.map(d => stage.screenBox(new THREE.Vector3().copy(d.die.body.position), d.die.radius + .15));
   const cover = y => boxes.reduce((sum, [a, b, c, e]) =>
     sum + Math.max(0, Math.min(c, x1) - Math.max(a, x0)) * Math.max(0, Math.min(e, y + h) - Math.max(b, y)), 0);
@@ -494,10 +502,12 @@ canvas.addEventListener('pointerdown', ev => {
     hint.hidden = true;
     buzz(theme.haptics.throw);
     state = 'rolling';
-    // a jogada leva a opção escolhida, e a escolha volta para a normal (ninguém esquece o bônus ligado)
+    // a jogada leva a opção escolhida, e a escolha volta para a normal (ninguém esquece o bônus ligado);
+    // o rótulo da mesa compartilhada também vai com ela e se apaga
     rolled = mode;
     mode = normalMode();
     syncModes();
+    rolledLabel = roomPanel.takeLabel();
     swap = null;   // a fórmula montada continua (para rolar o mesmo dano de novo), até limpar no ×
   } else if (state === 'result') {
     toIdle();
@@ -531,9 +541,13 @@ bindToggle($('btnSfx'), 'sfx', theme.texts.sound, on => audio.setSfx(on));
 bindToggle($('btnAmb'), 'amb', theme.texts.ambient, on => audio.setAmbient(on));
 
 /* ---------------------------------------------------------------- mesa compartilhada */
-// O botão "Mesa" e o painel dela (room-panel.js). Fora de uma mesa nada disso usa a internet:
-// rolar sozinho continua igual, mesmo sem conexão.
-const roomPanel = createRoomPanel({ place: PLACE, texts: theme.texts, unlock: () => audio.unlock(), notify: flashHint });
+// O botão "Mesa", o painel dela e as rolagens de todos (room-panel.js). Fora de uma mesa nada disso
+// usa a internet: rolar sozinho continua igual, mesmo sem conexão.
+const roomPanel = createRoomPanel({
+  place: PLACE, texts: theme.texts, unlock: () => audio.unlock(), notify: flashHint, relayout,
+  critical: theme.critical,
+  nameOf: id => { const f = formulas.parse(id); return f ? formulas.text(f) : id; }   // '2d6+6' → '2d6 + 6'; o d100 fica como está
+});
 
 /* ---------------------------------------------------------------- tela e animação */
 function relayout() {

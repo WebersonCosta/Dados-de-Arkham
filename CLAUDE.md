@@ -28,13 +28,13 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 2 (entrar na mesa) em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 6` |
+| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 3 (rolagens ao vivo, com rótulo) em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 7` |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 7.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 8.
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -56,11 +56,13 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   `mesa-arkham.workers.dev` foi criado pelo wrangler no primeiro envio. Este PC guarda o login do
   wrangler (fora do projeto, em `%APPDATA%\xdg.config\.wrangler`), feito só com as permissões de
   Workers: `wrangler login --scopes account:read user:read workers:write workers_scripts:write`.
-- Fase 2, passo 2 (entrar na mesa) no endereço de teste em 31/10/2026 (envio `teste 6`), esperando
-  o teste de Weberson (PC como Guardião, celular como jogador, `?aba` para um terceiro): o botão
-  "Mesa", criar e entrar com código e nome, a lista de quem está na mesa, o nome guardado, a volta
-  sozinha depois de uma queda, o convite e sair/encerrar (veja "Mesa compartilhada: o app"). Ainda
-  não há rolagens na mesa: elas são o passo 3.
+- Fase 2, passo 2 (entrar na mesa) testado e aprovado por Weberson em 31/10/2026 (PC como
+  Guardião, celular como jogador, `?aba` para um terceiro).
+- Fase 2, passo 3 (rolagens ao vivo, com rótulo) no endereço de teste em 31/10/2026 (envio
+  `teste 7`), esperando o teste de Weberson: o histórico (gaveta no celular, ao lado no PC), o
+  aviso perto da bandeja e o rótulo com os últimos usados (veja "Mesa compartilhada: o app").
+  Todas as rolagens ainda vão abertas, inclusive as do Guardião: privada, secreta e o sinal de
+  suspense são o passo 4.
 
 ## Decisões tomadas (e por quê)
 
@@ -169,7 +171,8 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - O wrangler roda por `npx wrangler@4.151.3` (versão fixa): fica no cache do npm, fora do
   OneDrive, e o projeto não tem `node_modules`.
 
-**Mesa compartilhada: o app** (`src/core/room-link.js` e `src/room-panel.js`)
+**Mesa compartilhada: o app** (`src/core/room-link.js`, `src/room-panel.js`, `src/room-log.js` e
+`src/room-label.js`)
 - `room-link.js` (mecânica, sem tela): `createRoom` (POST com corpo em texto simples, para o
   navegador não fazer a consulta prévia de CORS) e `connect`, que manda o `hello`, guarda um
   "ping" a cada 25 s (sem "pong" em 8 s, abre outra conexão), tenta de novo depois de 0,5, 1, 2,
@@ -178,7 +181,7 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   ligação (`final: true`). Medido: uma queda é percebida na hora e a conexão volta em ~1 s.
 - `room-panel.js` (a tela): o servidor vem do `PLACE` (`oficial` → mesa oficial; `teste` e
   `local` → mesa de teste). Guardado no aparelho em `arkham-mesa` (no teste, `arkham-mesa-teste`):
-  `{ device, name, room: { code, guardian } }`. Ao abrir o app, volta sozinho para `room`.
+  `{ device, name, room: { code, guardian }, labels }`. Ao abrir o app, volta sozinho para `room`.
   Fora do oficial, `?aba` no endereço faz da aba um aparelho à parte (tudo da mesa em
   `sessionStorage`), e o título da aba mostra quem é quem.
 - Convite: `<endereço do app>#mesa=K7QX3M` (no fim do endereço, depois do `#`: não chega ao
@@ -192,6 +195,34 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - Cabeçalho: o título não quebra mais; em tela estreita os botões descem, e o "Mesa", último da
   fila, fica embaixo do "Som" e do "Ambiente". Medido em 375 e 360 px: título numa linha,
   subtítulo inteiro, cabeçalho de 58 para 78 px.
+- Duas folhas e um painel: a folha de entrar/criar (no alto, por causa do teclado) fica aberta
+  até a mesa responder ("Entrando na mesa…"; um erro aparece nela; fechar desiste de entrar). Dentro
+  da mesa, o painel (código, convite, quem está, rolagens, sair) é uma gaveta no celular; com a
+  tela a partir de 960 px de largura, fica à direita, sempre à vista (`body.docked`, `--side` =
+  `clamp(280px, 26vw, 360px)`), e a mesa de dados, o cabeçalho, a bandeja e o resultado ocupam o
+  resto (`stage.fit` usa a largura do `canvas`). No PC, o "Mesa" e o "Fechar" escondem e mostram o
+  painel. Quem está na mesa virou uma fileira de etiquetas, para caber junto com as rolagens.
+- Rolagens (passo 3): cada uma é mandada quando os dados param (`showResult` → `roomPanel.share`),
+  com `{ id, vis: 'open', set, total, text, detail, note, pieces, label }`: `note` é só a opção do
+  d100 ("1 dado de bônus"), `pieces` as dezenas com as descartadas. O nome de quem rolou vem de
+  `members`; o "2d6 + 6" é escrito a partir do `set` (o `name` do servidor corta em 40 letras);
+  crítico e desastre são calculados em cada aparelho com `theme.critical`. A própria rolagem só
+  entra no histórico quando a mesa devolve (o histórico é o que a mesa recebeu). Sem conexão, a
+  rolagem não é guardada para depois (isso é o passo 5): aparece "Sem conexão: a mesa não recebeu
+  esta rolagem".
+- Histórico (`room-log.js`): a mais nova em cima, até 100 (como o servidor); ao entrar ou voltar,
+  o servidor manda tudo de novo. A rolagem de outra pessoa que acabou de chegar acende uma vez,
+  quando aparece. O sinal de suspense (sem `total`) já aparece como "?" ("rolagem secreta" ou
+  "privada"), pronto para o passo 4.
+- Aviso perto da bandeja: só das rolagens dos outros, ao vivo (não das que chegam ao voltar de uma
+  queda); some em 5 s; até 3 empilhados. No celular, o botão "Rolagens" conta as que chegaram
+  desde a última vez que o histórico esteve à vista (as que já estavam na mesa ao entrar contam
+  como vistas).
+- Rótulo (`room-label.js`): a linha "Rótulo · Rolagens" aparece acima da bandeja só dentro de uma
+  mesa (a área dos dados encolhe uns 44 px; `relayout` é chamado ao entrar e sair). O rótulo vai
+  com a próxima jogada (pego no toque que lança, como o bônus) e se apaga; aparece também no
+  resultado, acima do número. Até 30 letras; os 8 últimos usados ficam em `saved.labels` (sem
+  repetir, sem diferenciar maiúsculas). Sair da mesa apaga o rótulo escolhido.
 
 ## Fluxo: desenvolver, testar e publicar
 
