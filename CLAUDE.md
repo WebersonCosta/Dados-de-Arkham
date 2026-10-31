@@ -28,7 +28,7 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**, começando (nada novo ainda) | `desenvolvimento`; o endereço de teste ainda mostra a 1.1 (envio `teste 5`) |
+| Desenvolvimento | **1.2**, começando: mesa compartilhada, fase 1 (só o plano; o app ainda não mudou) | `desenvolvimento`; o endereço de teste ainda mostra a 1.1 (envio `teste 5`) |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
@@ -39,6 +39,14 @@ montagem, as atualizações sem mistura de versões e o número da versão no ca
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
   atualizações chegam inteiras.
+
+**Etapa atual: mesa compartilhada.** O Guardião e até 6 jogadores rolando juntos, cada um no seu
+aparelho, numa call do Discord. O plano de Weberson (sala com código, visibilidade aberta, privada
+ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) está em
+[`docs/plano-mesa-compartilhada.md`](docs/plano-mesa-compartilhada.md): leia antes de mexer nisso.
+- Fase 1 (o plano, sem código): respostas técnicas apresentadas em 30/10/2026, aguardando
+  aprovação. A proposta: um servidor de salas no Cloudflare (Workers + Durable Objects, plano
+  gratuito), sem biblioteca de interface. Nenhum código da fase 2 antes do OK de Weberson.
 
 ## Decisões tomadas (e por quê)
 
@@ -156,7 +164,6 @@ montagem, as atualizações sem mistura de versões e o número da versão no ca
 - **Campo de perícia**: informar o valor da perícia (por exemplo 60) antes de rolar o d100, e o
   app mostrar o nível de sucesso da 7ª edição: crítico (01), extremo (até 1/5 da perícia),
   difícil (até a metade), normal (até a perícia), fracasso, e desastre (100, ou 96 a 100 quando
-  a perícia é menor que 50).
-- **Mesa compartilhada**: os jogadores verem as rolagens uns dos outros em tempo real. O GitHub
-  Pages só entrega arquivos; isso precisaria de um serviço online (como Firebase ou Supabase) ou
-  de conexão direta entre os aparelhos, e de decidir quem vê o quê.
+  a perícia é menor que 50). Entra na fase 5 da mesa compartilhada.
+- **Mesa compartilhada**: virou a etapa atual (veja "Estado atual" e
+  `docs/plano-mesa-compartilhada.md`).
