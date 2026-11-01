@@ -9,6 +9,8 @@ Call of Cthulhu (7ª edição).
 
 **Endereço de teste** (próxima versão, ainda em teste): https://webersoncosta.github.io/Dados-de-Arkham-teste/
 
+**Guia de uso** (todas as funções e as limitações atuais): [`docs/guia-de-uso.md`](docs/guia-de-uso.md)
+
 ## Rolar vários dados
 
 Para lançar, escolha o dado na bandeja e toque na mesa. Para montar uma rolagem com vários
@@ -272,6 +274,7 @@ O restante:
   nunca misturar arquivos de versões diferentes.
 - `CLAUDE.md`: notas do projeto (estado atual, decisões, fluxo de trabalho e ideias para o
   futuro), para continuar o trabalho numa conversa nova sem perder nada.
+- `docs/guia-de-uso.md`: o guia de uso, com todas as funções e as limitações atuais do app.
 - `docs/plano-mesa-compartilhada.md`: o plano da mesa compartilhada, com as decisões e as fases.
 - `icons/`: os ícones do app (gerados por `tools/icone.html`).
 - `src/main.js`: liga as peças (toque, escolha dos dados, fórmula, atalhos, resultado).

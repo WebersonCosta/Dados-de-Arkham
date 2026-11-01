@@ -293,6 +293,9 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   desenvolvimento` → atualizar o teste com um commit novo por cima (comandos no README, "Para
   quem mexe no código") → conferir o endereço de teste no navegador (o canto mostra o envio
   novo; pode levar alguns minutos) → mandar o link e explicar como testar.
+- O guia de uso (`docs/guia-de-uso.md`, pedido por Weberson em 31/10/2026) descreve, para quem
+  usa, as funções e as limitações atuais. Atualizá-lo junto com o README a cada etapa que mude o
+  que o app faz, inclusive a data e as versões do alto e a tabela de versões.
 - Publicar, só depois do "pode publicar": a `main` vira cópia exata da `desenvolvimento`
   (`git restore --source=desenvolvimento ...`), commit "Versão X.Y", tag `vX.Y`, push da `main`
   e da tag, conferir o endereço oficial, voltar para a `desenvolvimento` e subir `VERSION`.
