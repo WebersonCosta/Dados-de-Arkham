@@ -260,7 +260,7 @@ o que ela pode ver e se apaga sozinho:
 | `worker.js` | A parte do Cloudflare: criar a sala, as conexões ao vivo, guardar, entregar e apagar |
 | `wrangler.toml` | Os dois servidores: a mesa oficial e a mesa de teste |
 | `test/room.test.js` | Testes das regras, sem servidor |
-| `test/three-devices.test.js` | O Guardião e os jogadores simulados, conferindo que ninguém recebe o que não pode ver, e o aviso para quem está com o app mais velho |
+| `test/three-devices.test.js` | O Guardião e os jogadores simulados, conferindo que ninguém recebe o que não pode ver, a mesa cheia rolando ao mesmo tempo e o aviso para quem está com o app mais velho |
 
 O restante:
 

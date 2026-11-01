@@ -28,13 +28,13 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 5 (quedas e versão) em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 9` |
+| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 6 (a sessão real no Discord) com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 10` |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 10.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 11.
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -62,14 +62,22 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - Fase 2, passo 4 (privada, secreta e suspense) testado e aprovado por Weberson em 31/10/2026: a
   escolha de quem vê perto da bandeja (o Guardião rola secreta por padrão), o sinal de suspense
   e as marcas "privada" e "secreta".
-- Fase 2, passo 5 (quedas e encerramento) no endereço de teste em 31/10/2026 (envio `teste 9`),
-  esperando o teste de Weberson: a fila das rolagens feitas sem conexão, o aviso "Sem conexão
-  com a mesa" perto da bandeja e o aviso de versão (veja "Mesa compartilhada: o app"). A mesa de
-  teste foi enviada de novo, com a conferência de versão (`outdated`), e passou no teste dos
-  aparelhos (12 de 12, com o caso novo da versão; o da sala que se apaga sozinha só roda com o
-  tempo sem uso reduzido, e essa parte do servidor não mudou desde o passo 1). "Encerrar a mesa"
-  e a sala que se apaga sozinha já vinham dos passos 1 e 2. Falta o passo 6: a sessão real no
-  Discord, pelo endereço de teste.
+- Fase 2, passo 5 (quedas e encerramento) testado e aprovado por Weberson em 31/10/2026: a fila
+  das rolagens feitas sem conexão, o aviso "Sem conexão com a mesa" perto da bandeja e o aviso de
+  versão (veja "Mesa compartilhada: o app"), com a conferência de versão (`outdated`) na mesa de
+  teste. "Encerrar a mesa" e a sala que se apaga sozinha já vinham dos passos 1 e 2.
+- Fase 2, passo 6 (a sessão real no Discord, pelo endereço de teste) começou em 31/10/2026,
+  esperando a sessão de Weberson; depois dela, os ajustes e o "pode publicar". Antes da sessão: a
+  mesa cheia (o Guardião e 6 jogadores rolando ao mesmo tempo, na mesa de teste: cada rolagem
+  chegou uma vez a cada um; o teste dos aparelhos agora tem esse caso, 13 de 13 com o da sala que
+  se apaga sozinha pulado) e a tela com a mesa cheia e nomes compridos, que trouxe dois ajustes
+  (envio `teste 10`): o rótulo que sumia no histórico e a lista de quem está na mesa, que tomava o
+  lugar das rolagens (veja "Mesa compartilhada: o app").
+- Risco conhecido para a sessão: cada navegador guarda a sua chave de aparelho. Quem entra por um
+  caminho e volta por outro (no iPhone, o navegador de dentro do Discord, o Safari e o ícone na
+  tela de início guardam coisas separadas) vira outro aparelho e ocupa mais um lugar, e ainda não
+  dá para liberar um lugar (isso é do painel do Guardião, fase 3). Orientação dada: entrar e
+  voltar sempre pelo link do convite; se a mesa encher, encerrar e criar outra.
 
 ## Decisões tomadas (e por quê)
 
@@ -215,7 +223,10 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   tela a partir de 960 px de largura, fica à direita, sempre à vista (`body.docked`, `--side` =
   `clamp(280px, 26vw, 360px)`), e a mesa de dados, o cabeçalho, a bandeja e o resultado ocupam o
   resto (`stage.fit` usa a largura do `canvas`). No PC, o "Mesa" e o "Fechar" escondem e mostram o
-  painel. Quem está na mesa virou uma fileira de etiquetas, para caber junto com as rolagens.
+  painel. Quem está na mesa virou uma fileira de etiquetas, para caber junto com as rolagens;
+  cada etiqueta ocupa no máximo meia linha (passo 6: com a mesa cheia e nomes compridos, a lista
+  ia a 7 linhas; com o limite, 4, e o painel do Guardião num notebook de 1366×640 passou de 2
+  para 4 rolagens à vista). O nome inteiro aparece no histórico.
 - Rolagens (passo 3): no toque que lança, `roomPanel.take()` pega o rótulo e quem vê
   (`{ label, vis, veil }`; null fora de uma mesa) e volta os dois ao padrão; quando os dados param,
   `showResult` → `roomPanel.share(table, roll)` manda `{ id, vis, label, set, total, text, detail,
@@ -243,7 +254,8 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   sozinho para a mesa. Entrando pela folha, a recusa `version` continua sendo um erro na folha.
 - Histórico (`room-log.js`): a mais nova em cima, até 100 (como o servidor); ao entrar ou voltar,
   o servidor manda tudo de novo. A rolagem de outra pessoa que acabou de chegar acende uma vez,
-  quando aparece.
+  quando aparece. Quem rolou e o rótulo ficam na mesma linha quando cabem; com um nome comprido,
+  o rótulo desce inteiro para a linha de baixo ("· Ocultismo"; antes, sumia nas reticências).
 - Quem vê (passo 4, em `room-panel.js`): um botão na linha perto da bandeja, que troca com um
   toque. Jogador: "Aberta" (padrão) ou "Privada"; Guardião: "Secreta" (padrão) ou "Aberta" (o
   Guardião não tem privada: para ele, a mesa já trata privada como secreta). Depois de cada

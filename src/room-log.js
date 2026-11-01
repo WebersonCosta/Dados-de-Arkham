@@ -45,9 +45,9 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
       li.addEventListener('animationend', () => li.classList.remove('is-new'), { once: true });
     }
     li.append(el('b', 'roll-num', hidden(roll) ? '?' : roll.text));
-    const top = el('p', 'roll-who'), title = el('span');
+    const top = el('p', 'roll-who'), title = el('span', 'roll-title');
     title.append(el('span', 'roll-name', who(roll.seat, roll.mine)));
-    if (roll.label) title.append(` · ${roll.label}`);
+    if (roll.label) title.append(el('span', 'roll-label', roll.label));
     top.append(title);
     if (VEIL[roll.vis] && !hidden(roll)) top.append(el('small', 'roll-veil', VEIL[roll.vis]));
     if (pending) top.append(el('small', 'roll-wait', 'enviando…'));

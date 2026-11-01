@@ -138,11 +138,29 @@ test('a mesa só entrega a cada um o que ele pode ver', { skip: !BASE && 'defina
       assert.ok(g2.room.rolls.every(r => Number.isInteger(r.total)));   // o Guardião vê tudo
     });
 
+    const full = [];
     await t.test('a mesa tem 6 lugares de jogador', async () => {
       for (const [i, name] of ['Carla', 'Davi', 'Elisa', 'Fábio'].entries()) {
-        assert.equal((await join(code, newDevice(), name)).room.you, `j${i + 3}`);
+        const me = await join(code, newDevice(), name);
+        assert.equal(me.room.you, `j${i + 3}`);
+        full.push(me);
       }
       assert.equal((await join(code, newDevice(), 'Gustavo')).error, 'room-full');
+    });
+
+    await t.test('a mesa cheia rola ao mesmo tempo e cada rolagem chega uma vez a cada um', async () => {
+      const ids = [g, a, b, ...full].map(me => {
+        const id = newId();
+        send(me, { type: 'roll', id, vis: 'open', set: '1d20', total: 7, text: '7', label: 'Iniciativa' });
+        return id;
+      });
+      for (const me of [g, a, b, ...full]) {
+        for (const id of ids) await until(me, rollOf(id));
+      }
+      await wait(300);
+      for (const me of [g, a, b, ...full]) {
+        for (const id of ids) assert.equal(me.messages.filter(rollOf(id)).length, 1, `${me.name} recebeu uma rolagem repetida`);
+      }
     });
 
     await t.test('ninguém recebeu o que não podia ver', () => {

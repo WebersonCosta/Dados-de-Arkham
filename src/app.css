@@ -288,8 +288,9 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   padding: calc(env(safe-area-inset-top, 0px) + 14px) max(14px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 14px) 14px;
 }
 .members { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+/* no máximo meia linha cada: com a mesa cheia e nomes compridos, sobra lugar para as rolagens */
 .member {
-  display: flex; align-items: center; gap: 7px; max-width: 100%; box-sizing: border-box; padding: .35rem .6rem;
+  display: flex; align-items: center; gap: 7px; max-width: calc(50% - 2px); box-sizing: border-box; padding: .35rem .6rem;
   background: var(--c-panel); border: 1px solid var(--c-line); border-radius: 2px;
 }
 .member .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-line-strong); }
@@ -315,7 +316,10 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 .roll-text { min-width: 0; }
 .roll-text p { margin: 0; }
 .roll-who { display: flex; align-items: baseline; gap: 8px; font-family: var(--font-title); font-size: 1rem; line-height: 1.25; }
-.roll-who > span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* quem rolou e o rótulo: na mesma linha quando cabem; com um nome comprido, o rótulo desce inteiro */
+.roll-title { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; column-gap: .3em; }
+.roll-title > span { min-width: 0; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.roll-label::before { content: '· '; }
 .roll-who time { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .06em; color: var(--c-text-dim); }
 .roll-veil { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .08em; color: var(--c-penalty); }
 .roll-wait { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .08em; color: var(--c-text-dim); }
