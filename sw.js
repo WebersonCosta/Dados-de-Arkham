@@ -8,7 +8,7 @@
 // lugar de guardar: cada um usa nomes próprios e só apaga as suas próprias cópias antigas.
 const TEST = self.location.pathname.toLowerCase().startsWith('/dados-de-arkham-teste/');
 const PREFIX = TEST ? 'dados-de-arkham-teste-v' : 'dados-de-arkham-v';
-const RELEASE = 10;   // suba a cada envio (teste ou oficial): é o que avisa os aparelhos que há versão nova
+const RELEASE = 11;   // suba a cada envio (teste ou oficial): é o que avisa os aparelhos que há versão nova
 const CACHE = PREFIX + RELEASE;
 const APP_FILES = [
   './', 'index.html', TEST ? 'manifest-teste.webmanifest' : 'manifest.webmanifest',

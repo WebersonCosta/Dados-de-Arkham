@@ -143,6 +143,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
       if (joining) {                // entrou pela folha: ela fecha e, no celular, a gaveta da mesa abre
         joining = false;
         joinSheet.hidden = true;
+        dropInvite();
         drawer = true;
       }
       // as rolagens feitas sem conexão: as que a mesa já tinha recebido saem da fila, e o resto vai
@@ -401,6 +402,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   // Fechar a folha de entrar enquanto a mesa não respondeu é desistir de entrar.
   function closeJoin() {
     joinSheet.hidden = true;
+    dropInvite();
     if (joining) forget();
   }
 
@@ -437,11 +439,13 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
 
   /* ------------------------------------------------------------ ao abrir o app */
   // Um convite (o link termina com "#mesa=K7QX3M") abre a folha com o código já preenchido. Vale
-  // também com o app já aberto: aí só o fim do endereço muda, e a página não recarrega.
+  // também com o app já aberto: aí só o fim do endereço muda, e a página não recarrega. O convite
+  // sai do endereço quando a folha termina (entrou ou fechou): se a página recarregar antes disso
+  // (uma versão nova do app chegando, por exemplo), a folha abre de novo com o código.
   function takeInvite() {
     if (!location.hash.includes('mesa=')) return;
     const invited = cleanCode(new URLSearchParams(location.hash.slice(1)).get('mesa'));
-    history.replaceState(null, '', location.pathname + location.search);
+    if (!invited || saved.room) dropInvite();   // dentro de uma mesa, a folha não abre: nada fica esperando
     if (!invited) return;
     if (invited !== saved.room?.code) {
       if (saved.room) notify('Saia desta mesa para entrar na do convite');
@@ -449,6 +453,9 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     }
     if (saved.room && !joining) showLog();
     else open();
+  }
+  function dropInvite() {
+    if (location.hash.includes('mesa=')) history.replaceState(null, '', location.pathname + location.search);
   }
   addEventListener('hashchange', takeInvite);
   if (saved.room) {   // volta sozinho para a mesa em que estava, com as rolagens que esperavam a conexão

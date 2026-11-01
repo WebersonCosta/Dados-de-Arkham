@@ -28,13 +28,13 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 6 (a sessão real no Discord) com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 10` |
+| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 6 (a sessão real no Discord) com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 11` |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 11.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 12.
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -72,7 +72,8 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   chegou uma vez a cada um; o teste dos aparelhos agora tem esse caso, 13 de 13 com o da sala que
   se apaga sozinha pulado) e a tela com a mesa cheia e nomes compridos, que trouxe dois ajustes
   (envio `teste 10`): o rótulo que sumia no histórico e a lista de quem está na mesa, que tomava o
-  lugar das rolagens (veja "Mesa compartilhada: o app").
+  lugar das rolagens. No envio `teste 11`, o convite que se perdia quando uma versão nova do app
+  chegava logo depois de abrir o link (veja "Mesa compartilhada: o app").
 - Risco conhecido para a sessão: cada navegador guarda a sua chave de aparelho. Quem entra por um
   caminho e volta por outro (no iPhone, o navegador de dentro do Discord, o Safari e o ícone na
   tela de início guardam coisas separadas) vira outro aparelho e ocupa mais um lugar, e ainda não
@@ -208,8 +209,11 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   `sessionStorage`), e o título da aba mostra quem é quem.
 - Convite: `<endereço do app>#mesa=K7QX3M` (no fim do endereço, depois do `#`: não chega ao
   GitHub nem muda a cópia guardada). Abre o painel com o código preenchido, também com o app já
-  aberto (`hashchange`), e sai do endereço depois de lido. No celular (toque e `navigator.share`)
-  abre o compartilhar; no PC, copia o texto com o link.
+  aberto (`hashchange`). Sai do endereço quando a folha termina (entrou ou fechou), e não ao ser
+  lido: se uma versão nova do app chega logo depois de abrir o link, a página recarrega antes do
+  primeiro toque, e a folha precisa abrir de novo com o código (passo 6). Dentro de uma mesa, ou
+  com um código que não vale, sai na hora. No celular (toque e `navigator.share`) abre o
+  compartilhar; no PC, copia o texto com o link.
 - O Guardião entra com o nome `texts.guardian`; os nomes do papel e do personagem vêm do tema
   (`texts.guardian` = "Guardião", `texts.character` = "investigador"), porque são termos de Call
   of Cthulhu. "Sair da mesa" guarda o lugar; o "Encerrar a mesa" do Guardião (previsto para o
