@@ -23,18 +23,18 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 - Quando Weberson pedir para avisar de problemas antes de implementar, explicar o problema e
   perguntar antes de mexer.
 
-## Estado atual (31/10/2026)
+## Estado atual (03/11/2026)
 
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 6 (a sessão real no Discord) com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 11` |
+| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 6 (a sessão real no Discord) com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 12` |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 12.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 13.
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -79,6 +79,11 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   tela de início guardam coisas separadas) vira outro aparelho e ocupa mais um lugar, e ainda não
   dá para liberar um lugar (isso é do painel do Guardião, fase 3). Orientação dada: entrar e
   voltar sempre pelo link do convite; se a mesa encher, encerrar e criar outra.
+- Valores do investigador (PV, SAN, Sorte e PM), pedidos por Weberson em 03/11/2026 antes da sessão
+  real: no endereço de teste (envio `teste 12`), esperando o teste dele. A mesa de teste foi enviada
+  de novo e passou no teste dos aparelhos (22 de 22; o da sala que se apaga sozinha fica pulado). O
+  pedido e a ideia da ficha do personagem estão no plano. Ficaram para depois: alertas para o
+  Guardião, o painel completo e outras regras da mesa.
 
 ## Decisões tomadas (e por quê)
 
@@ -133,7 +138,8 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - O que um tema oferece (`theme.js`): `id`, `title`, `css`, `fonts`, `texts`, `view`,
   `createScene`, `createAudio`, `dieMaterial`, `dimDie`, `critical(setId, result)`, `modes`
   (rolagens especiais por conjunto: `'d100'` ou a fórmula sem espaços, como `'1d20'`), `kinds`
-  (dados a mais, como o d3), `shortcuts` e `haptics`.
+  (dados a mais, como o d3), `shortcuts`, `counters` (os valores do personagem na mesa
+  compartilhada: `{ id, short, name }`) e `haptics`.
 - O caminho para vantagem e desvantagem de D&D (2d20, fica o maior ou o menor) está pronto e
   explicado no README ("Rolagens especiais"), e foi testado.
 
@@ -166,10 +172,11 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   aparelho volta sempre para o mesmo lugar.
 - Aparelho: o app sorteia uma chave (22 a 64 caracteres, base64url) e a guarda só nele; o
   servidor guarda só o SHA-256 dela, e a chave nunca volta em mensagem nenhuma.
-- Conversa: `POST /rooms` cria a sala (`{ protocol, device, name }` → `{ code }`); `/rooms/<código>`
-  é o WebSocket. Primeira mensagem do app: `hello` (`{ protocol, device, name, app }`); resposta:
-  `room` (o lugar, os membros e as últimas 100 rolagens, já filtradas). Depois chegam `members`,
-  `roll`, `outdated`, `error` e `ended`; o app manda `roll` e, o Guardião, `end`. `PROTOCOL` (hoje
+- Conversa: `POST /rooms` cria a sala (`{ protocol, device, name, rules }` → `{ code }`);
+  `/rooms/<código>` é o WebSocket. Primeira mensagem do app: `hello` (`{ protocol, device, name, app
+  }`); resposta: `room` (o lugar, as regras, os membros e as últimas 100 rolagens, já filtrados).
+  Depois chegam `members`, `roll`, `counters`, `outdated`, `error` e `ended`; o app manda `roll`, o
+  jogador manda `counters` (os dele) e o Guardião manda `end`. `PROTOCOL` (hoje
   1) muda quando app e servidor deixam de se entender (o `hello` é recusado com `version`). "ping"
   recebe "pong" sem acordar a sala.
 - Versão do app (passo 5): o `hello` leva `app` (o `VERSION` de `src/version.js`, como '1.2';
@@ -185,6 +192,15 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   cada app calcula com o seu tema. A mesma `id` mandada de novo conta uma vez só.
 - Quem vê o quê (`seenBy`): aberta, todos; privada, quem rolou e o Guardião; secreta, só o
   Guardião. Para os outros vai só `{ id, seq, seat, at, vis }`, uma lista fechada de campos.
+- Contadores (os valores do investigador): `{ type: 'counters', counters: { hp: { max, cur }, … } }`,
+  só de jogador (o Guardião recebe `players-only`) e sempre do lugar da conexão: a mensagem não diz
+  de quem são. O servidor confere só o formato (`readCounters`: até 8, máximo de 1 a 999, atual de 0
+  ao máximo); quais são é o tema do app que diz. Ficam em `seats.counters` (JSON; null sem nenhum).
+  A regra da mesa vem no `POST /rooms` e fica em `room.rules` (`cleanRules`; `counters`: `guardian`,
+  o padrão, ou `all`). `seesCounters`: o próprio, o Guardião e, com `all`, todos. Quem vê recebe `{
+  type: 'counters', seat, counters }` ao vivo (menos a conexão que mandou), e `members` e `room` são
+  montados para cada lugar: para quem não vê, o campo `counters` nem existe. Os mesmos valores de
+  novo não avisam ninguém, e mudar um contador conta como uso (`touch`).
 - A sala se apaga (`deleteAll()`) 6 horas depois do último `hello` ou `roll` (o alarme;
   `IDLE_SECONDS`) ou no `end` do Guardião. Um código que não existe não grava nada: as tabelas
   só nascem no `create`.
@@ -194,8 +210,8 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - O wrangler roda por `npx wrangler@4.151.3` (versão fixa): fica no cache do npm, fora do
   OneDrive, e o projeto não tem `node_modules`.
 
-**Mesa compartilhada: o app** (`src/core/room-link.js`, `src/room-panel.js`, `src/room-log.js` e
-`src/room-label.js`)
+**Mesa compartilhada: o app** (`src/core/room-link.js`, `src/core/counters.js`, `src/room-panel.js`,
+`src/room-log.js`, `src/room-label.js` e `src/room-counters.js`)
 - `room-link.js` (mecânica, sem tela): `createRoom` (POST com corpo em texto simples, para o
   navegador não fazer a consulta prévia de CORS) e `connect`, que manda o `hello`, guarda um
   "ping" a cada 25 s (sem "pong" em 8 s, abre outra conexão), tenta de novo depois de 0,5, 1, 2,
@@ -204,7 +220,8 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   ligação (`final: true`). Medido: uma queda é percebida na hora e a conexão volta em ~1 s.
 - `room-panel.js` (a tela): o servidor vem do `PLACE` (`oficial` → mesa oficial; `teste` e
   `local` → mesa de teste). Guardado no aparelho em `arkham-mesa` (no teste, `arkham-mesa-teste`):
-  `{ device, name, room: { code, guardian }, labels }`. Ao abrir o app, volta sozinho para `room`.
+  `{ device, name, room: { code, guardian }, labels, pending, characters }`. Ao abrir o app, volta
+  sozinho para `room`.
   Fora do oficial, `?aba` no endereço faz da aba um aparelho à parte (tudo da mesa em
   `sessionStorage`), e o título da aba mostra quem é quem.
 - Convite: `<endereço do app>#mesa=K7QX3M` (no fim do endereço, depois do `#`: não chega ao
@@ -282,6 +299,29 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   espaço na linha, é ele que encolhe (com reticências). Até 30 letras; os 8 últimos usados ficam
   em `saved.labels` (sem repetir, sem diferenciar maiúsculas). Sair da mesa apaga o rótulo e a
   escolha de quem vê.
+- Valores do personagem (`room-counters.js`; as contas em `core/counters.js`; a lista vem de
+  `theme.counters`): um botão na linha perto da bandeja mostra os dois primeiros ("PV 9 · SAN 55";
+  sem valores, "PV · SAN", aceso e pulsando) e abre a folha: − atual + e o máximo de cada um,
+  embaixo, perto do polegar (ela sobe só enquanto um campo está em foco, por causa do teclado). O
+  máximo vale ao sair do campo, e não a cada letra; o primeiro começa cheio, quem está cheio continua
+  cheio e os outros só não passam do máximo novo; vazio ou 0 apaga o contador. − e + repetem
+  segurando (`holdRepeat`, agora em `lib/util.js`), com `aria-disabled` em vez de `disabled`: um botão
+  desligado no meio do toque não avisaria que o dedo saiu, e a repetição não pararia. Em tela até 400
+  px, os quatro botões ficam mais justos (em 360 px cabem sem cortar; em 320 px, quem encolhe é o
+  rótulo). O Guardião não tem o botão.
+- Guardados em `saved.characters` (`{ chave do nome: { name, counters } }`, sem diferenciar
+  maiúsculas): sobrevivem a sair da mesa e ao fim dela, e outro nome começa vazio. O aparelho é quem
+  sabe os valores: a mesa os recebe a cada `room` (mudados sem conexão, ou de outro personagem) e, a
+  cada mudança, no máximo a cada 300 ms (`shareCounters`). Quem entra pela folha com um personagem
+  sem valores vai direto para a folha dos valores, em vez da gaveta da mesa.
+- Ao criar a mesa (`askRules`): "Os jogadores veem os valores uns dos outros (PV, SAN, Sorte e PM)?",
+  com "Não: só o Guardião vê" e "Sim: todos veem", sem padrão; a resposta já cria a mesa. A folha dos
+  valores diz quem vê.
+- Na lista de quem está na mesa: para quem vê os valores (o Guardião, ou todos com `all`), uma tabela
+  (`renderValues`) com atual/máximo de cada um, e o título diz quem vê; para os outros, a fileira de
+  etiquetas. O próprio jogador vê os valores do aparelho, que são os mais novos. Medido com a mesa
+  cheia: 25 px por linha, tabela de 190 px; no notebook de 1366×640 sobram 201 px para as rolagens
+  (de 3 a 4 à vista); o nome fica com 127 px no painel de 355 px e 83 px no de 280 px.
 
 ## Fluxo: desenvolver, testar e publicar
 
@@ -337,3 +377,6 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   a perícia é menor que 50). Entra na fase 5 da mesa compartilhada.
 - **Mesa compartilhada**: virou a etapa atual (veja "Estado atual" e
   `docs/plano-mesa-compartilhada.md`).
+- **Ficha do personagem** (Markdown, que os contadores leem e atualizam, e PDF, só para ver) e
+  **alertas para o Guardião** (PV baixo, perda grande de Sanidade): o pedido e como a ficha entra sem
+  refazer os contadores estão no fim do plano.

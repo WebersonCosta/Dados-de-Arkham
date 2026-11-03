@@ -6,6 +6,7 @@ import { createFormulas, MAX_DICE } from './core/formula.js';
 import { createDieModel } from './core/polyhedra.js';
 import { THEMES, DEFAULT_THEME } from './themes/index.js';
 import { VERSION, PLACE } from './version.js';
+import { holdRepeat } from './lib/util.js';
 import { createRoomPanel } from './room-panel.js';
 
 // Liga as peças: carrega o tema, monta a mesa e cuida do toque, da escolha dos dados e do resultado.
@@ -226,16 +227,6 @@ function useFormula(text) {
   setFormula(f);
 }
 
-// Botão que repete enquanto está apertado, para chegar rápido a +6, por exemplo.
-function holdRepeat(button, action) {
-  let timer = 0;
-  const stop = () => clearTimeout(timer);
-  const run = delay => { action(); timer = setTimeout(run, delay, 90); };
-  button.addEventListener('pointerdown', ev => { ev.preventDefault(); audio.unlock(); stop(); run(450); });
-  for (const type of ['pointerup', 'pointerleave', 'pointercancel']) button.addEventListener(type, stop);
-  button.addEventListener('click', ev => { if (!ev.detail) action(); });   // pelo teclado
-}
-
 function openSheet() {
   audio.unlock();
   renderSheet();
@@ -296,8 +287,8 @@ $('btnCloseSheet').addEventListener('click', closeSheet);
 sheet.addEventListener('click', ev => { if (ev.target === sheet) closeSheet(); });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !sheet.hidden) closeSheet(); });
 $('btnClear').addEventListener('click', clearFormula);
-holdRepeat($('btnMinus'), () => stepFixed(-1));
-holdRepeat($('btnPlus'), () => stepFixed(1));
+holdRepeat($('btnMinus'), () => stepFixed(-1), () => audio.unlock());
+holdRepeat($('btnPlus'), () => stepFixed(1), () => audio.unlock());
 
 /* ---------------------------------------------------------------- bônus, penalidade e afins */
 // O tema pode oferecer jeitos especiais de rolar (no Arkham, os dados de bônus e de penalidade do
@@ -548,7 +539,7 @@ bindToggle($('btnAmb'), 'amb', theme.texts.ambient, on => audio.setAmbient(on));
 // usa a internet: rolar sozinho continua igual, mesmo sem conexão.
 const roomPanel = createRoomPanel({
   place: PLACE, texts: theme.texts, unlock: () => audio.unlock(), notify: flashHint, relayout,
-  critical: theme.critical,
+  critical: theme.critical, counters: theme.counters,
   nameOf: id => { const f = formulas.parse(id); return f ? formulas.text(f) : id; }   // '2d6+6' → '2d6 + 6'; o d100 fica como está
 });
 

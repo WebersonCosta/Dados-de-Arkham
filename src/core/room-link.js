@@ -1,6 +1,6 @@
 // A ligação do app com a mesa compartilhada (o servidor fica em server/): criar a mesa, entrar,
 // manter a conexão viva e voltar sozinho quando ela cai. Não mexe na tela: conta o que aconteceu
-// por onEvent ({ type: 'status' | 'room' | 'members' | 'roll' | 'error' | 'ended', ... }).
+// por onEvent ({ type: 'status' | 'room' | 'members' | 'roll' | 'counters' | 'error' | 'ended', ... }).
 
 export const PROTOCOL = 1;      // o mesmo do servidor (server/room.js)
 const PING_EVERY = 25000;       // um "ping" a cada 25 s mantém a conexão aberta nas redes de celular
@@ -30,12 +30,13 @@ export function cleanCode(input) {
 }
 export const showCode = code => `${code.slice(0, 3)} ${code.slice(3)}`;   // "K7Q X3M": fácil de ditar
 
-// Cria uma mesa; quem cria é o Guardião. Devolve o código, ou lança o motivo ('offline', 'version'…).
-export async function createRoom(server, device, name) {
+// Cria uma mesa; quem cria é o Guardião. rules: as regras dela ({ counters: 'guardian' | 'all' }).
+// Devolve o código, ou lança o motivo ('offline', 'version'…).
+export async function createRoom(server, device, name, rules) {
   let res;
   try {
     // corpo em texto simples: o navegador manda direto, sem consultar antes o outro endereço
-    res = await fetch(`${server}/rooms`, { method: 'POST', body: JSON.stringify({ protocol: PROTOCOL, device, name }) });
+    res = await fetch(`${server}/rooms`, { method: 'POST', body: JSON.stringify({ protocol: PROTOCOL, device, name, rules }) });
   } catch (e) {
     throw new Error('offline');
   }

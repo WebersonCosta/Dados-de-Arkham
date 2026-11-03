@@ -1,13 +1,15 @@
 import { newDevice, newRollId, cleanCode, showCode, createRoom, connect } from './core/room-link.js';
 import { createRoomLog } from './room-log.js';
 import { createRoomLabel } from './room-label.js';
+import { createRoomCounters } from './room-counters.js';
 import { VERSION } from './version.js';
 
 // O painel da mesa compartilhada. O botão "Mesa", no alto da tela, abre a folha de entrar numa mesa
 // com o código (os jogadores) ou de criar uma (o Guardião). Dentro de uma mesa, ele abre o painel
 // dela: o código e o convite, quem está na mesa e as rolagens de todos (room-log.js). No celular o
 // painel é uma gaveta; no PC ele fica à vista, ao lado da mesa de dados. Perto da bandeja ficam
-// quem vê a próxima rolagem, o rótulo dela (room-label.js) e, no celular, o atalho para as rolagens.
+// quem vê a próxima rolagem, o rótulo dela (room-label.js), no celular, o atalho para as rolagens
+// e, para os jogadores, os valores do personagem (room-counters.js).
 // O nome do personagem, a chave do aparelho e a mesa atual ficam guardados no aparelho: ao abrir o
 // app, ele volta sozinho para a mesa em que estava.
 
@@ -21,10 +23,12 @@ const WIDE = '(min-width: 960px)';   // a partir dessa largura (PC, tablet deita
 const MAX_PENDING = 20;              // rolagens guardadas esperando a conexão
 const DROP_NOTICE = 3000;            // sem conexão por mais que isso, aparece o aviso perto da bandeja
 const CONFIRM_WAIT = 4000;           // a mesa não confirmou a rolagem nesse tempo: a conexão é conferida
+const COUNTERS_WAIT = 300;           // tocando várias vezes no − ou no +, os valores vão para a mesa no máximo nesse ritmo
 
 // critical e nameOf: para o histórico (veja room-log.js); relayout: refaz a área onde os dados rolam,
-// quando a bandeja ganha a linha do rótulo ou o painel passa a ocupar o lado da tela.
-export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf, relayout }) {
+// quando a bandeja ganha a linha do rótulo ou o painel passa a ocupar o lado da tela. counters: os
+// contadores do tema ({ id, short, name }).
+export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf, relayout, counters: counterList = [] }) {
   const $ = id => document.getElementById(id);
   const button = $('btnTable'), joinSheet = $('tableSheet'), panel = $('roomPanel'), row = $('roomRow');
   const nameInput = $('tableName'), codeInput = $('tableCodeInput'), errorBox = $('tableError');
@@ -49,8 +53,9 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   const store = perTab ? sessionStorage : localStorage;
   const KEY = place === 'teste' ? 'arkham-mesa-teste' : 'arkham-mesa';
   // device: a chave do aparelho; name: o nome do personagem; room: { code, guardian } da mesa atual;
-  // labels: os últimos rótulos usados; pending: as rolagens que a mesa ainda não confirmou
-  const saved = { device: '', name: '', room: null, labels: [], pending: [] };
+  // labels: os últimos rótulos usados; pending: as rolagens que a mesa ainda não confirmou;
+  // characters: os valores de cada personagem deste aparelho (room-counters.js)
+  const saved = { device: '', name: '', room: null, labels: [], pending: [], characters: {} };
   try { Object.assign(saved, JSON.parse(store.getItem(KEY) || '{}')); } catch (e) {}
   if (!saved.device) saved.device = newDevice();
   if (saved.room && !cleanCode(saved.room.code)) saved.room = null;
@@ -59,20 +64,25 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   save();
   $('tablePerTab').hidden = !perTab;
 
-  // room: { you, members }, depois que a mesa respondeu. status: 'out', 'connecting', 'reconnecting',
+  // room: { you, members, rules }, depois que a mesa respondeu. status: 'out', 'connecting', 'reconnecting',
   // 'online' ou 'old' (a mesa recusou este app, que ficou para trás). joining: entrando pela folha,
   // que fica aberta até a mesa responder. drawer: a gaveta aberta (celular); folded: o painel
   // recolhido (PC). seen: a última rolagem que esteve à vista, para contar as novas no botão
   // "Rolagens". dropped: sem conexão há mais que alguns segundos; outdated: a mesa avisou que há
   // uma versão mais nova do app.
   let link = null, room = null, status = 'out', joining = false, drawer = false, folded = false, seen = 0, layout = 'out';
-  let dropped = false, dropTimer = 0, outdated = false;
+  let dropped = false, dropTimer = 0, outdated = false, countersTimer = 0;
   const title = document.title;
   const canShare = !!navigator.share && matchMedia('(pointer: coarse)').matches;
   const inviteLabel = canShare ? 'Convidar' : 'Copiar convite';
   btnInvite.textContent = inviteLabel;
   const log = createRoomLog({ list: $('roomLog'), empty: $('roomLogEmpty'), notices: $('notices'), texts, critical, nameOf });
   const label = createRoomLabel({ saved, save, unlock });
+  const whoSeesValues = () => (!room ? `O ${texts.guardian} vê` : room.rules.counters === 'all' ? 'Todos na mesa veem' : `Só você e o ${texts.guardian} veem`);
+  const counters = createRoomCounters({
+    list: counterList, saved, save, unlock, onChange: shareCounters,
+    note: () => `Escreva os máximos; depois é só ajustar com − e +. ${whoSeesValues()} estes valores, que ficam guardados neste aparelho, com o nome do ${texts.character}.`
+  });
 
   // Quem vê a próxima rolagem. O jogador escolhe entre aberta (o padrão: todos veem) e privada (só
   // ele e o Guardião); o Guardião, entre secreta (o padrão: só ele vê) e aberta. Quem não pode ver
@@ -92,6 +102,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     room = null;
     status = 'connecting';
     outdated = false;
+    counters.use(saved.room.guardian ? null : saved.name);
     link = connect({ server, code: saved.room.code, device: saved.device, name: mine(), app: VERSION, onEvent });
     watchDrop();
     render();
@@ -111,6 +122,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     save();
     watchDrop();
     label.clear();
+    counters.clear();
     log.clear();
     render();
   }
@@ -136,16 +148,22 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     }
     if (ev.type === 'room') {
       const fresh = !room;   // a primeira resposta (ao entrar ou ao abrir o app), e não a volta depois de uma queda
-      room = { you: ev.you, members: ev.members };
+      room = { you: ev.you, members: ev.members, rules: ev.rules || {} };
       saved.room.guardian = ev.you === 'g';
       log.reset(ev);
       if (fresh) seen = log.last;   // o que já estava na mesa conta como visto
+      counters.use(saved.room.guardian ? null : saved.name);
       if (joining) {                // entrou pela folha: ela fecha e, no celular, a gaveta da mesa abre
         joining = false;
         joinSheet.hidden = true;
         dropInvite();
-        drawer = true;
+        // quem chega com um personagem ainda sem valores começa por eles
+        if (counters.missing) counters.open();
+        else drawer = true;
       }
+      // os valores do aparelho são os que valem: a cada volta, a mesa recebe os mais novos (mudados
+      // sem conexão, ou de outro personagem); sem nada de novo, ela não avisa ninguém
+      if (!saved.room.guardian && counterList.length) link.send({ type: 'counters', counters: counters.values() });
       // as rolagens feitas sem conexão: as que a mesa já tinha recebido saem da fila, e o resto vai
       // de novo (a mesa reconhece uma rolagem repetida e conta uma vez só)
       const got = new Set(ev.rolls.map(r => r.id));
@@ -155,6 +173,10 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     if (ev.type === 'members' && room) {
       room.members = ev.members;
       log.setMembers(ev.members);
+    }
+    if (ev.type === 'counters' && room) {
+      const member = room.members.find(m => m.seat === ev.seat);
+      if (member) member.counters = ev.counters;
     }
     if (ev.type === 'roll' && room) {
       if (saved.pending.some(p => p.msg.id === ev.roll.id)) setPending(saved.pending.filter(p => p.msg.id !== ev.roll.id));
@@ -202,13 +224,19 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     location.reload();
   }
 
-  async function create() {
+  // Criar uma mesa: o Guardião escolhe antes quem vê os valores dos jogadores.
+  function askRules(on) {
+    btnCreate.hidden = on;
+    $('createChoice').hidden = !on;
+  }
+
+  async function create(rules) {
     unlock();
     showError(null);
     joining = true;
     render();
     try {
-      const code = await createRoom(server, saved.device, texts.guardian);
+      const code = await createRoom(server, saved.device, texts.guardian, rules);
       if (!joining) return;   // a folha foi fechada enquanto a mesa era criada: desistiu
       saved.room = { code, guardian: true };
       save();
@@ -290,6 +318,16 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     render();
   }
 
+  // Os valores deste aparelho mudaram: vão para a mesa no máximo a cada instante, sempre os mais
+  // novos. Sem conexão, vão quando ela voltar (a cada volta à mesa, ela recebe os valores).
+  function shareCounters() {
+    countersTimer ||= setTimeout(() => {
+      countersTimer = 0;
+      link?.send({ type: 'counters', counters: counters.values() });
+    }, COUNTERS_WAIT);
+    render();
+  }
+
   /* ------------------------------------------------------------ a tela */
   function render() {
     const inside = !!saved.room && !joining;
@@ -305,7 +343,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     document.title = place !== 'oficial' && me ? `${me.role === 'guardian' ? texts.guardian : me.name} · ${title}` : title;
 
     // a folha de entrar, enquanto a mesa não responde
-    btnJoin.disabled = btnCreate.disabled = joining;
+    btnJoin.disabled = btnCreate.disabled = $('btnCreateClosed').disabled = $('btnCreateOpen').disabled = joining;
     $('tableJoining').hidden = !joining;
     $('tableJoining').textContent = status === 'reconnecting' ? 'Sem resposta da mesa. Tentando de novo…' : 'Entrando na mesa…';
 
@@ -348,9 +386,16 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     renderMembers();
   }
 
-  // Quem está na mesa, na ordem de entrada: o Guardião primeiro, depois os jogadores.
+  // Quem está na mesa, na ordem de entrada: o Guardião primeiro, depois os jogadores. Para quem vê
+  // os valores (o Guardião e, se ele deixou, todos), uma tabela com os de cada um; para os outros,
+  // uma fileira de etiquetas: os números dos outros nem chegam a este aparelho.
   function renderMembers() {
     const list = room?.members || [];
+    const withValues = !!room && counterList.length > 0 && (room.you === 'g' || room.rules.counters === 'all');
+    $('tableMembers').hidden = withValues;
+    $('tableValues').hidden = !withValues;
+    $('tableMembersTitle').textContent = !withValues ? 'Na mesa' : `Na mesa · ${room.rules.counters === 'all' ? 'todos veem os valores' : 'só você vê os valores'}`;
+    if (withValues) return renderValues(list);
     $('tableMembers').replaceChildren(...list.map(m => {
       const li = document.createElement('li');
       li.className = 'member' + (m.online ? ' is-online' : '') + (m.seat === room.you ? ' is-me' : '');
@@ -364,6 +409,51 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
       li.append(dot, name, note);
       return li;
     }));
+  }
+
+  function renderValues(list) {
+    const cell = (tag, text) => {
+      const e = document.createElement(tag);
+      if (text !== undefined) e.textContent = text;
+      return e;
+    };
+    const head = cell('tr');
+    head.append(cell('td'), ...counterList.map(c => {
+      const th = cell('th', c.short);
+      th.scope = 'col';
+      th.title = c.name;
+      return th;
+    }));
+    const rows = list.map(m => {
+      const tr = cell('tr');
+      tr.className = 'member-row' + (m.online ? ' is-online' : '') + (m.seat === room.you ? ' is-me' : '');
+      const who = cell('th');
+      who.scope = 'row';
+      who.className = 'member-who';
+      const dot = cell('i');
+      dot.className = 'dot';
+      const name = cell('span', m.role === 'guardian' ? texts.guardian : m.name);
+      name.className = 'member-name';
+      name.title = name.textContent + (m.online ? '' : ' (fora da mesa)');
+      const box = cell('span');
+      box.append(dot, name);
+      who.append(box);
+      // o próprio jogador vê os valores do aparelho, que são os mais novos
+      const values = m.seat === room.you ? counters.values() : m.counters;
+      tr.append(who, ...counterList.map(c => {
+        const value = values?.[c.id];
+        const td = cell('td');
+        if (m.role === 'guardian') return td;
+        if (!value) td.textContent = '—';
+        else td.append(cell('b', value.cur), `/${value.max}`);
+        return td;
+      }));
+      return tr;
+    });
+    const thead = cell('thead'), tbody = cell('tbody');
+    thead.append(head);
+    tbody.append(...rows);
+    $('tableValues').replaceChildren(thead, tbody);
   }
 
   function showError(reason, field) {
@@ -380,6 +470,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
       if (!joining) {
         nameInput.value ||= saved.name;
         showError(null);
+        askRules(false);
       }
       joinSheet.hidden = false;
       render();
@@ -429,13 +520,17 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     else if (!panel.hidden && !wide.matches) closePanel();
   });
   wide.addEventListener('change', render);
-  btnCreate.addEventListener('click', create);
+  btnCreate.addEventListener('click', () => (counterList.length ? askRules(true) : create({})));
+  $('btnCreateClosed').addEventListener('click', () => create({ counters: 'guardian' }));
+  $('btnCreateOpen').addEventListener('click', () => create({ counters: 'all' }));
   btnJoin.addEventListener('click', join);
   btnInvite.addEventListener('click', invite);
   btnLeave.addEventListener('click', leave);
   $('tableForm').addEventListener('submit', ev => { ev.preventDefault(); join(); });
   $('tableCharacter').textContent = `Nome do ${texts.character}`;
   $('tableGuardian').textContent = `É o ${texts.guardian}?`;
+  $('createQuestion').textContent = `Os jogadores veem os valores uns dos outros (${new Intl.ListFormat('pt-BR').format(counterList.map(c => c.short))})?`;
+  $('btnCreateClosed').textContent = `Não: só o ${texts.guardian} vê`;
 
   /* ------------------------------------------------------------ ao abrir o app */
   // Um convite (o link termina com "#mesa=K7QX3M") abre a folha com o código já preenchido. Vale

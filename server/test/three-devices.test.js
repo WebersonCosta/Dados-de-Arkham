@@ -18,9 +18,9 @@ const newDevice = () => Buffer.from(crypto.getRandomValues(new Uint8Array(32))).
 let counter = 0;
 const newId = () => `teste${Date.now().toString(36)}x${(counter++).toString(36)}`;
 
-async function createRoom(device) {
+async function createRoom(device, rules) {
   const res = await fetch(`${BASE}/rooms`, {
-    method: 'POST', headers: { Origin: ORIGIN }, body: JSON.stringify({ protocol: 1, device, name: 'Guardião' })
+    method: 'POST', headers: { Origin: ORIGIN }, body: JSON.stringify({ protocol: 1, device, name: 'Guardião', rules })
   });
   assert.equal(res.status, 201);
   return (await res.json()).code;
@@ -202,6 +202,119 @@ test('quem está com o app mais velho que o de alguém na mesa recebe o aviso', 
     assert.ok(!g.messages.some(msg => msg.type === 'outdated' && msg.newest === '1.2'));   // ninguém avisa da própria versão
     send(g, { type: 'end' });
     await until(b, msg => msg.type === 'ended');
+  } finally {
+    for (const d of devices) d.ws.close();
+  }
+});
+
+// Os valores do investigador. Os números marcados (733, 777…) só existem nesses testes: se aparecerem
+// no que chegou a alguém, aquele aparelho recebeu o que não podia.
+const isCounters = seat => msg => msg.type === 'counters' && msg.seat === seat;
+const memberOf = (list, seat) => list.find(m => m.seat === seat);
+
+test('sem a escolha do Guardião, só ele e o próprio jogador recebem os valores', { skip: !BASE && 'defina MESA_URL' }, async t => {
+  const keys = { g: newDevice(), a: newDevice(), b: newDevice() };
+  const code = await createRoom(keys.g, { counters: 'guardian' });
+  const g = await join(code, keys.g, 'Guardião');
+  const a = await join(code, keys.a, 'Ana');
+  const b = await join(code, keys.b, 'Bento');
+  const secret = { hp: { max: 777, cur: 733 }, san: { max: 666, cur: 655 } };
+  try {
+    assert.deepEqual(a.room.rules, { counters: 'guardian' });
+
+    await t.test('o Guardião vê em tempo real; o outro jogador não recebe nada', async () => {
+      send(a, { type: 'counters', counters: secret });
+      assert.deepEqual((await until(g, isCounters('j1'))).counters, secret);
+      await wait(300);
+      assert.ok(!b.messages.some(msg => msg.type === 'counters'));
+      assert.ok(!a.messages.some(msg => msg.type === 'counters'));   // quem mandou não precisa de volta
+    });
+
+    await t.test('quem chega ou volta recebe a lista filtrada', async () => {
+      const b2 = await join(code, keys.b, 'Bento');
+      assert.ok(!('counters' in memberOf(b2.room.members, 'j1')));
+      const a2 = await join(code, keys.a, 'Ana');
+      assert.deepEqual(memberOf(a2.room.members, 'j1').counters, secret);   // os dele, sim
+      const g2 = await join(code, keys.g, 'Guardião');
+      assert.deepEqual(memberOf(g2.room.members, 'j1').counters, secret);
+      const c = await join(code, newDevice(), 'Carla');
+      assert.ok(!('counters' in memberOf(c.room.members, 'j1')));
+      // a chegada dela avisa todos: cada um recebe a lista do jeito que pode ver
+      const seen = await until(g, msg => msg.type === 'members' && msg.members.length === 4);
+      assert.deepEqual(memberOf(seen.members, 'j1').counters, secret);
+      const told = await until(b, msg => msg.type === 'members' && msg.members.length === 4);
+      assert.ok(!('counters' in memberOf(told.members, 'j1')));
+    });
+
+    await t.test('cada um só muda os seus', async () => {
+      const mine = { hp: { max: 12, cur: 11 } };
+      send(b, { type: 'counters', seat: 'j1', counters: mine });   // dizendo ser Ana: vale o lugar da conexão
+      assert.deepEqual((await until(g, isCounters('j2'))).counters, mine);
+      assert.ok(!g.messages.some(msg => isCounters('j1')(msg) && msg.counters.hp.max === 12));
+    });
+
+    await t.test('o Guardião não tem valores nem muda os dos outros', async () => {
+      send(g, { type: 'counters', seat: 'j1', counters: { hp: { max: 1, cur: 0 } } });
+      assert.equal((await until(g, msg => msg.type === 'error')).error, 'players-only');
+      await wait(300);
+      assert.ok(!a.messages.some(msg => msg.type === 'counters'));
+      const g2 = await join(code, keys.g, 'Guardião');
+      assert.ok(!('counters' in memberOf(g2.room.members, 'g')));
+      assert.deepEqual(memberOf(g2.room.members, 'j1').counters, secret);
+    });
+
+    await t.test('valores fora do formato são recusados, e os mesmos valores não avisam de novo', async () => {
+      const told = g.messages.filter(isCounters('j1')).length;
+      send(a, { type: 'counters', counters: { hp: { max: 5, cur: 9 } } });
+      await until(a, msg => msg.type === 'error' && msg.error === 'invalid');
+      send(a, { type: 'counters', counters: secret });
+      await wait(400);
+      assert.equal(g.messages.filter(isCounters('j1')).length, told);
+    });
+
+    await t.test('ninguém recebeu os números de Ana sem poder', () => {
+      for (const d of devices.filter(d => ['Bento', 'Carla'].includes(d.name))) {
+        for (const number of ['733', '777', '655', '666']) assert.ok(!d.raw.join('\n').includes(`:${number}`), `${d.name} recebeu ${number}`);
+      }
+    });
+  } finally {
+    send(g, { type: 'end' });
+    await until(a, msg => msg.type === 'ended');
+    for (const d of devices) d.ws.close();
+  }
+});
+
+test('o Guardião deixou: todos recebem os valores de todos', { skip: !BASE && 'defina MESA_URL' }, async () => {
+  const keys = { g: newDevice(), a: newDevice(), b: newDevice() };
+  const code = await createRoom(keys.g, { counters: 'all' });
+  const g = await join(code, keys.g, 'Guardião');
+  const a = await join(code, keys.a, 'Ana');
+  const b = await join(code, keys.b, 'Bento');
+  try {
+    assert.deepEqual(b.room.rules, { counters: 'all' });
+    const values = { hp: { max: 11, cur: 9 } };
+    send(a, { type: 'counters', counters: values });
+    for (const me of [g, b]) assert.deepEqual((await until(me, isCounters('j1'))).counters, values);
+    const late = await join(code, newDevice(), 'Carla');
+    assert.deepEqual(memberOf(late.room.members, 'j1').counters, values);
+    send(a, { type: 'counters', counters: {} });                         // apagou tudo: o campo some da lista
+    await until(b, msg => isCounters('j1')(msg) && !msg.counters.hp);
+    const again = await join(code, newDevice(), 'Davi');
+    assert.ok(!('counters' in memberOf(again.room.members, 'j1')));
+  } finally {
+    send(g, { type: 'end' });
+    await until(a, msg => msg.type === 'ended');
+    for (const d of devices) d.ws.close();
+  }
+});
+
+test('mesa criada sem a regra (app antigo): os valores ficam protegidos', { skip: !BASE && 'defina MESA_URL' }, async () => {
+  const key = newDevice(), code = await createRoom(key);
+  const g = await join(code, key, 'Guardião');
+  try {
+    assert.deepEqual(g.room.rules, { counters: 'guardian' });
+    send(g, { type: 'end' });
+    await until(g, msg => msg.type === 'ended');
   } finally {
     for (const d of devices) d.ws.close();
   }

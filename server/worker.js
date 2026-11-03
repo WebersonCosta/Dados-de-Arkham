@@ -1,8 +1,8 @@
 import { DurableObject } from 'cloudflare:workers';
 import {
   PROTOCOL, GUARDIAN, HISTORY,
-  newCode, cleanCode, cleanName, cleanVersion, compareVersions, newest,
-  validDevice, digest, readRoll, seenBy, nextSeat, publicSeat
+  newCode, cleanCode, cleanName, cleanVersion, compareVersions, newest, cleanRules,
+  validDevice, digest, readRoll, seenBy, readCounters, seesCounters, nextSeat, publicSeat
 } from './room.js';
 
 // Servidor da mesa compartilhada, no Cloudflare. Cada sala é um Durable Object: um pequeno programa
@@ -10,12 +10,12 @@ import {
 // apaga sozinho depois de algumas horas sem uso. Quem vê o quê é decidido em room.js.
 //
 // Como o app conversa com ele:
-// - POST /rooms, com { protocol, device, name }: cria uma sala e devolve { code }. Quem cria é o
-//   Guardião.
+// - POST /rooms, com { protocol, device, name, rules }: cria uma sala e devolve { code }. Quem cria
+//   é o Guardião.
 // - /rooms/<código>: a conexão ao vivo (WebSocket). A primeira mensagem do app é
 //   { type: 'hello', protocol, device, name, app }, e a resposta é a sala ({ type: 'room' }).
-//   Depois chegam 'members', 'roll', 'outdated' (o app ficou para trás), 'error' e 'ended'; o app
-//   manda 'roll' e, o Guardião, 'end'.
+//   Depois chegam 'members', 'roll', 'counters', 'outdated' (o app ficou para trás), 'error' e
+//   'ended'; o app manda 'roll', o jogador manda 'counters' (os dele) e o Guardião manda 'end'.
 
 export default {
   async fetch(request, env) {
@@ -53,11 +53,11 @@ async function createRoom(request, env, cors) {
   try { body = JSON.parse(await request.text()); } catch (e) {}
   if (body?.protocol !== PROTOCOL) return reply({ error: 'version' }, 409);
   if (!validDevice(body.device)) return reply({ error: 'invalid' }, 400);
-  const device = await digest(body.device), name = cleanName(body.name);
+  const device = await digest(body.device), name = cleanName(body.name), rules = cleanRules(body.rules);
   // um código sorteado que já esteja em uso (muito raro) é trocado por outro
   for (let tries = 0; tries < 5; tries++) {
     const code = newCode();
-    if (await env.ROOMS.get(env.ROOMS.idFromName(code)).create(code, device, name)) return reply({ code }, 201);
+    if (await env.ROOMS.get(env.ROOMS.idFromName(code)).create(code, device, name, rules)) return reply({ code }, 201);
   }
   return reply({ error: 'busy' }, 503);
 }
@@ -81,15 +81,15 @@ export class Room extends DurableObject {
   }
 
   // Cria a sala, com o Guardião no lugar dele. false se o código já estiver em uso.
-  async create(code, device, name) {
+  async create(code, device, name, rules) {
     if (this.exists()) return false;
     const now = Date.now();
     this.ctx.storage.transactionSync(() => {
-      this.sql.exec('CREATE TABLE room (code TEXT NOT NULL, created INTEGER NOT NULL, last INTEGER NOT NULL)');
-      this.sql.exec('CREATE TABLE seats (seat TEXT PRIMARY KEY, device TEXT NOT NULL UNIQUE, name TEXT NOT NULL, role TEXT NOT NULL, ord INTEGER NOT NULL)');
+      this.sql.exec('CREATE TABLE room (code TEXT NOT NULL, created INTEGER NOT NULL, last INTEGER NOT NULL, rules TEXT NOT NULL)');
+      this.sql.exec('CREATE TABLE seats (seat TEXT PRIMARY KEY, device TEXT NOT NULL UNIQUE, name TEXT NOT NULL, role TEXT NOT NULL, ord INTEGER NOT NULL, counters TEXT)');
       this.sql.exec('CREATE TABLE rolls (seq INTEGER PRIMARY KEY, id TEXT NOT NULL UNIQUE, seat TEXT NOT NULL, at INTEGER NOT NULL, vis TEXT NOT NULL, body TEXT NOT NULL)');
-      this.sql.exec('INSERT INTO room VALUES (?, ?, ?)', code, now, now);
-      this.sql.exec("INSERT INTO seats VALUES (?, ?, ?, 'guardian', 0)", GUARDIAN, device, name);
+      this.sql.exec('INSERT INTO room VALUES (?, ?, ?, ?)', code, now, now, JSON.stringify(rules));
+      this.sql.exec("INSERT INTO seats (seat, device, name, role, ord) VALUES (?, ?, ?, 'guardian', 0)", GUARDIAN, device, name);
     });
     await this.ctx.storage.setAlarm(now + this.idle);
     return true;
@@ -116,6 +116,7 @@ export class Room extends DurableObject {
     const seat = ws.deserializeAttachment()?.seat;
     if (!seat) return msg.type === 'hello' ? this.hello(ws, msg) : this.refuse(ws, 'invalid');
     if (msg.type === 'roll') return this.roll(ws, seat, msg);
+    if (msg.type === 'counters') return this.counters(ws, seat, msg);
     if (msg.type === 'end') return seat === GUARDIAN ? this.end('guardian') : this.send(ws, { type: 'error', error: 'guardian-only' });
     this.send(ws, { type: 'error', error: 'invalid' });
   }
@@ -133,14 +134,14 @@ export class Room extends DurableObject {
       const seats = this.seats(), seat = nextSeat(seats);
       if (!seat) return this.refuse(ws, 'room-full');
       me = { seat, name, role: 'player', ord: seats.length };
-      this.sql.exec('INSERT INTO seats VALUES (?, ?, ?, ?, ?)', seat, device, name, me.role, me.ord);
+      this.sql.exec('INSERT INTO seats (seat, device, name, role, ord) VALUES (?, ?, ?, ?, ?)', seat, device, name, me.role, me.ord);
     } else if (name && name !== me.name) {
       this.sql.exec('UPDATE seats SET name = ? WHERE seat = ?', name, me.seat);
     }
     ws.serializeAttachment({ seat: me.seat, app: cleanVersion(msg.app) });
     await this.touch();
     const { code } = this.sql.exec('SELECT code FROM room').one();
-    this.send(ws, { type: 'room', protocol: PROTOCOL, code, you: me.seat, members: this.members(), rolls: this.history(me.seat) });
+    this.send(ws, { type: 'room', protocol: PROTOCOL, code, you: me.seat, rules: this.rules(), members: this.members(me.seat), rolls: this.history(me.seat) });
     this.announceMembers({ skip: ws });
     this.checkVersions();
   }
@@ -166,6 +167,23 @@ export class Room extends DurableObject {
     for (const c of this.connections()) this.send(c.ws, { type: 'roll', roll: seenBy(saved, c.seat) });
   }
 
+  // Os contadores de um jogador (PV, Sanidade…). Cada um só muda os seus: a mensagem não diz de quem
+  // são, vale o lugar da conexão. O Guardião não tem contadores. Eles vão só para quem pode ver, e o
+  // app manda os dele a cada volta à mesa: se nada mudou, ninguém é avisado.
+  async counters(ws, seat, msg) {
+    if (seat === GUARDIAN) return this.send(ws, { type: 'error', error: 'players-only' });
+    const counters = readCounters(msg.counters);
+    if (!counters) return this.send(ws, { type: 'error', error: 'invalid' });
+    const body = Object.keys(counters).length ? JSON.stringify(counters) : null;
+    if (this.sql.exec('SELECT counters FROM seats WHERE seat = ?', seat).one().counters === body) return;
+    this.sql.exec('UPDATE seats SET counters = ? WHERE seat = ?', body, seat);
+    await this.touch();
+    const rules = this.rules();
+    for (const c of this.connections()) {
+      if (c.ws !== ws && seesCounters(c.seat, seat, rules)) this.send(c.ws, { type: 'counters', seat, counters });
+    }
+  }
+
   // O Guardião encerrou a sessão, ou a sala ficou tempo demais sem uso: avisa quem está nela,
   // desliga todas as conexões e apaga tudo o que a sala guardava.
   async end(reason) {
@@ -185,7 +203,7 @@ export class Room extends DurableObject {
     else await this.ctx.storage.setAlarm(last + this.idle);
   }
 
-  // Mais um uso (alguém chegou ou rolou): a contagem das horas sem uso começa de novo.
+  // Mais um uso (alguém chegou, rolou ou mudou um contador): a contagem das horas sem uso começa de novo.
   async touch(now = Date.now()) {
     this.sql.exec('UPDATE room SET last = ?', now);
     await this.ctx.storage.setAlarm(now + this.idle);
@@ -209,6 +227,10 @@ export class Room extends DurableObject {
     return this.sql.exec('SELECT * FROM seats ORDER BY ord').toArray();
   }
 
+  rules() {
+    return cleanRules(JSON.parse(this.sql.exec('SELECT * FROM room').one().rules || '{}'));
+  }
+
   // As últimas rolagens, do jeito que esse lugar pode ver.
   history(seat) {
     return this.sql.exec('SELECT * FROM (SELECT * FROM rolls ORDER BY seq DESC LIMIT ?) ORDER BY seq', HISTORY)
@@ -224,15 +246,15 @@ export class Room extends DurableObject {
     });
   }
 
-  members(gone) {
-    const online = new Set(this.connections(gone).map(c => c.seat));
-    return this.seats().map(s => publicSeat(s, online.has(s.seat)));
+  // Quem está na mesa, do jeito que esse lugar pode ver.
+  members(viewer, gone) {
+    const online = new Set(this.connections(gone).map(c => c.seat)), rules = this.rules();
+    return this.seats().map(s => publicSeat(s, online.has(s.seat), seesCounters(viewer, s.seat, rules)));
   }
 
   // Manda a lista de quem está na mesa para todos (menos `skip`, que já recebeu a sala inteira).
   announceMembers({ skip, gone } = {}) {
-    const members = this.members(gone);
-    for (const c of this.connections(gone)) if (c.ws !== skip) this.send(c.ws, { type: 'members', members });
+    for (const c of this.connections(gone)) if (c.ws !== skip) this.send(c.ws, { type: 'members', members: this.members(c.seat, gone) });
   }
 
   send(ws, msg) {

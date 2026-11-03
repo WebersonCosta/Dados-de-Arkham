@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   GUARDIAN, MAX_PLAYERS, CODE_CHARS, CODE_LENGTH,
   newCode, cleanCode, validDevice, digest, cleanName, bounds, readRoll, seenBy, nextSeat, publicSeat,
-  cleanVersion, compareVersions, newest
+  cleanVersion, compareVersions, newest, readCounters, cleanRules, seesCounters, MAX_COUNTERS, MAX_COUNTER
 } from '../room.js';
 
 test('código da sala: 6 letras e números, sem os que se confundem', () => {
@@ -121,6 +121,42 @@ test('lugares: j1 a j6 na ordem de entrada, depois a mesa está cheia', () => {
 test('a lista de quem está na mesa não leva a chave do aparelho', () => {
   const row = { seat: 'j1', device: 'f'.repeat(64), name: 'Ana', role: 'player', ord: 1 };
   assert.deepEqual(publicSeat(row, true), { seat: 'j1', name: 'Ana', role: 'player', order: 1, online: true });
+});
+
+test('contadores: só o máximo e o atual de cada um, com o atual entre 0 e o máximo', () => {
+  const good = { hp: { max: 11, cur: 9 }, san: { max: 60, cur: 0 } };
+  assert.deepEqual(readCounters(good), good);
+  assert.deepEqual(readCounters({}), {});                                   // ainda sem nenhum
+  assert.deepEqual(readCounters({ hp: { max: 5, cur: 5, extra: 'x' } }), { hp: { max: 5, cur: 5 } });   // campo a mais não passa
+  assert.deepEqual(readCounters({ hp: { max: MAX_COUNTER, cur: 1 } }), { hp: { max: MAX_COUNTER, cur: 1 } });
+  for (const bad of [
+    null, undefined, 'hp', 7, [], [{ max: 1, cur: 1 }],
+    { hp: { max: 10, cur: 11 } },                       // acima do máximo
+    { hp: { max: 10, cur: -1 } },                       // abaixo de zero
+    { hp: { max: 0, cur: 0 } },                         // sem máximo
+    { hp: { max: MAX_COUNTER + 1, cur: 1 } },
+    { hp: { max: '10', cur: 1 } }, { hp: { max: 10 } }, { hp: { max: 10.5, cur: 1 } }, { hp: null }, { hp: 5 },
+    { 'H P': { max: 1, cur: 1 } }, { __proto__x: { max: 1, cur: 1 } },
+    Object.fromEntries(Array.from({ length: MAX_COUNTERS + 1 }, (_, i) => [`c${i}`, { max: 1, cur: 1 }]))
+  ]) assert.equal(readCounters(bad), null, JSON.stringify(bad));
+});
+
+test('regras da mesa: sem escolha, os contadores não são mostrados aos outros', () => {
+  assert.deepEqual(cleanRules({ counters: 'all' }), { counters: 'all' });
+  assert.deepEqual(cleanRules({ counters: 'guardian' }), { counters: 'guardian' });
+  for (const other of [undefined, null, {}, { counters: 'todos' }, 'all']) assert.deepEqual(cleanRules(other), { counters: 'guardian' });
+});
+
+test('quem vê os contadores de um jogador', () => {
+  const closed = { counters: 'guardian' }, open = { counters: 'all' };
+  assert.ok(seesCounters('j1', 'j1', closed));      // o próprio
+  assert.ok(seesCounters(GUARDIAN, 'j1', closed));  // o Guardião
+  assert.ok(!seesCounters('j2', 'j1', closed));     // os outros, só se a regra deixar
+  assert.ok(seesCounters('j2', 'j1', open));
+  const row = { seat: 'j1', device: 'f', name: 'Ana', role: 'player', ord: 1, counters: '{"hp":{"max":11,"cur":9}}' };
+  assert.deepEqual(publicSeat(row, true, true).counters, { hp: { max: 11, cur: 9 } });
+  assert.ok(!('counters' in publicSeat(row, true, false)));                  // para quem não pode ver, o campo nem existe
+  assert.ok(!('counters' in publicSeat({ ...row, counters: null }, true, true)));
 });
 
 test('versão do app: a mais nova da mesa e quem ficou para trás', () => {

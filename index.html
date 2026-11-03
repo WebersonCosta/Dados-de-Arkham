@@ -86,13 +86,15 @@
 
   <footer class="hud-bottom" id="hudBottom">
     <!-- mesa compartilhada: os avisos das rolagens dos outros, por cima da mesa, e a linha com quem
-         vê a próxima rolagem, o rótulo dela e o atalho para as rolagens (room-panel.js) -->
+         vê a próxima rolagem, o rótulo dela, o atalho para as rolagens e os valores do personagem
+         (room-panel.js) -->
     <div class="notices" id="notices" aria-live="polite"></div>
     <p class="hint" id="hint">Preparando a mesa…</p>
     <div class="room-row" id="roomRow" hidden>
       <button type="button" class="toggle room-chip" id="btnVis">Aberta</button>
       <button type="button" class="toggle room-chip" id="btnLabel">Rótulo</button>
       <button type="button" class="toggle room-chip" id="btnLog">Rolagens<span class="count" id="logCount"></span></button>
+      <button type="button" class="toggle room-chip" id="btnCounters" hidden></button>
     </div>
     <div class="slot">
       <div class="modes" id="modes" role="group"></div>
@@ -159,6 +161,12 @@
       <p class="table-error" id="tableError" role="alert" hidden></p>
       <p class="sheet-label" id="tableGuardian">É o Guardião?</p>
       <button type="button" class="sheet-save is-quiet" id="btnCreate">Criar uma mesa nova</button>
+      <!-- ao criar, o Guardião escolhe quem vê os valores dos jogadores (room-panel.js) -->
+      <div class="table-choice" id="createChoice" hidden>
+        <p class="table-status" id="createQuestion"></p>
+        <button type="button" class="sheet-save is-quiet" id="btnCreateClosed"></button>
+        <button type="button" class="sheet-save is-quiet" id="btnCreateOpen">Sim: todos veem</button>
+      </div>
       <p class="table-note">Sem cadastro: na mesa vai só o nome do personagem. A mesa se apaga sozinha
         6 horas depois do último uso.</p>
     </div>
@@ -177,8 +185,9 @@
         <button type="button" class="toggle" id="btnInvite">Copiar convite</button>
       </div>
       <p class="table-status" id="tableStatus" aria-live="polite"></p>
-      <p class="sheet-label">Na mesa</p>
+      <p class="sheet-label" id="tableMembersTitle">Na mesa</p>
       <ol class="members" id="tableMembers"></ol>
+      <table class="values" id="tableValues" hidden></table>
       <p class="sheet-label">Rolagens</p>
       <div class="log-box">
         <ol class="log" id="roomLog"></ol>
@@ -206,6 +215,18 @@
       <p class="sheet-label" id="labelRecentTitle">Últimos usados</p>
       <div class="label-chips" id="labelRecent"></div>
       <button type="button" class="sheet-save is-quiet" id="btnNoLabel">Rolar sem rótulo</button>
+    </div>
+  </div>
+
+  <!-- os valores do personagem: PV, SAN, Sorte e PM no tema Arkham (room-counters.js) -->
+  <div class="sheet" id="countersSheet" hidden role="dialog" aria-modal="true" aria-labelledby="countersHead">
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <p class="sheet-title" id="countersHead"></p>
+        <button type="button" class="toggle" id="btnCloseCounters">Fechar</button>
+      </div>
+      <div class="counters" id="countersList"></div>
+      <p class="table-note" id="countersNote"></p>
     </div>
   </div>
 

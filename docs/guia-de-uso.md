@@ -1,6 +1,6 @@
 # Guia de uso: Dados de Arkham
 
-Atualizado em 31/10/2026: versão oficial **1.1** e versão em teste **1.2** (envio "teste 11").
+Atualizado em 03/11/2026: versão oficial **1.1** e versão em teste **1.2** (envio "teste 12").
 
 O Dados de Arkham é um rolador de dados 3D para RPG, feito para *Call of Cthulhu* (7ª edição). Os
 dados caem numa mesa de madeira, à luz de velas, e o resultado é a face que ficou para cima, como
@@ -30,10 +30,10 @@ e até 6 jogadores podem rolar juntos, cada um no seu aparelho, pela **mesa comp
 | | Endereço | Versão | O que tem |
 | --- | --- | --- | --- |
 | **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.1 | Tudo o que está neste guia, menos a mesa compartilhada |
-| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.2 (teste 11) | Tudo, inclusive a mesa compartilhada |
+| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.2 (teste 12) | Tudo, inclusive a mesa compartilhada |
 
 - O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.1** no oficial e
-  **v1.2 · teste 11** no teste, em vermelho. O número depois de "teste" sobe a cada envio: é o
+  **v1.2 · teste 12** no teste, em vermelho. O número depois de "teste" sobe a cada envio: é o
   jeito de saber se a versão nova já chegou.
 - Os dois endereços não se misturam. Cada um guarda à parte as preferências, as fórmulas favoritas
   e a cópia para usar sem internet. Instalado, o oficial se chama **Arkham** e o teste, **Arkham
@@ -71,7 +71,8 @@ conexão.
   - com os outros dados: **★** (atalhos), a **fórmula** (com o **×**) e o **número fixo** (**−** e
     **+**).
 - **Dentro de uma mesa compartilhada** (versão em teste), aparece mais uma linha acima da bandeja:
-  quem vê a rolagem, **Rótulo** e **Rolagens**.
+  quem vê a rolagem, **Rótulo**, **Rolagens** e, para os jogadores, os valores do investigador
+  (**PV · SAN**).
 - **No canto de baixo, à direita:** o número da versão.
 
 ## 4. Rolar os dados
@@ -185,8 +186,10 @@ Não há cadastro nem turnos: qualquer um rola quando quiser.
 ### Criar a mesa (Guardião)
 
 1. Toque em **Mesa** e, em "É o Guardião?", em **Criar uma mesa nova**.
-2. Aparece o painel da mesa, com o **código** (6 letras e números, como **K7Q X3M**).
-3. Para convidar: no computador, **Copiar convite** copia um texto com o link, para colar no
+2. Responda se os jogadores veem os valores uns dos outros (PV, SAN, Sorte e PM): **Não: só o
+   Guardião vê** ou **Sim: todos veem**. A escolha vale até o fim da mesa.
+3. Aparece o painel da mesa, com o **código** (6 letras e números, como **K7Q X3M**).
+4. Para convidar: no computador, **Copiar convite** copia um texto com o link, para colar no
    Discord; no celular, **Convidar** abre o compartilhar (Discord, WhatsApp…).
 
 O Guardião entra com o nome "Guardião". O aparelho que cria a mesa é o do Guardião dela.
@@ -201,6 +204,8 @@ O Guardião entra com o nome "Guardião". O aparelho que cria a mesa é o do Gua
 - A folha fica aberta até a mesa responder ("Entrando na mesa…"). Se algo der errado, a mensagem
   aparece nela. Fechar a folha desiste de entrar.
 - O nome (até 30 letras) fica guardado no aparelho para a próxima vez.
+- Se o investigador ainda não tem valores neste aparelho, a folha dos valores abre logo depois de
+  entrar (veja [Valores do investigador](#valores-do-investigador-pv-san-sorte-e-pm)).
 
 ### O painel da mesa
 
@@ -209,6 +214,8 @@ O Guardião entra com o nome "Guardião". O aparelho que cria a mesa é o do Gua
 - **Quem está na mesa:** na ordem de entrada, com o Guardião primeiro. O ponto verde aceso é quem
   está conectado agora; "você" marca o seu nome, e "fora da mesa", quem saiu ou caiu. Nomes
   compridos aparecem cortados nessa lista, mas inteiros no histórico.
+- **Para o Guardião** (e para todos, se ele deixou), essa lista vira uma tabela com os valores de
+  cada um, como **9/11** (atual e máximo). O título dela diz quem vê os valores.
 - **No celular**, o painel é uma gaveta: abre pelo **Mesa** ou pelo **Rolagens**. O número em cima
   de **Rolagens** conta as rolagens novas dos outros.
 - **No computador**, com a janela larga, o painel fica sempre à vista, à direita. **Mesa** e
@@ -255,6 +262,35 @@ troca:
   ("d100 · 1 dado de bônus · 20 30 + 7"), além de "Sucesso crítico" ou "Desastre". O seu nome
   aparece em dourado. A rolagem de outra pessoa que acabou de chegar acende uma vez.
 
+### Valores do investigador (PV, SAN, Sorte e PM)
+
+Cada jogador acompanha os Pontos de Vida, a Sanidade, a Sorte e os Pontos de Magia do investigador.
+O Guardião não tem valores próprios.
+
+- **Onde ficam:** o botão perto da bandeja mostra os dois primeiros (**PV 9 · SAN 55**) e abre a folha
+  com os quatro. Sem valores ainda, ele aparece como **PV · SAN**, aceso e pulsando.
+- **Informar:** escreva o máximo de cada valor na coluna "máximo". O valor atual já começa cheio.
+- **Ajustar:** **−** e **+** mudam o valor atual (segure para ir mais rápido), que fica sempre entre 0
+  e o máximo.
+- **Mudar um máximo depois:** escreva o novo. Quem estava cheio continua cheio; nos outros casos, o
+  atual só muda se passar do máximo novo. Apagar o campo apaga aquele valor.
+- **Guardados no aparelho:** os valores ficam ligados ao nome do investigador (maiúsculas não fazem
+  diferença) e voltam sozinhos na próxima sessão, em qualquer mesa. Outro nome começa com os valores
+  vazios.
+- **Sem conexão:** dá para ajustar do mesmo jeito; os valores vão para a mesa quando a conexão voltar.
+
+**Quem vê e quem muda**
+
+| | Vê os valores de um jogador | Muda os valores |
+| --- | --- | --- |
+| O próprio jogador | Sim | Sim |
+| O Guardião | Sim, em tempo real, na lista de quem está na mesa | Não |
+| Os outros jogadores | Só se o Guardião escolheu **Sim: todos veem** ao criar a mesa | Não |
+
+Se o Guardião escolheu **Não: só o Guardião vê**, a proteção é feita na própria mesa, no servidor,
+como nas rolagens privadas: os números dos outros nunca chegam ao aparelho de um jogador, nem
+escondidos.
+
 ### Quando a conexão cai
 
 - O app reconecta sozinho e volta para o mesmo lugar, com o histórico. Fechar o app e abrir de novo
@@ -299,12 +335,12 @@ aparelho diferente, e o título da aba mostra quem é quem.
 **No seu aparelho** (só nele; limpar os dados do navegador apaga tudo isso):
 
 - se **Som** e **Ambiente** estão ligados, o último dado ou fórmula e as fórmulas favoritas;
-- na mesa compartilhada: o nome do investigador, os últimos rótulos, a mesa em que você está, as
-  rolagens esperando conexão e uma chave sorteada que identifica o aparelho.
+- na mesa compartilhada: o nome do investigador e os valores dele, os últimos rótulos, a mesa em que
+  você está, as rolagens esperando conexão e uma chave sorteada que identifica o aparelho.
 
-**Na mesa compartilhada** (no servidor, só enquanto a mesa existe): o código, os nomes dos
-investigadores, um resumo da chave de cada aparelho (a chave mesmo nunca sai do aparelho) e as
-rolagens. Tudo se apaga quando o Guardião encerra a mesa ou depois de 6 horas sem uso.
+**Na mesa compartilhada** (no servidor, só enquanto a mesa existe): o código, a escolha de quem vê
+os valores, os nomes dos investigadores e os valores deles, um resumo da chave de cada aparelho (a
+chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardião encerra a mesa ou depois de 6 horas sem uso.
 
 - Ninguém cria conta. Não se pede e-mail, telefone nem nome real.
 - O servidor não grava registros (logs) nem endereços de internet.
@@ -328,7 +364,7 @@ rolagens. Tudo se apaga quando o Guardião encerra a mesa ou depois de 6 horas s
 | --- | --- | --- |
 | 1.0 | 29/10/2026 | Os dados d4 a d20 e o d100, com dados de bônus e de penalidade, crítico e desastre |
 | 1.1 | 30/10/2026 | Vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e montagem, atualizações sem mistura de versões e o número da versão no canto |
-| 1.2 | em teste | A mesa compartilhada |
+| 1.2 | em teste | A mesa compartilhada, com os valores do investigador (PV, SAN, Sorte e PM) |
 
 ## 12. Limitações atuais
 
@@ -386,6 +422,14 @@ rolagens. Tudo se apaga quando o Guardião encerra a mesa ou depois de 6 horas s
 - Os dados dos outros não aparecem em 3D, só o resultado, no aviso e no histórico. Não há som para
   as rolagens dos outros.
 - Não há chat: a conversa continua no Discord.
+- Valores do investigador:
+  - são só PV, SAN, Sorte e PM, escritos à mão: ainda não há ficha de personagem;
+  - não há alertas para o Guardião (PV baixo, perda grande de Sanidade);
+  - o Guardião não altera os valores de ninguém, e a escolha de quem vê não muda depois de criar a
+    mesa;
+  - ficam só no aparelho: não passam para outro aparelho nem para outro navegador;
+  - o valor atual não passa do máximo nem fica abaixo de 0, e o máximo vai até 999;
+  - quem sai da mesa continua aparecendo para o Guardião com os últimos valores que mandou.
 - A mesa roda num servidor no leste dos Estados Unidos (o atraso é de uma fração de segundo), no
   plano gratuito do Cloudflare. Se um limite diário estourar (muito improvável numa sessão), a mesa
   compartilhada para até as 21h de Brasília; rolar sozinho continua funcionando.
@@ -397,6 +441,8 @@ rolagens. Tudo se apaga quando o Guardião encerra a mesa ou depois de 6 horas s
 | O número do canto continua o antigo depois de uma atualização | Espere alguns minutos, feche o app de vez e abra de novo |
 | Sem som | Toque na tela uma vez e confira se **Som** e **Ambiente** estão ligados; no iPhone, desligue o modo silencioso |
 | "No máximo 8 dados na mesa" | Tire um dado da fórmula ou role em duas vezes |
+| O botão **PV · SAN** está pulsando | O investigador ainda não tem valores: toque nele e escreva os máximos |
+| Os valores não voltaram na sessão seguinte | Entre com o mesmo nome do investigador, no mesmo aparelho e navegador |
 | "Escreva o nome do investigador." | Preencha o nome antes de entrar |
 | "O código tem 6 letras e números, como K7Q X3M." | Confira o código com o Guardião |
 | "Não existe mesa com esse código. Confira com o Guardião." | O código está errado, ou a mesa já foi encerrada |
@@ -419,11 +465,12 @@ rolagens. Tudo se apaga quando o Guardião encerra a mesa ou depois de 6 horas s
 - **Agora:** a sessão real no Discord, pelo endereço de teste. Depois dos ajustes, a publicação da
   1.2, com a mesa oficial.
 - **Fase 3, o painel do Guardião:** rolar em segredo por um jogador, pedir uma rolagem a um jogador
-  (o aparelho dele abre com a bandeja já pronta), as regras da mesa e, provavelmente, liberar um
-  lugar.
+  (o aparelho dele abre com a bandeja já pronta), as regras da mesa, os alertas (PV baixo, perda
+  grande de Sanidade) e, provavelmente, liberar um lugar.
 - **Fase 4, a mesa ritual 3D:** uma mesa redonda à luz de velas, com os jogadores como figuras
   encapuzadas e o resultado de cada um sobre a sua figura.
 - **Fase 5, o polimento:** sons e efeitos, ajustes para PC e celular e o campo de perícia, com o
   nível de sucesso da 7ª edição.
-- **Ideias:** outros temas, como um de fantasia para D&D, com crítico no d20 e vantagem e
-  desvantagem.
+- **Ideias:** a ficha do personagem dentro do app (em Markdown, com os contadores lendo e
+  atualizando a tabela de valores e as perícias virando botões de rolagem; em PDF, só para ver) e
+  outros temas, como um de fantasia para D&D, com crítico no d20 e vantagem e desvantagem.

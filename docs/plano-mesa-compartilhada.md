@@ -8,8 +8,10 @@ Andamento: fase 1 (plano) aprovada em 31/10/2026. Fase 2, passo 1 (preparação)
 31/10/2026: a mesa de teste está no ar e passou no teste dos três aparelhos. Passo 2 (entrar na
 mesa), passo 3 (rolagens ao vivo, com rótulo), passo 4 (privada, secreta e suspense) e passo 5
 (quedas e encerramento) testados e aprovados por Weberson em 31/10/2026. **Passo 6 (a sessão real
-no Discord) começou em 31/10/2026, esperando a sessão de Weberson.** As decisões e os passos da
-fase 2 estão no fim deste arquivo.
+no Discord) começou em 31/10/2026, esperando a sessão de Weberson.** Antes dela, em 03/11/2026,
+entrou a versão mínima dos valores do investigador (PV, SAN, Sorte e PM), no endereço de teste,
+esperando o teste de Weberson. As decisões, os passos da fase 2, os valores e a ideia da ficha do
+personagem estão no fim deste arquivo.
 
 ## Sala e entrada
 
@@ -147,3 +149,55 @@ Cada passo termina com o endereço de teste atualizado, o link e como testar.
    "reconectando…", a rolagem feita sem sinal enviada quando a conexão volta, o aviso de versão.
 6. **Sessão real no Discord**, pelo endereço de teste. Depois dos ajustes, o "pode publicar" põe
    no ar o app e a mesa oficial juntos.
+
+## Valores do investigador (pedido de Weberson em 03/11/2026)
+
+Versão mínima de PV, Sanidade, Sorte e Pontos de Magia, antes da primeira sessão real.
+
+- Cada jogador informa o máximo de cada valor e ajusta o atual com + e −, de forma rápida no
+  celular.
+- Só o jogador altera os próprios valores. O Guardião não altera e não tem contadores próprios.
+- Os valores ficam salvos no aparelho, ligados ao nome do investigador, e voltam sozinhos na próxima
+  sessão.
+- O Guardião vê os valores de todos em tempo real, na lista de quem está na mesa.
+- Ao criar a sala, o Guardião escolhe se os outros jogadores também veem os valores de todos. Se
+  não, a proteção é feita no servidor, como nas rolagens privadas: quem não pode ver não recebe os
+  números.
+
+Fica para depois: alertas para o Guardião (PV baixo, perda grande de Sanidade), o painel completo
+do Guardião e outras regras da mesa.
+
+**Como foi feito**
+
+- O aparelho é quem sabe os valores; a mesa só recebe o resultado e entrega a quem pode ver. Assim
+  ninguém consegue mudar os valores de outra pessoa: a mensagem não diz de quem são, vale o lugar da
+  conexão, e o Guardião não tem como mandar.
+- Quais são os contadores é o tema que diz (`counters`, em `rules.js`); o servidor confere só o
+  formato. Outro tema pode ter outros contadores sem mudar o servidor.
+- Um botão perto da bandeja mostra os dois primeiros valores e abre a folha com os quatro, embaixo,
+  perto do polegar. Quem entra com um investigador ainda sem valores começa por essa folha.
+- Para o Guardião (e para todos, se ele deixou), a lista de quem está na mesa vira uma tabela, uma
+  linha por pessoa, para caber junto com as rolagens.
+
+## Ideia para depois: a ficha do personagem
+
+Weberson quer, no futuro, carregar a ficha de personagem dentro do app, em dois formatos. A ficha
+ainda não foi feita; os contadores foram feitos para ela entrar sem refazer nada.
+
+- **Markdown, o formato completo.** A ficha terá uma tabela "Valores derivados", com as colunas
+  "Máximo" e "Atual", e os contadores devem poder ler e atualizar essa tabela. As perícias também
+  poderão virar botões de rolagem.
+- **PDF, só para visualizar a ficha dentro do app.** Nesse caso, os contadores continuam sendo
+  ajustados à mão.
+
+Como isso entra:
+
+- Cada linha da tabela já tem a forma de um contador: "Máximo" e "Atual" são o `{ max, cur }` de
+  `src/core/counters.js`. O tema já traz os dois nomes de cada um (`short` e `name`, como "PV" e
+  "Pontos de Vida"), para achar a linha certa na tabela.
+- Ler: o que vier da tabela passa por `cleanCounters` e entra nos valores do personagem.
+- Atualizar: toda mudança passa por um único ponto (`changed()`, em `src/room-counters.js`); é ali
+  que a ficha reescreve a coluna "Atual".
+- A ficha fica no aparelho, ao lado dos valores e ligada ao mesmo nome do investigador
+  (`saved.characters`; um PDF, por ser grande, pediria outro lugar de guardar). A mesa não muda: ela
+  continua recebendo só os contadores, e a ficha nunca sai do aparelho.

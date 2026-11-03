@@ -123,12 +123,43 @@ export function seenBy(roll, seat) {
   return sees ? roll : { id: roll.id, seq: roll.seq, seat: roll.seat, at: roll.at, vis: roll.vis };
 }
 
+// Os contadores de um jogador, como o app manda: { hp: { max: 11, cur: 9 }, san: { max: 60, cur: 55 } }.
+// Quais são (PV, Sanidade…) é o tema do app que diz; aqui vale só o formato: o máximo e o valor atual
+// de cada um, inteiros, com o atual entre 0 e o máximo. null se vier qualquer outra coisa.
+export const MAX_COUNTERS = 8;
+export const MAX_COUNTER = 999;
+export function readCounters(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const entries = Object.entries(input);
+  if (entries.length > MAX_COUNTERS) return null;
+  const counters = {};
+  for (const [id, c] of entries) {
+    const good = /^[a-z0-9]{1,12}$/.test(id) && Number.isInteger(c?.max) && Number.isInteger(c?.cur)
+      && c.max >= 1 && c.max <= MAX_COUNTER && c.cur >= 0 && c.cur <= c.max;
+    if (!good) return null;
+    counters[id] = { max: c.max, cur: c.cur };
+  }
+  return counters;
+}
+
+// As regras da mesa, escolhidas pelo Guardião ao criar. counters: quem vê os contadores dos
+// jogadores, 'guardian' (o Guardião e o próprio jogador; é o padrão, que não revela nada) ou 'all'.
+export const cleanRules = input => ({ counters: input?.counters === 'all' ? 'all' : 'guardian' });
+
+// Quem vê os contadores de um lugar: o próprio, o Guardião e, se a regra da mesa deixar, os outros.
+export const seesCounters = (viewer, owner, rules) => viewer === owner || viewer === GUARDIAN || rules.counters === 'all';
+
 // O lugar de quem chega pela primeira vez: o próximo de jogador (j1, j2…), ou null com a mesa cheia.
 export function nextSeat(seats) {
   const players = seats.filter(s => s.role === 'player').length;
   return players < MAX_PLAYERS ? `j${players + 1}` : null;
 }
 
-// Quem está na mesa, como todos recebem: o lugar, o nome, o papel, a ordem de entrada e se está
-// conectado. A chave do aparelho (nem o resumo dela) nunca sai do servidor.
-export const publicSeat = (s, online) => ({ seat: s.seat, name: s.name, role: s.role, order: s.ord, online });
+// Quem está na mesa, como cada lugar recebe: o lugar, o nome, o papel, a ordem de entrada, se está
+// conectado e, só para quem pode ver (showCounters), os contadores. Para os outros, o campo nem
+// existe. A chave do aparelho (nem o resumo dela) nunca sai do servidor.
+export function publicSeat(s, online, showCounters = false) {
+  const seat = { seat: s.seat, name: s.name, role: s.role, order: s.ord, online };
+  if (showCounters && s.counters) seat.counters = JSON.parse(s.counters);
+  return seat;
+}

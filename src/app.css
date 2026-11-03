@@ -304,6 +304,23 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 .member small { flex: none; font-family: var(--font-ui); font-size: .62rem; letter-spacing: .06em; color: var(--c-text-dim); }
 .member small:empty { display: none; }
 
+/* Quem está na mesa, com os valores de cada um: uma tabela, para o Guardião bater o olho. Quem cede
+   são os nomes compridos, que aparecem inteiros no histórico. */
+.values { width: 100%; border-collapse: collapse; font-family: var(--font-ui); }
+.values th, .values td {
+  padding: .16rem 0 .16rem .5rem; font-size: .66rem; line-height: 1.2; font-weight: 400; text-align: center; white-space: nowrap;
+  color: var(--c-text-dim); border-bottom: 1px solid var(--c-line);
+}
+.values thead th, .values thead td { padding-top: 0; padding-bottom: .12rem; font-size: .6rem; letter-spacing: .06em; }
+.values td b { font: 700 .9rem/1 var(--font-number); color: var(--c-text); }
+.values .member-who { width: 100%; max-width: 0; padding-left: 0; text-align: left; }
+.member-who > span { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.member-who .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-line-strong); }
+.member-row.is-online .dot { background: var(--c-bonus); box-shadow: 0 0 6px var(--c-bonus); }
+.member-who .member-name { font-size: .95rem; line-height: 1.25; color: var(--c-text); }
+.member-row.is-me .member-name { color: var(--c-accent); }
+.member-row:not(.is-online) .member-name { opacity: .55; }
+
 /* As rolagens da mesa, a mais nova em cima: o número à esquerda; ao lado, quem rolou e o rótulo, e
    embaixo o que foi rolado. A que acabou de chegar acende por um instante. */
 .log-box { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
@@ -375,6 +392,37 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 #btnLabel { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .room-chip.is-set { color: var(--c-accent); border-color: var(--c-accent); background: var(--c-accent-soft); }
 .room-chip.is-veiled { color: var(--c-penalty); border-color: var(--c-penalty); background: var(--c-penalty-soft); }
+/* em tela estreita, os quatro botões ficam um pouco mais justos, para o rótulo não encolher */
+@media (max-width: 400px) {
+  .room-row { gap: 6px; }
+  .room-chip { padding-inline: .5rem; }
+}
+/* os valores do personagem: enquanto não foram informados, o botão chama a atenção */
+#btnCounters { white-space: nowrap; }
+.room-chip.is-empty { color: var(--c-accent); border-color: var(--c-accent); animation: breathe 2.6s ease-in-out infinite; }
+
+/* A folha dos valores do personagem: o nome, − atual +, e o máximo. Botões grandes, para o polegar. */
+#countersHead { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.counters { display: grid; grid-template-columns: minmax(2.7rem, auto) minmax(2.7rem, 3.1rem) minmax(2.4rem, 1fr) minmax(2.7rem, 3.1rem) 3.4rem; gap: 6px; align-items: center; }
+.counter-caption { font-family: var(--font-ui); font-size: .62rem; letter-spacing: .1em; text-align: center; color: var(--c-text-dim); }
+.counter-name { font-family: var(--font-title); font-size: 1.1rem; }
+.counter-cur { font: 700 1.6rem/1 var(--font-number); text-align: center; color: var(--c-text); }
+.counter-step {
+  height: 3.1rem; font: 700 1.4rem/1 var(--font-number); color: var(--c-accent); background: var(--c-panel);
+  border: 1px solid var(--c-line-strong); border-radius: 2px; cursor: pointer; touch-action: manipulation;
+}
+.counter-step[aria-disabled="true"] { color: var(--c-text-dim); border-color: var(--c-line); opacity: .5; cursor: default; }
+.counter-max {
+  box-sizing: border-box; width: 100%; padding: .55rem .2rem;
+  font: 16px/1.2 var(--font-ui);   /* 16px: o iPhone não aproxima a tela ao tocar no campo */
+  text-align: center; color: var(--c-text); background: var(--c-panel); border: 1px solid var(--c-line-strong); border-radius: 2px;
+  -webkit-user-select: text; user-select: text;
+}
+.counter-max:focus { outline: none; border-color: var(--c-accent); }
+
+/* Ao criar uma mesa: a pergunta de quem vê os valores dos jogadores. */
+.table-choice { display: flex; flex-direction: column; gap: 2px; }
+.table-choice > p { margin: 0; }
 
 /* A folha do rótulo: o campo, e os últimos usados para escolher com um toque. */
 .label-form { display: flex; align-items: flex-end; gap: 8px; }
@@ -402,5 +450,5 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 }
 @media (prefers-reduced-motion: reduce) {
   .hint, .table-button { animation: none !important; opacity: .85; }
-  .verdict.show > *, .notice, .notice.is-hidden b, .notice.is-held, .roll.is-new { animation: none; }
+  .verdict.show > *, .notice, .notice.is-hidden b, .notice.is-held, .roll.is-new, .room-chip.is-empty { animation: none; }
 }
