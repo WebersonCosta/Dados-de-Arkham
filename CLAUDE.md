@@ -27,10 +27,10 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.2**, publicada em 06/11/2026 | `main` = tag `v1.2`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev |
+| Oficial | **1.2**, publicada em 06/11/2026 | `main` = tag `v1.2` (d41a027), https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev |
 | Desenvolvimento | depois da 1.2: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 12` (a 1.2) |
 
-Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6) e `v1.2`. A 1.1 trouxe: vários
+Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6) e `v1.2` (d41a027). A 1.1 trouxe: vários
 dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2 trouxe a mesa
 compartilhada (fase 2), com os valores do investigador.
