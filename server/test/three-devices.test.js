@@ -5,6 +5,8 @@
 // Com o simulador local ligado (npm run local, em outra janela):
 //   MESA_URL=http://localhost:8787 npm run test:mesa
 // Ou contra a mesa de teste publicada: MESA_URL=https://mesa-arkham-teste.mesa-arkham.workers.dev
+// A mesa oficial só aceita o endereço do app: MESA_URL=https://mesa-arkham.mesa-arkham.workers.dev
+// MESA_ORIGEM=https://webersoncosta.github.io
 // O teste da sala que se apaga sozinha só roda com MESA_INATIVIDADE (os segundos sem uso
 // configurados no servidor, como em "npm run local -- --var IDLE_SECONDS:3").
 import { test } from 'node:test';
@@ -12,7 +14,7 @@ import assert from 'node:assert/strict';
 
 const BASE = process.env.MESA_URL?.replace(/\/$/, '');
 const IDLE = Number(process.env.MESA_INATIVIDADE) || 0;
-const ORIGIN = 'http://localhost:8766';   // como se fosse o app aberto no computador
+const ORIGIN = process.env.MESA_ORIGEM || 'http://localhost:8766';   // como se fosse o app aberto no computador
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const newDevice = () => Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
 let counter = 0;

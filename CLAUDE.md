@@ -27,12 +27,13 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**: mesa compartilhada (fase 2) testada por Weberson, esperando o "pode publicar" | `desenvolvimento`; endereço de teste com o envio `teste 12` |
+| Oficial | **1.2**, publicada em 06/11/2026 | `main` = tag `v1.2`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev |
+| Desenvolvimento | depois da 1.2: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 12` (a 1.2) |
 
-Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
-juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
-montagem, as atualizações sem mistura de versões e o número da versão no canto.
+Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6) e `v1.2`. A 1.1 trouxe: vários
+dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
+montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2 trouxe a mesa
+compartilhada (fase 2), com os valores do investigador.
 
 - Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 13.
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
@@ -50,8 +51,8 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - Fase 2, passo 1 (preparação, o app não mudou) pronto em 31/10/2026: o servidor em `server/`
   (veja "Mesa compartilhada: o servidor" abaixo). A mesa de teste está no ar em
   https://mesa-arkham-teste.mesa-arkham.workers.dev e passou no teste dos três aparelhos (12 de
-  12, com o tempo sem uso reduzido a 20 s só para o teste). A mesa oficial ainda não existe; vai
-  ser https://mesa-arkham.mesa-arkham.workers.dev, só com o "pode publicar".
+  12, com o tempo sem uso reduzido a 20 s só para o teste). A mesa oficial está no ar desde
+  06/11/2026 em https://mesa-arkham.mesa-arkham.workers.dev, criada com o "pode publicar".
 - A conta do Cloudflare é de Weberson (plano gratuito, sem cartão). O subdomínio gratuito
   `mesa-arkham.workers.dev` foi criado pelo wrangler no primeiro envio. Este PC guarda o login do
   wrangler (fora do projeto, em `%APPDATA%\xdg.config\.wrangler`), feito só com as permissões de
@@ -87,10 +88,12 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   sala que se apaga sozinha fica pulado). O
   pedido e a ideia da ficha do personagem estão no plano. Ficaram para depois: alertas para o
   Guardião, o painel completo e outras regras da mesa.
-- Próximo passo: o "pode publicar" da 1.2, que põe no ar o app e a mesa oficial juntos (veja
-  "Fluxo"). Na publicação: o README e o guia de uso deixam de dizer "em teste" (e a tabela de
-  versões ganha a data), e Weberson fica sabendo que os valores do investigador guardados no
-  endereço de teste não passam para o oficial (cada endereço guarda os seus).
+- Versão 1.2 publicada em 06/11/2026, com o "pode publicar" de Weberson. Primeiro a mesa oficial
+  (`npm run deploy:oficial`; nos primeiros instantes o Cloudflare respondeu "error code: 1042" e
+  logo passou), testada com os aparelhos simulados (22 de 22; outras origens recebem 403), e depois
+  o app. Os valores do investigador guardados no endereço de teste não passam para o oficial (cada
+  endereço guarda os seus). Próxima etapa da mesa compartilhada: a fase 3 (o painel do Guardião),
+  quando Weberson pedir.
 
 ## Decisões tomadas (e por quê)
 
@@ -346,8 +349,10 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - Publicar, só depois do "pode publicar": a `main` vira cópia exata da `desenvolvimento`
   (`git restore --source=desenvolvimento ...`), commit "Versão X.Y", tag `vX.Y`, push da `main`
   e da tag, conferir o endereço oficial, voltar para a `desenvolvimento` e subir `VERSION`. Da 1.2
-  em diante, a mesa oficial vai antes (`npm run deploy:oficial` e o teste dos aparelhos contra ela),
-  para o botão "Mesa" do app oficial já encontrá-la.
+  em diante, a mesa oficial vai antes (`npm run deploy:oficial` e o teste dos aparelhos contra ela,
+  com `MESA_ORIGEM=https://webersoncosta.github.io`, a única origem que ela aceita), para o botão
+  "Mesa" do app oficial já encontrá-la. Um servidor recém-criado pode responder "error code: 1042"
+  por alguns instantes.
 - Voltar a uma versão anterior ("volte o app oficial para a versão 1.0"): `git restore
   --source=vX.Y ...` na `main`, commit e push. Os comandos estão no README.
 - Servidor da mesa (dentro de `server/`): a mesa de teste (`npm run deploy:teste`, que roda os

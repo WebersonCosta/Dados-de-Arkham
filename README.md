@@ -71,10 +71,10 @@ na mesa e é lançado junto com os outros.
   ficam apagados na mesa. Crítico (01) e desastre (100) olham o resultado final.
 - Depois de cada lançamento, a escolha volta sozinha para **Normal**.
 
-## Mesa compartilhada (em teste)
+## Mesa compartilhada
 
-Para o Guardião e até 6 jogadores rolarem juntos, cada um no seu aparelho (por enquanto só no
-endereço de teste; o plano completo está em `docs/plano-mesa-compartilhada.md`).
+Para o Guardião e até 6 jogadores rolarem juntos, cada um no seu aparelho (desde a versão 1.2; o
+plano completo está em `docs/plano-mesa-compartilhada.md`).
 
 - **O Guardião** toca em **Mesa** → **Criar uma mesa nova** e responde se os jogadores veem os
   valores uns dos outros (veja "Valores do investigador", abaixo). Aparece o código da mesa (6 letras
@@ -236,6 +236,7 @@ mexer no app oficial que os amigos têm na tela inicial.
   npm run deploy:teste         # envia a mesa de teste (roda os testes antes)
   MESA_URL=https://mesa-arkham-teste.mesa-arkham.workers.dev npm run test:mesa   # o teste dos três aparelhos
   npm run deploy:oficial       # a mesa oficial: só junto com o "pode publicar"
+  MESA_URL=https://mesa-arkham.mesa-arkham.workers.dev MESA_ORIGEM=https://webersoncosta.github.io npm run test:mesa   # o mesmo teste, contra a mesa oficial
   ```
 
 ## Como o projeto está organizado

@@ -1,11 +1,12 @@
 # Guia de uso: Dados de Arkham
 
-Atualizado em 03/11/2026: versão oficial **1.1** e versão em teste **1.2** (envio "teste 12").
+Atualizado em 06/11/2026: versão oficial **1.2**, publicada nesse dia. O endereço de teste está com a
+mesma versão (envio "teste 12").
 
 O Dados de Arkham é um rolador de dados 3D para RPG, feito para *Call of Cthulhu* (7ª edição). Os
 dados caem numa mesa de madeira, à luz de velas, e o resultado é a face que ficou para cima, como
 num dado de verdade. O app abre no navegador do celular ou do computador, pode ser instalado na
-tela inicial e, depois da primeira abertura, funciona sem internet. Na versão em teste, o Guardião
+tela inicial e, depois da primeira abertura, funciona sem internet. Desde a versão 1.2, o Guardião
 e até 6 jogadores podem rolar juntos, cada um no seu aparelho, pela **mesa compartilhada**.
 
 ## Sumário
@@ -18,7 +19,7 @@ e até 6 jogadores podem rolar juntos, cada um no seu aparelho, pela **mesa comp
 6. [Vários dados juntos](#6-vários-dados-juntos)
 7. [Atalhos e fórmulas favoritas](#7-atalhos-e-fórmulas-favoritas)
 8. [Som, ambiente e vibração](#8-som-ambiente-e-vibração)
-9. [Mesa compartilhada (em teste)](#9-mesa-compartilhada-em-teste)
+9. [Mesa compartilhada](#9-mesa-compartilhada)
 10. [O que fica guardado, e onde](#10-o-que-fica-guardado-e-onde)
 11. [Atualizações e versões](#11-atualizações-e-versões)
 12. [Limitações atuais](#12-limitações-atuais)
@@ -29,16 +30,17 @@ e até 6 jogadores podem rolar juntos, cada um no seu aparelho, pela **mesa comp
 
 | | Endereço | Versão | O que tem |
 | --- | --- | --- | --- |
-| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.1 | Tudo o que está neste guia, menos a mesa compartilhada |
-| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.2 (teste 12) | Tudo, inclusive a mesa compartilhada |
+| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.2 | Tudo o que está neste guia |
+| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.2 (teste 12) | A mesma versão; é onde as próximas novidades aparecem primeiro, para testar |
 
-- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.1** no oficial e
+- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.2** no oficial e
   **v1.2 · teste 12** no teste, em vermelho. O número depois de "teste" sobe a cada envio: é o
   jeito de saber se a versão nova já chegou.
 - Os dois endereços não se misturam. Cada um guarda à parte as preferências, as fórmulas favoritas
   e a cópia para usar sem internet. Instalado, o oficial se chama **Arkham** e o teste, **Arkham
   Teste**.
-- A versão 1.2, com a mesa compartilhada, vai para o endereço oficial quando for publicada.
+- A mesa compartilhada também é separada: o endereço oficial usa a mesa oficial, e o de teste, a
+  mesa de teste. Os valores do investigador guardados num endereço não passam para o outro.
 
 ## 2. Instalar na tela inicial
 
@@ -64,13 +66,13 @@ conexão.
 ## 3. A tela
 
 - **No alto:** o nome do app e, embaixo dele, o que está escolhido ("Teste percentual · d100",
-  "Vários dados"…). À direita, os botões **Som** e **Ambiente** e, na versão em teste, **Mesa**.
+  "Vários dados"…). À direita, os botões **Som**, **Ambiente** e **Mesa**.
 - **No meio:** a mesa de madeira, com velas, um livro antigo e papéis. É ali que os dados caem.
 - **Embaixo, a bandeja:** os dados **D4, D6, D8, D10, D12, D20** e **D100**. Logo acima deles:
   - com o d100 escolhido: **penalidade 2 · 1**, **Normal** e **bônus 1 · 2**;
   - com os outros dados: **★** (atalhos), a **fórmula** (com o **×**) e o **número fixo** (**−** e
     **+**).
-- **Dentro de uma mesa compartilhada** (versão em teste), aparece mais uma linha acima da bandeja:
+- **Dentro de uma mesa compartilhada**, aparece mais uma linha acima da bandeja:
   quem vê a rolagem, **Rótulo**, **Rolagens** e, para os jogadores, os valores do investigador
   (**PV · SAN**).
 - **No canto de baixo, à direita:** o número da versão.
@@ -175,9 +177,7 @@ vêm no modo montagem. O soco com bônus de dano (1d3 + 1d4) é o atalho 1d3 e u
 - **Vibração** (só no Android): um toque leve ao lançar, outro quando os dados param e um padrão
   diferente no crítico e no desastre.
 
-## 9. Mesa compartilhada (em teste)
-
-> Por enquanto, só no endereço de teste. Vai para o oficial junto com a publicação da versão 1.2.
+## 9. Mesa compartilhada
 
 O Guardião e até 6 jogadores rolam juntos, cada um no seu aparelho, por exemplo numa call do
 Discord. Toda rolagem feita dentro da mesa aparece para os outros, do jeito que cada um pode ver.
@@ -364,7 +364,7 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 | --- | --- | --- |
 | 1.0 | 29/10/2026 | Os dados d4 a d20 e o d100, com dados de bônus e de penalidade, crítico e desastre |
 | 1.1 | 30/10/2026 | Vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e montagem, atualizações sem mistura de versões e o número da versão no canto |
-| 1.2 | em teste | A mesa compartilhada, com os valores do investigador (PV, SAN, Sorte e PM) |
+| 1.2 | 06/11/2026 | A mesa compartilhada, com os valores do investigador (PV, SAN, Sorte e PM) |
 
 ## 12. Limitações atuais
 
@@ -394,7 +394,6 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 
 **Mesa compartilhada**
 
-- Só no endereço de teste, até a publicação da 1.2.
 - Até 6 jogadores e o Guardião.
 - **Cada navegador conta como um aparelho.** Quem entra por um caminho e volta por outro ocupa mais
   um lugar e aparece duas vezes na lista (uma delas "fora da mesa"). Isso acontece mais no iPhone,
@@ -462,8 +461,8 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 
 ## 14. O que vem por aí
 
-- **Agora:** a sessão real no Discord, pelo endereço de teste. Depois dos ajustes, a publicação da
-  1.2, com a mesa oficial.
+- **Agora:** a versão 1.2, com a mesa compartilhada, está publicada. As próximas novidades aparecem
+  primeiro no endereço de teste.
 - **Fase 3, o painel do Guardião:** rolar em segredo por um jogador, pedir uma rolagem a um jogador
   (o aparelho dele abre com a bandeja já pronta), as regras da mesa, os alertas (PV baixo, perda
   grande de Sanidade) e, provavelmente, liberar um lugar.

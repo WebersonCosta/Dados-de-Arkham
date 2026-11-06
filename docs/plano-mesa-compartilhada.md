@@ -11,7 +11,7 @@ mesa), passo 3 (rolagens ao vivo, com rótulo), passo 4 (privada, secreta e susp
 03/11/2026, entrou a versão mínima dos valores do investigador (PV, SAN, Sorte e PM), testada e
 aprovada por Weberson. Passo 6 (a sessão real no Discord) feito: Weberson, como Guardião, jogou uma
 sessão rápida com dois amigos para testar as funções e não encontrou erro (relatado em 06/11/2026).
-**A fase 2 está pronta, esperando o "pode publicar".** As decisões, os passos da fase 2, os valores
+**A fase 2 foi publicada na versão 1.2, em 06/11/2026, junto com a mesa oficial.** As decisões, os passos da fase 2, os valores
 e a ideia da ficha do personagem estão no fim deste arquivo.
 
 ## Sala e entrada
