@@ -6,6 +6,8 @@ import { createFormulas, MAX_DICE } from './core/formula.js';
 import { createDieModel } from './core/polyhedra.js';
 import { THEMES, DEFAULT_THEME } from './themes/index.js';
 import { VERSION, PLACE } from './version.js';
+import { holdRepeat } from './lib/util.js';
+import { createRoomPanel } from './room-panel.js';
 
 // Liga as peças: carrega o tema, monta a mesa e cuida do toque, da escolha dos dados e do resultado.
 
@@ -225,16 +227,6 @@ function useFormula(text) {
   setFormula(f);
 }
 
-// Botão que repete enquanto está apertado, para chegar rápido a +6, por exemplo.
-function holdRepeat(button, action) {
-  let timer = 0;
-  const stop = () => clearTimeout(timer);
-  const run = delay => { action(); timer = setTimeout(run, delay, 90); };
-  button.addEventListener('pointerdown', ev => { ev.preventDefault(); audio.unlock(); stop(); run(450); });
-  for (const type of ['pointerup', 'pointerleave', 'pointercancel']) button.addEventListener(type, stop);
-  button.addEventListener('click', ev => { if (!ev.detail) action(); });   // pelo teclado
-}
-
 function openSheet() {
   audio.unlock();
   renderSheet();
@@ -295,8 +287,8 @@ $('btnCloseSheet').addEventListener('click', closeSheet);
 sheet.addEventListener('click', ev => { if (ev.target === sheet) closeSheet(); });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !sheet.hidden) closeSheet(); });
 $('btnClear').addEventListener('click', clearFormula);
-holdRepeat($('btnMinus'), () => stepFixed(-1));
-holdRepeat($('btnPlus'), () => stepFixed(1));
+holdRepeat($('btnMinus'), () => stepFixed(-1), () => audio.unlock());
+holdRepeat($('btnPlus'), () => stepFixed(1), () => audio.unlock());
 
 /* ---------------------------------------------------------------- bônus, penalidade e afins */
 // O tema pode oferecer jeitos especiais de rolar (no Arkham, os dados de bônus e de penalidade do
@@ -304,7 +296,7 @@ holdRepeat($('btnPlus'), () => stepFixed(1));
 // sem dados a mais é a normal. Depois de cada lançamento, volta para a normal.
 const PLAIN = { id: 'normal' };
 const themeModes = Object.values(theme.modes || {});
-let options = null, mode = PLAIN, rolled = PLAIN;
+let options = null, mode = PLAIN, rolled = PLAIN, sharing = null;
 const normalMode = () => options?.find(o => !o.extra) || PLAIN;
 modesBox.hidden = !themeModes.length;
 
@@ -421,7 +413,8 @@ function fade(dt) {
 
 /* ---------------------------------------------------------------- resultado */
 // how: a opção com que os dados foram lançados (normal, bônus…), que decide como contar.
-function showResult(values, how = rolled) {
+// table: na mesa compartilhada, o rótulo e quem vê esta jogada (roomPanel.take); fora dela, null.
+function showResult(values, how = rolled, table = sharing) {
   const { set } = current;
   const result = how.combine ? how.combine(values, set) : set.combine(values);
   const crit = theme.critical(set.id, result);
@@ -431,6 +424,11 @@ function showResult(values, how = rolled) {
   note.textContent = noteText;
   note.className = 'verdict-note' + (how.tone ? ` tone-${how.tone}` : '');
   note.hidden = !noteText;
+  // o rótulo e, quando nem todos veem, a marca ("Furtividade · secreta")
+  const tag = [table?.label, table?.veil].filter(Boolean).join(' · ');
+  $('vTag').textContent = tag;
+  $('vTag').hidden = !tag;
+  $('vTag').classList.toggle('is-veiled', !!table?.veil);
   $('vLabel').textContent = crit ? crit.label : '';
   verdict.className = 'verdict' + (crit ? ` is-${crit.kind}` : '');
   for (const i of result.discard || []) if (current.dice[i]) current.dice[i].dropped = true;
@@ -444,13 +442,18 @@ function showResult(values, how = rolled) {
   clearTimeout(verdictTimer);
   verdictTimer = setTimeout(toIdle, crit ? 4200 : 3000);
   state = 'result';
+  // dentro de uma mesa compartilhada, a rolagem vai para a mesa
+  if (table) roomPanel.share(table, {
+    set: set.id, total: result.total, text: result.text, detail: result.detail || set.name,
+    note: how.extra ? how.name : '', pieces: result.pieces
+  });
 }
 
 // O resultado vai para a altura da tela em que cobre menos os dados, entre o cabeçalho e a bandeja.
 function placeVerdict() {
   verdict.style.top = '0px';
   const h = verdict.offsetHeight, w = Math.max(...[...verdict.children].map(el => el.offsetWidth)) + 32;
-  const x0 = (innerWidth - w) / 2, x1 = x0 + w;
+  const x0 = (canvas.clientWidth - w) / 2, x1 = x0 + w;   // a mesa de dados (no PC, o painel da mesa fica ao lado)
   const boxes = current.dice.map(d => stage.screenBox(new THREE.Vector3().copy(d.die.body.position), d.die.radius + .15));
   const cover = y => boxes.reduce((sum, [a, b, c, e]) =>
     sum + Math.max(0, Math.min(c, x1) - Math.max(a, x0)) * Math.max(0, Math.min(e, y + h) - Math.max(b, y)), 0);
@@ -493,10 +496,12 @@ canvas.addEventListener('pointerdown', ev => {
     hint.hidden = true;
     buzz(theme.haptics.throw);
     state = 'rolling';
-    // a jogada leva a opção escolhida, e a escolha volta para a normal (ninguém esquece o bônus ligado)
+    // a jogada leva a opção escolhida, e a escolha volta para a normal (ninguém esquece o bônus ligado);
+    // na mesa compartilhada, o rótulo e quem vê também vão com ela e voltam ao padrão
     rolled = mode;
     mode = normalMode();
     syncModes();
+    sharing = roomPanel.take();
     swap = null;   // a fórmula montada continua (para rolar o mesmo dano de novo), até limpar no ×
   } else if (state === 'result') {
     toIdle();
@@ -528,6 +533,15 @@ function bindToggle(button, key, label, apply) {
 }
 bindToggle($('btnSfx'), 'sfx', theme.texts.sound, on => audio.setSfx(on));
 bindToggle($('btnAmb'), 'amb', theme.texts.ambient, on => audio.setAmbient(on));
+
+/* ---------------------------------------------------------------- mesa compartilhada */
+// O botão "Mesa", o painel dela e as rolagens de todos (room-panel.js). Fora de uma mesa nada disso
+// usa a internet: rolar sozinho continua igual, mesmo sem conexão.
+const roomPanel = createRoomPanel({
+  place: PLACE, texts: theme.texts, unlock: () => audio.unlock(), notify: flashHint, relayout,
+  critical: theme.critical, counters: theme.counters,
+  nameOf: id => { const f = formulas.parse(id); return f ? formulas.text(f) : id; }   // '2d6+6' → '2d6 + 6'; o d100 fica como está
+});
 
 /* ---------------------------------------------------------------- tela e animação */
 function relayout() {
@@ -573,7 +587,7 @@ requestAnimationFrame(frame);
 if (location.hostname === 'localhost') {
   window.__dados = {
     showResult, chooseSet, setFormula, tapKind, pickD100, chooseMode, stepFixed, clearFormula, useFormula,
-    formulas, tick, table, stage, theme, THREE, D100,
+    formulas, tick, table, stage, theme, THREE, D100, roomPanel,
     get current() { return current; }, get state() { return state; }, get mode() { return mode; },
     get formula() { return formula; }, get building() { return building; }, get leaving() { return leaving; }
   };

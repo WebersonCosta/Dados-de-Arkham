@@ -9,6 +9,8 @@ Call of Cthulhu (7ª edição).
 
 **Endereço de teste** (próxima versão, ainda em teste): https://webersoncosta.github.io/Dados-de-Arkham-teste/
 
+**Guia de uso** (todas as funções e as limitações atuais): [`docs/guia-de-uso.md`](docs/guia-de-uso.md)
+
 ## Rolar vários dados
 
 Para lançar, escolha o dado na bandeja e toque na mesa. Para montar uma rolagem com vários
@@ -68,6 +70,67 @@ na mesa e é lançado junto com os outros.
 - Na tela do resultado aparecem todas as dezenas: as descartadas vêm riscadas, e os dados delas
   ficam apagados na mesa. Crítico (01) e desastre (100) olham o resultado final.
 - Depois de cada lançamento, a escolha volta sozinha para **Normal**.
+
+## Mesa compartilhada
+
+Para o Guardião e até 6 jogadores rolarem juntos, cada um no seu aparelho (desde a versão 1.2; o
+plano completo está em `docs/plano-mesa-compartilhada.md`).
+
+- **O Guardião** toca em **Mesa** → **Criar uma mesa nova** e responde se os jogadores veem os
+  valores uns dos outros (veja "Valores do investigador", abaixo). Aparece o código da mesa (6 letras
+  e números, como **K7Q X3M**) e o botão para convidar: no computador ele copia um texto com o link,
+  para colar no Discord; no celular, abre o compartilhar.
+- **Os jogadores** tocam em **Mesa**, escrevem o nome do investigador e o código e tocam em
+  **Entrar na mesa**. Quem toca no link do convite já encontra o código preenchido.
+- Ninguém faz cadastro: na mesa vai só o nome do investigador, que fica guardado no aparelho.
+- O painel da mesa mostra o código, quem está nela, na ordem de entrada (o ponto aceso é quem está
+  conectado), e as rolagens de todos, a mais nova em cima. No celular ele abre como uma gaveta,
+  pelo botão **Mesa** ou pelo **Rolagens**, perto da bandeja (o número em cima dele conta as
+  rolagens novas). No computador, com a janela larga, ele fica sempre à vista, à direita; o botão
+  **Mesa** esconde e mostra. Com a mesa ligada, o botão mostra quantos estão conectados
+  (**Mesa · 3**).
+- Toda rolagem feita dentro da mesa vai para a mesa. Quando outra pessoa rola, aparece um aviso
+  pequeno logo acima da bandeja, com o nome, o rótulo e o número, que some sozinho.
+- **Quem vê a rolagem**: o primeiro botão perto da bandeja diz quem vai ver a próxima rolagem, e
+  um toque troca:
+  - jogador: **Aberta** (todos veem; é o normal) ou **Privada** (só o jogador e o Guardião);
+  - Guardião: **Secreta** (só ele vê; é o normal) ou **Aberta**.
+
+  Depois de cada lançamento a escolha volta para o normal, como o bônus e o rótulo. Quem não pode
+  ver recebe só um sinal de suspense ("Guardião rolou em segredo", "Ana rolou só para o Guardião"),
+  com um "?" no lugar do número. A proteção é feita na própria mesa, no servidor: o número e o
+  rótulo nunca chegam ao aparelho de quem não pode ver. O Guardião vê todas as rolagens, e as que
+  nem todos viram aparecem marcadas ("privada" ou "secreta").
+- **Rótulo**: antes de lançar, toque em **Rótulo** (perto da bandeja) e escreva para que é a
+  rolagem, como "Furtividade". Ele vai junto com a próxima rolagem e depois se apaga. Os últimos
+  usados ficam guardados no aparelho, para escolher com um toque.
+- **Valores do investigador (PV, SAN, Sorte e PM):** o botão perto da bandeja mostra os dois
+  primeiros (**PV 9 · SAN 55**) e abre a folha com os quatro; na primeira vez com um investigador,
+  ela já abre sozinha ao entrar na mesa.
+  - O jogador escreve o máximo de cada valor e ajusta o atual com **−** e **+** (segure para ir mais
+    rápido). Os valores ficam guardados no aparelho, ligados ao nome do investigador, e voltam
+    sozinhos na próxima sessão. Sem conexão, eles vão para a mesa quando ela voltar.
+  - Só o próprio jogador altera os seus valores. O Guardião não tem valores próprios e vê os de todos
+    em tempo real, na lista de quem está na mesa.
+  - Ao criar a mesa, o Guardião escolhe se os outros jogadores também veem. Se escolher que não, a
+    proteção é feita na própria mesa, no servidor: os números dos outros nunca chegam ao aparelho de
+    um jogador.
+- Se a conexão cair, ou se o app for fechado e aberto de novo, ele volta sozinho para o mesmo
+  lugar, e o histórico volta junto. Sem conexão por mais que alguns segundos, aparece um aviso
+  acima da bandeja ("Sem conexão com a mesa · reconectando…"), que some quando ela volta.
+- Rolagem feita sem conexão não se perde: ela aparece no histórico com "enviando…" e vai para a
+  mesa quando a conexão voltar, mesmo que o app seja fechado e aberto de novo nesse meio tempo. A
+  mesa reconhece uma rolagem mandada duas vezes e conta uma vez só.
+- **Versão do app**: se alguém na mesa estiver com uma versão mais nova do app, quem ficou com a
+  antiga vê o aviso "Versão nova do app · toque para atualizar"; um toque atualiza e o app volta
+  sozinho para a mesa. Se a diferença for grande demais para os dois se entenderem, o aviso diz
+  "App desatualizado", e a mesa continua guardada até a pessoa atualizar.
+- **Sair da mesa** guarda o lugar: entrando de novo com o código, o jogador volta para ele. O
+  Guardião tem **Encerrar a mesa**, que tira todos e apaga a mesa. Uma mesa sem uso se apaga
+  sozinha 6 horas depois.
+- Para testar vários jogadores num computador só: no endereço de teste, acrescente `?aba` ao
+  endereço (por exemplo `https://webersoncosta.github.io/Dados-de-Arkham-teste/?aba`). Cada aba
+  aberta assim conta como um aparelho diferente.
 
 ## Instalar na tela inicial
 
@@ -166,10 +229,19 @@ mexer no app oficial que os amigos têm na tela inicial.
   git push origin main
   git switch desenvolvimento
   ```
+- **Servidor da mesa compartilhada** (pasta `server/`, no Cloudflare; precisa do Node.js e do
+  login feito uma vez com `npx wrangler@4.151.3 login`). Os comandos rodam dentro de `server/`:
+  ```sh
+  npm test                     # as regras da sala, sem servidor
+  npm run deploy:teste         # envia a mesa de teste (roda os testes antes)
+  MESA_URL=https://mesa-arkham-teste.mesa-arkham.workers.dev npm run test:mesa   # o teste dos três aparelhos
+  npm run deploy:oficial       # a mesa oficial: só junto com o "pode publicar"
+  MESA_URL=https://mesa-arkham.mesa-arkham.workers.dev MESA_ORIGEM=https://webersoncosta.github.io npm run test:mesa   # o mesmo teste, contra a mesa oficial
+  ```
 
 ## Como o projeto está organizado
 
-O projeto tem duas metades que não se misturam:
+O app tem duas metades que não se misturam:
 
 **A mecânica** (`src/core/`) é igual para qualquer tema:
 
@@ -179,18 +251,32 @@ O projeto tem duas metades que não se misturam:
 | `dice-sets.js` | Os tipos de dado (d4 a d20) e o d100 (dois d10: dezenas + unidades) |
 | `formula.js` | As fórmulas de vários dados: montar, escrever ("2d6 + 6"), ler e somar; o limite de 8 dados |
 | `physics.js` | Gravidade, quiques, paredes, os dados tortos que rolam de novo e a leitura da face que ficou para cima |
-| `stage.js` | Câmera e área da mesa, ajustadas ao tamanho da tela |
+| `stage.js` | Câmera e área da mesa, ajustadas ao tamanho da tela (no PC, o painel da mesa compartilhada fica ao lado) |
+| `room-link.js` | A ligação com a mesa compartilhada: criar a mesa, entrar, manter a conexão viva e voltar sozinho quando ela cai |
+| `counters.js` | Os contadores de um personagem (máximo e valor atual): as contas, sem tela e sem tema |
 
 **O tema** (`src/themes/arkham/`) é tudo o que se vê e se ouve, e as regras do jogo:
 
 | Arquivo | O que faz |
 | --- | --- |
 | `theme.js` | Ficha do tema: nome, textos, vibração e quais regras e peças ele usa |
-| `rules.js` | Regras de Call of Cthulhu: crítico, desastre, dados de bônus e de penalidade, o 1d3 e os atalhos prontos |
+| `rules.js` | Regras de Call of Cthulhu: crítico, desastre, dados de bônus e de penalidade, o 1d3, os atalhos prontos e os valores do investigador (PV, SAN, Sorte e PM) |
 | `theme.css` | Cores e fontes da interface |
 | `scene.js` | Mesa, velas, tomo, papéis, névoa, luz e a reação aos críticos |
 | `dice-look.js` | Material e pintura dos dados (pedra, osso, números) e o dado descartado apagado |
 | `audio.js` | Som dos dados, vento, sussurros e presságios |
+
+**O servidor da mesa compartilhada** (`server/`) roda no Cloudflare e não faz parte do app que vai
+para o celular. Cada sala é um pequeno programa com memória própria, que entrega a cada pessoa só
+o que ela pode ver e se apaga sozinho:
+
+| Arquivo | O que faz |
+| --- | --- |
+| `room.js` | As regras da sala: o código, os lugares (Guardião e até 6 jogadores), a conferência de cada rolagem e dos valores dos jogadores, e quem vê o quê |
+| `worker.js` | A parte do Cloudflare: criar a sala, as conexões ao vivo, guardar, entregar e apagar |
+| `wrangler.toml` | Os dois servidores: a mesa oficial e a mesa de teste |
+| `test/room.test.js` | Testes das regras, sem servidor |
+| `test/three-devices.test.js` | O Guardião e os jogadores simulados, conferindo que ninguém recebe o que não pode ver (rolagens e valores), a mesa cheia rolando ao mesmo tempo e o aviso para quem está com o app mais velho |
 
 O restante:
 
@@ -202,8 +288,17 @@ O restante:
   nunca misturar arquivos de versões diferentes.
 - `CLAUDE.md`: notas do projeto (estado atual, decisões, fluxo de trabalho e ideias para o
   futuro), para continuar o trabalho numa conversa nova sem perder nada.
+- `docs/guia-de-uso.md`: o guia de uso, com todas as funções e as limitações atuais do app.
+- `docs/plano-mesa-compartilhada.md`: o plano da mesa compartilhada, com as decisões e as fases.
 - `icons/`: os ícones do app (gerados por `tools/icone.html`).
 - `src/main.js`: liga as peças (toque, escolha dos dados, fórmula, atalhos, resultado).
+- `src/room-panel.js`: o botão "Mesa" e o painel da mesa compartilhada (criar, entrar, quem está
+  na mesa, convite, sair; gaveta no celular, ao lado no PC), quem vê cada rolagem (aberta, privada
+  ou secreta) e o envio das rolagens para a mesa.
+- `src/room-log.js`: as rolagens da mesa: o histórico e o aviso perto da bandeja.
+- `src/room-label.js`: o rótulo da próxima rolagem e os últimos usados.
+- `src/room-counters.js`: os valores do investigador: o botão perto da bandeja, a folha com − e +, e
+  o que fica guardado no aparelho, ligado ao nome dele.
 - `src/app.css`: posição dos elementos na tela.
 - `src/themes/index.js`: a lista de temas (hoje só "arkham").
 - `src/lib/`: ferramentas pequenas usadas em todo o app.
@@ -223,6 +318,8 @@ mudar: valem para qualquer tema. O que é de cada jogo fica no `rules.js` do tem
 - `kinds`: tipos de dado a mais, que entram nas fórmulas. O Arkham tem o d3, rolado com um d6
   (`shape: 'd6'`) e convertido por `points` (1-2 → 1, 3-4 → 2, 5-6 → 3).
 - `shortcuts`: os atalhos prontos, escritos como fórmulas (`'2d6+6'`), com uma nota opcional.
+- `counters`: os valores do personagem na mesa compartilhada (`{ id, short, name }`). O servidor não
+  precisa saber quais são. Sem essa lista, a mesa funciona sem valores.
 
 ### Rolagens especiais: bônus, penalidade, vantagem…
 

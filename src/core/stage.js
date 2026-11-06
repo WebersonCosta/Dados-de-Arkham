@@ -29,9 +29,10 @@ export function createStage(canvas, view = {}) {
     return ray.ray.origin.clone().addScaledVector(ray.ray.direction, t);
   }
 
-  // topPx / bottomPx: quanto da tela o cabeçalho e a bandeja ocupam.
+  // topPx / bottomPx: quanto da tela o cabeçalho e a bandeja ocupam. A largura é a do desenho, que
+  // pode deixar um lado da tela para outra coisa (no PC, o painel da mesa compartilhada).
   function fit({ topPx, bottomPx }) {
-    const w = window.innerWidth, h = window.innerHeight;
+    const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));

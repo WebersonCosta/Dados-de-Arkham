@@ -23,18 +23,77 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 - Quando Weberson pedir para avisar de problemas antes de implementar, explicar o problema e
   perguntar antes de mexer.
 
-## Estado atual (30/10/2026)
+## Estado atual (06/11/2026)
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.0** | `main` = tag `v1.0` (3ac132c), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Em teste | **1.1**, ainda não publicada | `desenvolvimento`, https://webersoncosta.github.io/Dados-de-Arkham-teste/ (envio `teste 5`) |
+| Oficial | **1.2**, publicada em 06/11/2026 | `main` = tag `v1.2`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev |
+| Desenvolvimento | depois da 1.2: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 12` (a 1.2) |
 
-A 1.1 tem: vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas,
-os modos dado único e montagem, e as atualizações sem mistura de versões. Está esperando o teste
-no celular e o "pode publicar". O Claude só testou nos navegadores do computador.
+Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6) e `v1.2`. A 1.1 trouxe: vários
+dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
+montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2 trouxe a mesa
+compartilhada (fase 2), com os valores do investigador.
 
-Depois de publicar a 1.1: na `desenvolvimento`, mudar `VERSION` em `src/version.js` para `1.2`.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 13.
+- A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
+  arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
+  pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
+  atualizações chegam inteiras.
+
+**Etapa atual: mesa compartilhada.** O Guardião e até 6 jogadores rolando juntos, cada um no seu
+aparelho, numa call do Discord. O plano de Weberson (sala com código, visibilidade aberta, privada
+ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) está em
+[`docs/plano-mesa-compartilhada.md`](docs/plano-mesa-compartilhada.md): leia antes de mexer nisso.
+- Fase 1 (o plano) aprovada em 31/10/2026: as decisões e os 6 passos da fase 2 estão no fim do
+  plano. Resumo: um servidor de salas no Cloudflare (Workers + Durable Objects, plano gratuito,
+  sem cartão), JavaScript puro, sem biblioteca de interface.
+- Fase 2, passo 1 (preparação, o app não mudou) pronto em 31/10/2026: o servidor em `server/`
+  (veja "Mesa compartilhada: o servidor" abaixo). A mesa de teste está no ar em
+  https://mesa-arkham-teste.mesa-arkham.workers.dev e passou no teste dos três aparelhos (12 de
+  12, com o tempo sem uso reduzido a 20 s só para o teste). A mesa oficial está no ar desde
+  06/11/2026 em https://mesa-arkham.mesa-arkham.workers.dev, criada com o "pode publicar".
+- A conta do Cloudflare é de Weberson (plano gratuito, sem cartão). O subdomínio gratuito
+  `mesa-arkham.workers.dev` foi criado pelo wrangler no primeiro envio. Este PC guarda o login do
+  wrangler (fora do projeto, em `%APPDATA%\xdg.config\.wrangler`), feito só com as permissões de
+  Workers: `wrangler login --scopes account:read user:read workers:write workers_scripts:write`.
+- Fase 2, passo 2 (entrar na mesa) testado e aprovado por Weberson em 31/10/2026 (PC como
+  Guardião, celular como jogador, `?aba` para um terceiro).
+- Fase 2, passo 3 (rolagens ao vivo, com rótulo) testado e aprovado por Weberson em 31/10/2026.
+- Fase 2, passo 4 (privada, secreta e suspense) testado e aprovado por Weberson em 31/10/2026: a
+  escolha de quem vê perto da bandeja (o Guardião rola secreta por padrão), o sinal de suspense
+  e as marcas "privada" e "secreta".
+- Fase 2, passo 5 (quedas e encerramento) testado e aprovado por Weberson em 31/10/2026: a fila
+  das rolagens feitas sem conexão, o aviso "Sem conexão com a mesa" perto da bandeja e o aviso de
+  versão (veja "Mesa compartilhada: o app"), com a conferência de versão (`outdated`) na mesa de
+  teste. "Encerrar a mesa" e a sala que se apaga sozinha já vinham dos passos 1 e 2.
+- Fase 2, passo 6 (a sessão real no Discord, pelo endereço de teste) feito: Weberson, como
+  Guardião, jogou uma sessão rápida com dois amigos só para testar as funções (as rolagens e a
+  visão dos resultados), sem derrubar a internet de propósito, e não encontrou erro (relatado em
+  06/11/2026; as quedas já tinham sido testadas no passo 5). Antes da sessão: a
+  mesa cheia (o Guardião e 6 jogadores rolando ao mesmo tempo, na mesa de teste: cada rolagem
+  chegou uma vez a cada um; o teste dos aparelhos agora tem esse caso, 13 de 13 com o da sala que
+  se apaga sozinha pulado) e a tela com a mesa cheia e nomes compridos, que trouxe dois ajustes
+  (envio `teste 10`): o rótulo que sumia no histórico e a lista de quem está na mesa, que tomava o
+  lugar das rolagens. No envio `teste 11`, o convite que se perdia quando uma versão nova do app
+  chegava logo depois de abrir o link (veja "Mesa compartilhada: o app").
+- Risco conhecido para a sessão: cada navegador guarda a sua chave de aparelho. Quem entra por um
+  caminho e volta por outro (no iPhone, o navegador de dentro do Discord, o Safari e o ícone na
+  tela de início guardam coisas separadas) vira outro aparelho e ocupa mais um lugar, e ainda não
+  dá para liberar um lugar (isso é do painel do Guardião, fase 3). Orientação dada: entrar e
+  voltar sempre pelo link do convite; se a mesa encher, encerrar e criar outra.
+- Valores do investigador (PV, SAN, Sorte e PM), pedidos por Weberson em 03/11/2026 antes da sessão
+  real (envio `teste 12`): testados e aprovados por ele, com o PC como Guardião e o celular como
+  jogador (relatado em 06/11/2026). A mesa de teste passou no teste dos aparelhos (22 de 22; o da
+  sala que se apaga sozinha fica pulado). O
+  pedido e a ideia da ficha do personagem estão no plano. Ficaram para depois: alertas para o
+  Guardião, o painel completo e outras regras da mesa.
+- Versão 1.2 publicada em 06/11/2026, com o "pode publicar" de Weberson. Primeiro a mesa oficial
+  (`npm run deploy:oficial`; nos primeiros instantes o Cloudflare respondeu "error code: 1042" e
+  logo passou), testada com os aparelhos simulados (22 de 22; outras origens recebem 403), e depois
+  o app. Os valores do investigador guardados no endereço de teste não passam para o oficial (cada
+  endereço guarda os seus). Próxima etapa da mesa compartilhada: a fase 3 (o painel do Guardião),
+  quando Weberson pedir.
 
 ## Decisões tomadas (e por quê)
 
@@ -89,7 +148,8 @@ Depois de publicar a 1.1: na `desenvolvimento`, mudar `VERSION` em `src/version.
 - O que um tema oferece (`theme.js`): `id`, `title`, `css`, `fonts`, `texts`, `view`,
   `createScene`, `createAudio`, `dieMaterial`, `dimDie`, `critical(setId, result)`, `modes`
   (rolagens especiais por conjunto: `'d100'` ou a fórmula sem espaços, como `'1d20'`), `kinds`
-  (dados a mais, como o d3), `shortcuts` e `haptics`.
+  (dados a mais, como o d3), `shortcuts`, `counters` (os valores do personagem na mesa
+  compartilhada: `{ id, short, name }`) e `haptics`.
 - O caminho para vantagem e desvantagem de D&D (2d20, fica o maior ou o menor) está pronto e
   explicado no README ("Rolagens especiais"), e foi testado.
 
@@ -110,7 +170,168 @@ Depois de publicar a 1.1: na `desenvolvimento`, mudar `VERSION` em `src/version.
   `id`), cópias guardadas com nomes diferentes (cada um só apaga as suas) e preferências
   separadas (`arkham-dice-prefs` e `arkham-dice-prefs-teste`). O `index.html` descobre onde está
   pelo caminho e marca `data-place` (`oficial`, `teste` ou `local`).
-- O número no canto: `v1.1` no oficial; `v1.1 · teste 5` no teste (5 é o `RELEASE`).
+- O número no canto: `vX.Y` no oficial (`v1.1`); `vX.Y · teste N` no teste, em que N é o
+  `RELEASE` (`v1.1 · teste 5`).
+
+**Mesa compartilhada: o servidor** (`server/`; o plano e o porquê em `docs/plano-mesa-compartilhada.md`)
+- Cloudflare Workers + Durable Objects (SQLite), plano gratuito. Cada sala é um Durable Object
+  (`Room`, em `worker.js`), achado pelo código (`idFromName`). As regras ficam em `room.js`, sem
+  nada do Cloudflare, para testar com `node --test`.
+- Código da sala: 6 caracteres de `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (sem 0, O, 1, I e L).
+  Lugares: `g` (o Guardião, quem criou a sala) e `j1` a `j6`, na ordem de entrada. O mesmo
+  aparelho volta sempre para o mesmo lugar.
+- Aparelho: o app sorteia uma chave (22 a 64 caracteres, base64url) e a guarda só nele; o
+  servidor guarda só o SHA-256 dela, e a chave nunca volta em mensagem nenhuma.
+- Conversa: `POST /rooms` cria a sala (`{ protocol, device, name, rules }` → `{ code }`);
+  `/rooms/<código>` é o WebSocket. Primeira mensagem do app: `hello` (`{ protocol, device, name, app
+  }`); resposta: `room` (o lugar, as regras, os membros e as últimas 100 rolagens, já filtrados).
+  Depois chegam `members`, `roll`, `counters`, `outdated`, `error` e `ended`; o app manda `roll`, o
+  jogador manda `counters` (os dele) e o Guardião manda `end`. `PROTOCOL` (hoje
+  1) muda quando app e servidor deixam de se entender (o `hello` é recusado com `version`). "ping"
+  recebe "pong" sem acordar a sala.
+- Versão do app (passo 5): o `hello` leva `app` (o `VERSION` de `src/version.js`, como '1.2';
+  sem ele, ou fora do formato, conta como '0.0'), guardado junto com o lugar na conexão
+  (`serializeAttachment({ seat, app })`). A cada chegada, quem está conectado com uma versão mais
+  velha que a mais nova da mesa recebe `{ type: 'outdated', newest }` (`compareVersions` compara
+  número, então 1.10 vem depois de 1.9). Só a versão publicada conta: os envios de teste da mesma
+  versão não se avisam.
+- Rolagem: `{ id, vis, set, name, total, text, label?, detail?, note?, pieces? }`. `set` é
+  `'d100'` ou a fórmula sem espaços (`'2d6+6'`; guardada com `-` comum no lugar de `−`). O
+  servidor confere o formato, recusa total fora do mínimo e do máximo da fórmula (`impossible`) e
+  secreta de jogador (`guardian-only`); a privada do Guardião vira secreta. O crítico não viaja:
+  cada app calcula com o seu tema. A mesma `id` mandada de novo conta uma vez só.
+- Quem vê o quê (`seenBy`): aberta, todos; privada, quem rolou e o Guardião; secreta, só o
+  Guardião. Para os outros vai só `{ id, seq, seat, at, vis }`, uma lista fechada de campos.
+- Contadores (os valores do investigador): `{ type: 'counters', counters: { hp: { max, cur }, … } }`,
+  só de jogador (o Guardião recebe `players-only`) e sempre do lugar da conexão: a mensagem não diz
+  de quem são. O servidor confere só o formato (`readCounters`: até 8, máximo de 1 a 999, atual de 0
+  ao máximo); quais são é o tema do app que diz. Ficam em `seats.counters` (JSON; null sem nenhum).
+  A regra da mesa vem no `POST /rooms` e fica em `room.rules` (`cleanRules`; `counters`: `guardian`,
+  o padrão, ou `all`). `seesCounters`: o próprio, o Guardião e, com `all`, todos. Quem vê recebe `{
+  type: 'counters', seat, counters }` ao vivo (menos a conexão que mandou), e `members` e `room` são
+  montados para cada lugar: para quem não vê, o campo `counters` nem existe. Os mesmos valores de
+  novo não avisam ninguém, e mudar um contador conta como uso (`touch`).
+- A sala se apaga (`deleteAll()`) 6 horas depois do último `hello` ou `roll` (o alarme;
+  `IDLE_SECONDS`) ou no `end` do Guardião. Um código que não existe não grava nada: as tabelas
+  só nascem no `create`.
+- Pelo navegador, só a origem do app passa (`ORIGINS`; na mesa de teste, também localhost). Sem
+  registros no Cloudflare (`observability` desligada) e sem métricas do wrangler
+  (`send_metrics = false`).
+- O wrangler roda por `npx wrangler@4.151.3` (versão fixa): fica no cache do npm, fora do
+  OneDrive, e o projeto não tem `node_modules`.
+
+**Mesa compartilhada: o app** (`src/core/room-link.js`, `src/core/counters.js`, `src/room-panel.js`,
+`src/room-log.js`, `src/room-label.js` e `src/room-counters.js`)
+- `room-link.js` (mecânica, sem tela): `createRoom` (POST com corpo em texto simples, para o
+  navegador não fazer a consulta prévia de CORS) e `connect`, que manda o `hello`, guarda um
+  "ping" a cada 25 s (sem "pong" em 8 s, abre outra conexão), tenta de novo depois de 0,5, 1, 2,
+  4, 8 e 15 s, e reconecta na hora quando o app volta para a tela ou a internet volta. Recusa na
+  entrada (`room-not-found`, `room-full`, `version`, `name`, `invalid`) e `ended` encerram a
+  ligação (`final: true`). Medido: uma queda é percebida na hora e a conexão volta em ~1 s.
+- `room-panel.js` (a tela): o servidor vem do `PLACE` (`oficial` → mesa oficial; `teste` e
+  `local` → mesa de teste). Guardado no aparelho em `arkham-mesa` (no teste, `arkham-mesa-teste`):
+  `{ device, name, room: { code, guardian }, labels, pending, characters }`. Ao abrir o app, volta
+  sozinho para `room`.
+  Fora do oficial, `?aba` no endereço faz da aba um aparelho à parte (tudo da mesa em
+  `sessionStorage`), e o título da aba mostra quem é quem.
+- Convite: `<endereço do app>#mesa=K7QX3M` (no fim do endereço, depois do `#`: não chega ao
+  GitHub nem muda a cópia guardada). Abre o painel com o código preenchido, também com o app já
+  aberto (`hashchange`). Sai do endereço quando a folha termina (entrou ou fechou), e não ao ser
+  lido: se uma versão nova do app chega logo depois de abrir o link, a página recarrega antes do
+  primeiro toque, e a folha precisa abrir de novo com o código (passo 6). Dentro de uma mesa, ou
+  com um código que não vale, sai na hora. No celular (toque e `navigator.share`) abre o
+  compartilhar; no PC, copia o texto com o link.
+- O Guardião entra com o nome `texts.guardian`; os nomes do papel e do personagem vêm do tema
+  (`texts.guardian` = "Guardião", `texts.character` = "investigador"), porque são termos de Call
+  of Cthulhu. "Sair da mesa" guarda o lugar; o "Encerrar a mesa" do Guardião (previsto para o
+  passo 5, trazido antes porque o Guardião precisa de uma saída) pede confirmação e apaga a mesa.
+- Cabeçalho: o título não quebra mais; em tela estreita os botões descem, e o "Mesa", último da
+  fila, fica embaixo do "Som" e do "Ambiente". Medido em 375 e 360 px: título numa linha,
+  subtítulo inteiro, cabeçalho de 58 para 78 px.
+- Duas folhas e um painel: a folha de entrar/criar (no alto, por causa do teclado) fica aberta
+  até a mesa responder ("Entrando na mesa…"; um erro aparece nela; fechar desiste de entrar). Dentro
+  da mesa, o painel (código, convite, quem está, rolagens, sair) é uma gaveta no celular; com a
+  tela a partir de 960 px de largura, fica à direita, sempre à vista (`body.docked`, `--side` =
+  `clamp(280px, 26vw, 360px)`), e a mesa de dados, o cabeçalho, a bandeja e o resultado ocupam o
+  resto (`stage.fit` usa a largura do `canvas`). No PC, o "Mesa" e o "Fechar" escondem e mostram o
+  painel. Quem está na mesa virou uma fileira de etiquetas, para caber junto com as rolagens;
+  cada etiqueta ocupa no máximo meia linha (passo 6: com a mesa cheia e nomes compridos, a lista
+  ia a 7 linhas; com o limite, 4, e o painel do Guardião num notebook de 1366×640 passou de 2
+  para 4 rolagens à vista). O nome inteiro aparece no histórico.
+- Rolagens (passo 3): no toque que lança, `roomPanel.take()` pega o rótulo e quem vê
+  (`{ label, vis, veil }`; null fora de uma mesa) e volta os dois ao padrão; quando os dados param,
+  `showResult` → `roomPanel.share(table, roll)` manda `{ id, vis, label, set, total, text, detail,
+  note, pieces }`: `note` é só a opção do d100 ("1 dado de bônus"), `pieces` as dezenas com as
+  descartadas. O nome de quem rolou vem de
+  `members`; o "2d6 + 6" é escrito a partir do `set` (o `name` do servidor corta em 40 letras);
+  crítico e desastre são calculados em cada aparelho com `theme.critical`. A própria rolagem só
+  entra no histórico quando a mesa devolve (o histórico é o que a mesa recebeu).
+- Fila (passo 5): toda rolagem entra em `saved.pending` (`[{ at, msg }]`, até 20, guardada no
+  aparelho) e sai quando a mesa a devolve. Enquanto espera, aparece no histórico em cima de todas,
+  apagada, com "enviando…". A cada `room` (entrar, voltar de uma queda, abrir o app), as que a
+  mesa já tem (pelo id, no histórico que ela manda) saem da fila e as outras vão de novo; a mesa
+  conta uma rolagem repetida uma vez só. Sem conexão na hora de rolar: "Sem conexão: a rolagem vai
+  para a mesa quando a conexão voltar". Se a conexão parecia aberta mas a mesa não devolve em 4 s,
+  o app confere na hora (`link.check()`: um "ping"; sem "pong" em 8 s, abre outra conexão), em
+  vez de esperar o próximo "ping" (até 33 s). Recusada pela mesa: sai da fila. Sair da mesa
+  esvazia a fila. Testado: sem conexão, com o app fechado e aberto, com a confirmação perdida
+  (não repete) e com a conexão morta sem avisar (volta em ~15 s).
+- Aviso que fica perto da bandeja (`log.banner`, embaixo dos avisos que passam): "Sem conexão com
+  a mesa · reconectando…" (com "· N rolagens esperando") quando a conexão some por mais de 3 s
+  (as quedas rápidas passam sem aviso); "Versão nova do app · toque para atualizar" com o
+  `outdated`; e, se a mesa recusar o `hello` com `version` ao voltar, "App desatualizado · toque
+  para atualizar e voltar à mesa" (status `old`: a mesa e a fila continuam guardadas). Os dois de
+  versão são botões: um toque recarrega a página, a versão nova chega pelo `sw.js` e o app volta
+  sozinho para a mesa. Entrando pela folha, a recusa `version` continua sendo um erro na folha.
+- Histórico (`room-log.js`): a mais nova em cima, até 100 (como o servidor); ao entrar ou voltar,
+  o servidor manda tudo de novo. A rolagem de outra pessoa que acabou de chegar acende uma vez,
+  quando aparece. Quem rolou e o rótulo ficam na mesma linha quando cabem; com um nome comprido,
+  o rótulo desce inteiro para a linha de baixo ("· Ocultismo"; antes, sumia nas reticências).
+- Quem vê (passo 4, em `room-panel.js`): um botão na linha perto da bandeja, que troca com um
+  toque. Jogador: "Aberta" (padrão) ou "Privada"; Guardião: "Secreta" (padrão) ou "Aberta" (o
+  Guardião não tem privada: para ele, a mesa já trata privada como secreta). Depois de cada
+  lançamento volta ao padrão, como o bônus e o rótulo (decisão: um segredo nunca é revelado por
+  esquecimento; se Weberson preferir que fique, é só não voltar). Privada e secreta ficam em
+  vermelho (`--c-penalty`) e tracejadas: o botão, a marca no resultado ("Furtividade · privada"),
+  a marca no histórico de quem vê e o aviso. O sinal de suspense (rolagem sem `total`, a lista
+  fechada de campos do servidor) aparece como "?" e "Guardião rolou em segredo" / "Ana rolou só
+  para o Guardião", no histórico e no aviso (o "?" pulsa). Testado com três abas, guardando tudo o
+  que chegava ao aparelho de um jogador: nenhum número nem rótulo de rolagem que ele não podia ver,
+  nem ao vivo nem no histórico mandado ao voltar.
+- Aviso perto da bandeja: só das rolagens dos outros, ao vivo (não das que chegam ao voltar de uma
+  queda); some em 5 s; até 3 empilhados. No celular, o botão "Rolagens" conta as que chegaram
+  desde a última vez que o histórico esteve à vista (as que já estavam na mesa ao entrar contam
+  como vistas).
+- Rótulo (`room-label.js`): a linha "quem vê · Rótulo · Rolagens" aparece acima da bandeja só
+  dentro de uma mesa (a área dos dados encolhe uns 44 px; `relayout` é chamado ao entrar e sair).
+  O rótulo vai com a próxima jogada (pego no toque que lança, como o bônus) e se apaga; aparece
+  também no resultado, acima do número. Escolhido, ele aparece no próprio botão, aceso; se faltar
+  espaço na linha, é ele que encolhe (com reticências). Até 30 letras; os 8 últimos usados ficam
+  em `saved.labels` (sem repetir, sem diferenciar maiúsculas). Sair da mesa apaga o rótulo e a
+  escolha de quem vê.
+- Valores do personagem (`room-counters.js`; as contas em `core/counters.js`; a lista vem de
+  `theme.counters`): um botão na linha perto da bandeja mostra os dois primeiros ("PV 9 · SAN 55";
+  sem valores, "PV · SAN", aceso e pulsando) e abre a folha: − atual + e o máximo de cada um,
+  embaixo, perto do polegar (ela sobe só enquanto um campo está em foco, por causa do teclado). O
+  máximo vale ao sair do campo, e não a cada letra; o primeiro começa cheio, quem está cheio continua
+  cheio e os outros só não passam do máximo novo; vazio ou 0 apaga o contador. − e + repetem
+  segurando (`holdRepeat`, agora em `lib/util.js`), com `aria-disabled` em vez de `disabled`: um botão
+  desligado no meio do toque não avisaria que o dedo saiu, e a repetição não pararia. Em tela até 400
+  px, os quatro botões ficam mais justos (em 360 px cabem sem cortar; em 320 px, quem encolhe é o
+  rótulo). O Guardião não tem o botão.
+- Guardados em `saved.characters` (`{ chave do nome: { name, counters } }`, sem diferenciar
+  maiúsculas): sobrevivem a sair da mesa e ao fim dela, e outro nome começa vazio. O aparelho é quem
+  sabe os valores: a mesa os recebe a cada `room` (mudados sem conexão, ou de outro personagem) e, a
+  cada mudança, no máximo a cada 300 ms (`shareCounters`). Quem entra pela folha com um personagem
+  sem valores vai direto para a folha dos valores, em vez da gaveta da mesa.
+- Ao criar a mesa (`askRules`): "Os jogadores veem os valores uns dos outros (PV, SAN, Sorte e PM)?",
+  com "Não: só o Guardião vê" e "Sim: todos veem", sem padrão; a resposta já cria a mesa. A folha dos
+  valores diz quem vê.
+- Na lista de quem está na mesa: para quem vê os valores (o Guardião, ou todos com `all`), uma tabela
+  (`renderValues`) com atual/máximo de cada um, e o título diz quem vê; para os outros, a fileira de
+  etiquetas. O próprio jogador vê os valores do aparelho, que são os mais novos. Medido com a mesa
+  cheia: 25 px por linha, tabela de 190 px; no notebook de 1366×640 sobram 201 px para as rolagens
+  (de 3 a 4 à vista); o nome fica com 127 px no painel de 355 px e 83 px no de 280 px.
 
 ## Fluxo: desenvolver, testar e publicar
 
@@ -122,11 +343,22 @@ Depois de publicar a 1.1: na `desenvolvimento`, mudar `VERSION` em `src/version.
   desenvolvimento` → atualizar o teste com um commit novo por cima (comandos no README, "Para
   quem mexe no código") → conferir o endereço de teste no navegador (o canto mostra o envio
   novo; pode levar alguns minutos) → mandar o link e explicar como testar.
+- O guia de uso (`docs/guia-de-uso.md`, pedido por Weberson em 31/10/2026) descreve, para quem
+  usa, as funções e as limitações atuais. Atualizá-lo junto com o README a cada etapa que mude o
+  que o app faz, inclusive a data e as versões do alto e a tabela de versões.
 - Publicar, só depois do "pode publicar": a `main` vira cópia exata da `desenvolvimento`
   (`git restore --source=desenvolvimento ...`), commit "Versão X.Y", tag `vX.Y`, push da `main`
-  e da tag, conferir o endereço oficial, voltar para a `desenvolvimento` e subir `VERSION`.
+  e da tag, conferir o endereço oficial, voltar para a `desenvolvimento` e subir `VERSION`. Da 1.2
+  em diante, a mesa oficial vai antes (`npm run deploy:oficial` e o teste dos aparelhos contra ela,
+  com `MESA_ORIGEM=https://webersoncosta.github.io`, a única origem que ela aceita), para o botão
+  "Mesa" do app oficial já encontrá-la. Um servidor recém-criado pode responder "error code: 1042"
+  por alguns instantes.
 - Voltar a uma versão anterior ("volte o app oficial para a versão 1.0"): `git restore
   --source=vX.Y ...` na `main`, commit e push. Os comandos estão no README.
+- Servidor da mesa (dentro de `server/`): a mesa de teste (`npm run deploy:teste`, que roda os
+  testes das regras antes) vai junto com o envio para o endereço de teste que precisar dela;
+  depois, o teste dos três aparelhos contra ela (`MESA_URL=... npm run test:mesa`). A mesa oficial
+  (`npm run deploy:oficial`) só com o "pode publicar", junto com o app oficial.
 
 ## Testar no computador
 
@@ -142,6 +374,11 @@ Depois de publicar a 1.1: na `desenvolvimento`, mudar `VERSION` em `src/version.
   e chame `__dados.tick(1/60)` quantas vezes precisar.
 - No painel de navegador do Claude, se o painel estiver escondido, as capturas de tela podem vir
   atrasadas (tire duas). Os avisos "Blocked call to navigator.vibrate" nos testes são normais.
+- Servidor da mesa: `npm test` (dentro de `server/`) testa as regras da sala sem servidor. O
+  simulador local (`npm run local`, que usa o `workerd`) não abre neste PC: o Visual C++ do
+  Windows é de 2017 (14.16) e o `workerd` quebra ao iniciar ("access violation"). Instalar o
+  Visual C++ Redistributable mais novo (x64) resolveria; até lá, o teste dos três aparelhos roda
+  contra a mesa de teste publicada.
 
 ## Ideias para o futuro
 
@@ -151,7 +388,9 @@ Depois de publicar a 1.1: na `desenvolvimento`, mudar `VERSION` em `src/version.
 - **Campo de perícia**: informar o valor da perícia (por exemplo 60) antes de rolar o d100, e o
   app mostrar o nível de sucesso da 7ª edição: crítico (01), extremo (até 1/5 da perícia),
   difícil (até a metade), normal (até a perícia), fracasso, e desastre (100, ou 96 a 100 quando
-  a perícia é menor que 50).
-- **Mesa compartilhada**: os jogadores verem as rolagens uns dos outros em tempo real. O GitHub
-  Pages só entrega arquivos; isso precisaria de um serviço online (como Firebase ou Supabase) ou
-  de conexão direta entre os aparelhos, e de decidir quem vê o quê.
+  a perícia é menor que 50). Entra na fase 5 da mesa compartilhada.
+- **Mesa compartilhada**: virou a etapa atual (veja "Estado atual" e
+  `docs/plano-mesa-compartilhada.md`).
+- **Ficha do personagem** (Markdown, que os contadores leem e atualizam, e PDF, só para ver) e
+  **alertas para o Guardião** (PV baixo, perda grande de Sanidade): o pedido e como a ficha entra sem
+  refazer os contadores estão no fim do plano.

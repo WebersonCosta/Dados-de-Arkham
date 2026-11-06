@@ -62,6 +62,16 @@ export const shortcuts = [
   { formula: '1d10' }
 ];
 
+// Os valores do investigador na mesa compartilhada, na ordem da tela (o botão perto da bandeja
+// mostra os dois primeiros). short: como aparece na tela; name: por extenso. Os dois também são como
+// a ficha do personagem vai escrever cada um, na tabela "Valores derivados".
+export const counters = [
+  { id: 'hp', short: 'PV', name: 'Pontos de Vida' },
+  { id: 'san', short: 'SAN', name: 'Sanidade' },
+  { id: 'luck', short: 'Sorte', name: 'Sorte' },
+  { id: 'mp', short: 'PM', name: 'Pontos de Magia' }
+];
+
 // Opções do d100, da esquerda para a direita. A que não põe dados a mais na mesa é a normal.
 export const modes = {
   d100: {

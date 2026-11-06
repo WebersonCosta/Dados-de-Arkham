@@ -1,0 +1,37 @@
+# Servidor da mesa compartilhada, no Cloudflare. São dois servidores separados, como os dois
+# endereços do app: a mesa oficial (a parte de cima deste arquivo) e a mesa de teste ([env.teste]).
+# Cada sala é um Durable Object da classe Room (worker.js). Para enviar, veja o README.
+name = "mesa-arkham"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+preview_urls = false
+send_metrics = false   # o wrangler não manda dados de uso para o Cloudflare
+
+[observability]
+enabled = false        # sem registros (logs) guardados no Cloudflare
+
+[vars]
+PLACE = "oficial"
+ORIGINS = "https://webersoncosta.github.io"
+IDLE_SECONDS = "21600" # a sala se apaga 6 horas depois do último uso
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room"]
+
+[env.teste]
+name = "mesa-arkham-teste"
+
+[env.teste.vars]
+PLACE = "teste"
+ORIGINS = "https://webersoncosta.github.io,http://localhost:*,http://127.0.0.1:*"
+IDLE_SECONDS = "21600"
+
+[[env.teste.durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"

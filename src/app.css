@@ -20,8 +20,12 @@
   --font-title: Georgia, "Times New Roman", serif;
   --font-ui: "Courier New", Courier, monospace;
   --font-number: Georgia, "Times New Roman", serif;
+  --side: 0px;   /* a faixa da direita ocupada pelo painel da mesa compartilhada (só no PC) */
   color-scheme: dark;
 }
+/* No PC (tela larga), dentro de uma mesa compartilhada, o painel dela fica à direita, e a mesa de
+   dados, o cabeçalho e a bandeja ocupam o resto da tela. */
+body.docked { --side: clamp(280px, 26vw, 360px); }
 html, body { height: 100%; }
 [hidden] { display: none !important; }
 body {
@@ -38,11 +42,11 @@ body {
   -webkit-touch-callout: none;
   overscroll-behavior: none;
 }
-#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-.vignette { position: fixed; inset: 0; pointer-events: none; }
+#scene { position: fixed; inset: 0; width: calc(100% - var(--side)); height: 100%; display: block; touch-action: none; }
+.vignette { position: fixed; inset: 0 var(--side) 0 0; pointer-events: none; }
 
 .hud-top {
-  position: fixed; top: 0; left: 0; right: 0;
+  position: fixed; top: 0; left: 0; right: var(--side);
   display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -51,18 +55,21 @@ body {
 }
 .hud-top > * { pointer-events: auto; }
 .brand h1 {
-  margin: 0; font-family: var(--font-title); font-weight: 400;
+  margin: 0; font-family: var(--font-title); font-weight: 400; white-space: nowrap;
   font-size: 1.4rem; letter-spacing: .05em; line-height: 1.05;
   text-shadow: 0 0 14px #000, 0 0 3px #000;
 }
-.brand { min-width: 0; }
+/* O título fica sempre numa linha; em tela estreita, quem cede são os botões, que descem para uma
+   segunda linha (o "Mesa" embaixo do "Som" e do "Ambiente"). O subtítulo usa a largura do título
+   e corta com reticências se precisar. */
+.brand { flex: 1 1 auto; }
 .brand p {
+  width: 0; min-width: 100%;
   margin: .3rem 0 0; font-family: var(--font-ui); font-size: .72rem;
   letter-spacing: .08em; color: var(--c-text-dim); text-shadow: 0 0 6px #000;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.toggles { flex: none; }
-.toggles { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.toggles { flex: 0 1 auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .toggle {
   font-family: var(--font-ui); font-size: .72rem; letter-spacing: .04em;
   color: var(--c-text); background: var(--c-panel);
@@ -73,7 +80,7 @@ body {
 button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
 
 .hud-bottom {
-  position: fixed; left: 0; right: 0; bottom: 0;
+  position: fixed; left: 0; right: var(--side); bottom: 0;
   display: flex; flex-direction: column; gap: 12px;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -97,12 +104,13 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   padding: .6rem 0; cursor: pointer; touch-action: manipulation; min-width: 0;
 }
 .die-chip[aria-pressed="true"] { color: var(--c-accent); border-color: var(--c-accent); background: var(--c-accent-soft); }
-/* quantos dados desse tipo estão na fórmula (só aparece a partir de 2) */
-.die-chip .count {
+/* quantos dados desse tipo estão na fórmula (só aparece a partir de 2); no botão "Rolagens", quantas
+   rolagens novas chegaram */
+.die-chip .count, .room-chip .count {
   position: absolute; top: -7px; right: -3px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px;
-  font: 700 .64rem/17px var(--font-number); color: var(--c-void); background: var(--c-accent);
+  box-sizing: border-box; font: 700 .64rem/17px var(--font-number); text-align: center; color: var(--c-void); background: var(--c-accent);
 }
-.die-chip .count:empty { display: none; }
+.die-chip .count:empty, .room-chip .count:empty { display: none; }
 
 /* Faixa acima da bandeja: as opções do d100 (bônus e penalidade) ou a fórmula montada, uma no
    lugar da outra. As duas ocupam o mesmo espaço, para a mesa não mudar de tamanho. */
@@ -152,7 +160,7 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 .tone-penalty .mode-chip[aria-pressed="true"] { color: var(--c-penalty); border-color: var(--c-penalty); background: var(--c-penalty-soft); }
 
 .verdict {
-  position: fixed; left: 0; right: 0; top: 17%;
+  position: fixed; left: 0; right: var(--side); top: 17%;
   display: flex; flex-direction: column; align-items: center; gap: .1rem;
   pointer-events: none; text-align: center;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -165,6 +173,12 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   z-index: -1;
 }
 .verdict > * { margin: 0; }
+/* o rótulo que foi junto com a jogada, na mesa compartilhada */
+.verdict-tag {
+  font-family: var(--font-ui); font-size: .78rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--c-accent); text-shadow: 0 0 8px #000, 0 0 3px #000;
+}
+.verdict-tag.is-veiled { color: var(--c-penalty); }   /* privada ou secreta: nem todos viram */
 .verdict-label {
   font-family: var(--font-title); font-size: 1.35rem; letter-spacing: .14em; min-height: 1.2em;
   text-shadow: 0 0 12px #000;
@@ -233,10 +247,198 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   cursor: pointer; touch-action: manipulation;
 }
 .sheet-save:disabled { color: var(--c-text-dim); border-color: var(--c-line); background: none; cursor: default; }
+.sheet-save.is-quiet { color: var(--c-text); background: var(--c-panel); border-color: var(--c-line-strong); }
+.sheet-save.is-danger { margin-top: 10px; color: var(--c-penalty); background: none; border-color: var(--c-penalty); }
+
+/* Mesa compartilhada: o botão "Mesa" (aceso dentro de uma mesa, pulsando enquanto conecta) e o
+   painel dela. O painel fica no alto da tela, para o teclado do celular não cobrir os campos. */
+.table-button.is-in { color: var(--c-accent); border-color: var(--c-accent); background: var(--c-accent-soft); }
+.table-button[data-status="connecting"], .table-button[data-status="reconnecting"] { animation: breathe 1.8s ease-in-out infinite; }
+.sheet.at-top { align-items: flex-start; padding-top: calc(env(safe-area-inset-top, 0px) + 14px); }
+.table-box { display: flex; flex-direction: column; gap: 8px; }
+.table-box > p { margin: 0; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field span { font-family: var(--font-ui); font-size: .66rem; letter-spacing: .16em; color: var(--c-text-dim); }
+.field input {
+  box-sizing: border-box; width: 100%; padding: .6rem .7rem;
+  font: 16px/1.2 var(--font-ui);   /* 16px: o iPhone não aproxima a tela ao tocar no campo */
+  color: var(--c-text); background: var(--c-panel); border: 1px solid var(--c-line-strong); border-radius: 2px;
+  -webkit-user-select: text; user-select: text;
+}
+.field input:focus { outline: none; border-color: var(--c-accent); }
+#tableCodeInput { font-family: var(--font-number); letter-spacing: .18em; text-transform: uppercase; }
+#tableCodeInput::placeholder { font-family: var(--font-ui); letter-spacing: .04em; text-transform: none; }
+.table-note { font-family: var(--font-ui); font-size: .68rem; line-height: 1.5; color: var(--c-text-dim); }
+.table-error { font-family: var(--font-ui); font-size: .78rem; line-height: 1.4; color: var(--c-penalty); }
+.table-code { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.table-code b {
+  font-family: var(--font-number); font-size: 1.9rem; letter-spacing: .12em; color: var(--c-accent);
+  -webkit-user-select: text; user-select: text;
+}
+.table-status { font-family: var(--font-ui); font-size: .72rem; color: var(--c-text-dim); }
+
+/* O painel de dentro da mesa: no celular, uma gaveta que sobe da bandeja; no PC, a faixa da direita
+   (--side). Só a lista das rolagens rola; o resto fica parado. */
+.room-card { max-height: 86vh; overflow: hidden; }
+.room-card > :not(.log-box) { flex-shrink: 0; }
+.room-panel.is-docked { inset: 0 0 0 auto; width: var(--side); padding: 0; background: none; z-index: 5; }
+.room-panel.is-docked .room-card {
+  box-sizing: border-box; height: 100%; max-height: none; max-width: none;
+  border-width: 0 0 0 1px; border-radius: 0; box-shadow: none;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) max(14px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 14px) 14px;
+}
+.members { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+/* no máximo meia linha cada: com a mesa cheia e nomes compridos, sobra lugar para as rolagens */
+.member {
+  display: flex; align-items: center; gap: 7px; max-width: calc(50% - 2px); box-sizing: border-box; padding: .35rem .6rem;
+  background: var(--c-panel); border: 1px solid var(--c-line); border-radius: 2px;
+}
+.member .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-line-strong); }
+.member.is-online .dot { background: var(--c-bonus); box-shadow: 0 0 6px var(--c-bonus); }
+.member-name {
+  min-width: 0; font-family: var(--font-title); font-size: 1rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.member.is-me .member-name { color: var(--c-accent); }
+.member:not(.is-online) .member-name { opacity: .55; }
+.member small { flex: none; font-family: var(--font-ui); font-size: .62rem; letter-spacing: .06em; color: var(--c-text-dim); }
+.member small:empty { display: none; }
+
+/* Quem está na mesa, com os valores de cada um: uma tabela, para o Guardião bater o olho. Quem cede
+   são os nomes compridos, que aparecem inteiros no histórico. */
+.values { width: 100%; border-collapse: collapse; font-family: var(--font-ui); }
+.values th, .values td {
+  padding: .16rem 0 .16rem .5rem; font-size: .66rem; line-height: 1.2; font-weight: 400; text-align: center; white-space: nowrap;
+  color: var(--c-text-dim); border-bottom: 1px solid var(--c-line);
+}
+.values thead th, .values thead td { padding-top: 0; padding-bottom: .12rem; font-size: .6rem; letter-spacing: .06em; }
+.values td b { font: 700 .9rem/1 var(--font-number); color: var(--c-text); }
+.values .member-who { width: 100%; max-width: 0; padding-left: 0; text-align: left; }
+.member-who > span { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.member-who .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-line-strong); }
+.member-row.is-online .dot { background: var(--c-bonus); box-shadow: 0 0 6px var(--c-bonus); }
+.member-who .member-name { font-size: .95rem; line-height: 1.25; color: var(--c-text); }
+.member-row.is-me .member-name { color: var(--c-accent); }
+.member-row:not(.is-online) .member-name { opacity: .55; }
+
+/* As rolagens da mesa, a mais nova em cima: o número à esquerda; ao lado, quem rolou e o rótulo, e
+   embaixo o que foi rolado. A que acabou de chegar acende por um instante. */
+.log-box { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.roll {
+  display: grid; grid-template-columns: 3.3rem minmax(0, 1fr); align-items: center; gap: 6px;
+  padding: .45rem .6rem .45rem .2rem; background: var(--c-panel); border: 1px solid var(--c-line); border-radius: 2px;
+}
+.roll-num { font: 700 1.5rem/1 var(--font-number); text-align: center; color: var(--c-text); }
+.roll-text { min-width: 0; }
+.roll-text p { margin: 0; }
+.roll-who { display: flex; align-items: baseline; gap: 8px; font-family: var(--font-title); font-size: 1rem; line-height: 1.25; }
+/* quem rolou e o rótulo: na mesma linha quando cabem; com um nome comprido, o rótulo desce inteiro */
+.roll-title { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; column-gap: .3em; }
+.roll-title > span { min-width: 0; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.roll-label::before { content: '· '; }
+.roll-who time { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .06em; color: var(--c-text-dim); }
+.roll-veil { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .08em; color: var(--c-penalty); }
+.roll-wait { flex: none; font-family: var(--font-ui); font-size: .6rem; letter-spacing: .08em; color: var(--c-text-dim); }
+.roll.is-pending { opacity: .62; border-style: dotted; }   /* deste aparelho, esperando a mesa confirmar */
+.roll.is-me .roll-name { color: var(--c-accent); }
+.roll-what { margin-top: 2px; font-family: var(--font-ui); font-size: .66rem; line-height: 1.45; letter-spacing: .04em; color: var(--c-text-dim); }
+.roll-what span { color: var(--c-text); }   /* números que contam */
+.roll-what s { opacity: .6; }                /* números descartados */
+.roll.is-critical .roll-num, .roll.is-critical .roll-crit { color: var(--c-critical); }
+.roll.is-fumble .roll-num, .roll.is-fumble .roll-crit { color: var(--c-fumble); }
+.roll.is-hidden .roll-num { color: var(--c-text-dim); }
+.roll.is-hidden .roll-what { font-style: italic; }
+.roll.is-veiled { border-style: dashed; }   /* nem todos veem */
+.roll.is-new { animation: arrive 1.6s ease-out; }
+@keyframes arrive { from { border-color: var(--c-accent); background-color: var(--c-accent-soft); } }
+
+/* Aviso das rolagens dos outros: por cima da beira da mesa, logo acima da bandeja, e some sozinho. */
+.notices {
+  position: absolute; left: 0; right: 0; bottom: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 0 16px 8px; pointer-events: none;
+}
+.notice {
+  margin: 0; display: flex; align-items: baseline; gap: .7em; max-width: 100%; box-sizing: border-box;
+  padding: .3rem .75rem; font-family: var(--font-ui); font-size: .78rem; letter-spacing: .04em; color: var(--c-text);
+  background: rgba(0, 0, 0, .62); border: 1px solid var(--c-line); border-radius: 2px;
+  animation: notice 5s ease-in-out both;
+}
+.notice span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notice b { flex: none; font: 700 1.1rem/1 var(--font-number); color: var(--c-accent); }
+.notice.is-critical b { color: var(--c-critical); }
+.notice.is-fumble b { color: var(--c-fumble); }
+.notice.is-veiled { border-style: dashed; }
+/* o sinal de suspense: alguém rolou, e o "?" pulsa no lugar do número */
+.notice.is-hidden span { font-style: italic; color: var(--c-text-dim); }
+.notice.is-hidden b { color: var(--c-penalty); animation: breathe 1.8s ease-in-out infinite; }
+/* O aviso que fica (a mesa sem conexão, o app desatualizado): não some sozinho e fica embaixo dos
+   outros, mais perto da bandeja. O do app desatualizado é um botão: um toque atualiza. */
+.notice.is-held {
+  display: block; text-align: center; border-style: dashed; color: var(--c-text-dim);
+  animation: breathe 2.6s ease-in-out infinite;
+}
+.notice.is-action {
+  animation: none; pointer-events: auto; cursor: pointer; touch-action: manipulation;
+  color: var(--c-accent); border-color: var(--c-accent); background: rgba(0, 0, 0, .78);
+}
+@keyframes notice { from { opacity: 0; transform: translateY(6px); } 8%, 85% { opacity: 1; transform: none; } to { opacity: 0; } }
+
+/* Perto da bandeja, dentro de uma mesa: quem vê a próxima rolagem (aberta, privada ou secreta), o
+   rótulo dela e (no celular) as rolagens. Se faltar espaço, quem encolhe é o rótulo. */
+.room-row { display: flex; justify-content: center; gap: 8px; pointer-events: none; }
+.room-chip { position: relative; flex: none; pointer-events: auto; }
+#btnLabel { flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.room-chip.is-set { color: var(--c-accent); border-color: var(--c-accent); background: var(--c-accent-soft); }
+.room-chip.is-veiled { color: var(--c-penalty); border-color: var(--c-penalty); background: var(--c-penalty-soft); }
+/* em tela estreita, os quatro botões ficam um pouco mais justos, para o rótulo não encolher */
+@media (max-width: 400px) {
+  .room-row { gap: 6px; }
+  .room-chip { padding-inline: .5rem; }
+}
+/* os valores do personagem: enquanto não foram informados, o botão chama a atenção */
+#btnCounters { white-space: nowrap; }
+.room-chip.is-empty { color: var(--c-accent); border-color: var(--c-accent); animation: breathe 2.6s ease-in-out infinite; }
+
+/* A folha dos valores do personagem: o nome, − atual +, e o máximo. Botões grandes, para o polegar. */
+#countersHead { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.counters { display: grid; grid-template-columns: minmax(2.7rem, auto) minmax(2.7rem, 3.1rem) minmax(2.4rem, 1fr) minmax(2.7rem, 3.1rem) 3.4rem; gap: 6px; align-items: center; }
+.counter-caption { font-family: var(--font-ui); font-size: .62rem; letter-spacing: .1em; text-align: center; color: var(--c-text-dim); }
+.counter-name { font-family: var(--font-title); font-size: 1.1rem; }
+.counter-cur { font: 700 1.6rem/1 var(--font-number); text-align: center; color: var(--c-text); }
+.counter-step {
+  height: 3.1rem; font: 700 1.4rem/1 var(--font-number); color: var(--c-accent); background: var(--c-panel);
+  border: 1px solid var(--c-line-strong); border-radius: 2px; cursor: pointer; touch-action: manipulation;
+}
+.counter-step[aria-disabled="true"] { color: var(--c-text-dim); border-color: var(--c-line); opacity: .5; cursor: default; }
+.counter-max {
+  box-sizing: border-box; width: 100%; padding: .55rem .2rem;
+  font: 16px/1.2 var(--font-ui);   /* 16px: o iPhone não aproxima a tela ao tocar no campo */
+  text-align: center; color: var(--c-text); background: var(--c-panel); border: 1px solid var(--c-line-strong); border-radius: 2px;
+  -webkit-user-select: text; user-select: text;
+}
+.counter-max:focus { outline: none; border-color: var(--c-accent); }
+
+/* Ao criar uma mesa: a pergunta de quem vê os valores dos jogadores. */
+.table-choice { display: flex; flex-direction: column; gap: 2px; }
+.table-choice > p { margin: 0; }
+
+/* A folha do rótulo: o campo, e os últimos usados para escolher com um toque. */
+.label-form { display: flex; align-items: flex-end; gap: 8px; }
+.label-form .field { flex: 1; min-width: 0; }
+.label-form .sheet-save { flex: none; margin: 0; padding: .7rem 1.1rem; }
+.label-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.label-chips:empty { display: none; }
+.label-chip {
+  max-width: 100%; padding: .55rem .8rem; font-family: var(--font-title); font-size: 1rem; color: var(--c-text);
+  background: var(--c-panel); border: 1px solid var(--c-line); border-radius: 2px; cursor: pointer; touch-action: manipulation;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 /* Número da versão, discreto no canto de baixo. No endereço de teste ele aparece em outra cor. */
 .version {
-  position: fixed; right: max(10px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 1px);
+  position: fixed; right: calc(var(--side) + max(10px, env(safe-area-inset-right, 0px))); bottom: calc(env(safe-area-inset-bottom, 0px) + 1px);
   margin: 0; font-family: var(--font-ui); font-size: .58rem; letter-spacing: .08em; line-height: 1.2;
   color: var(--c-text-dim); opacity: .55; pointer-events: none;
 }
@@ -247,6 +449,6 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   font-family: var(--font-ui); text-align: center; line-height: 1.5; background: var(--c-void);
 }
 @media (prefers-reduced-motion: reduce) {
-  .hint { animation: none; opacity: .85; }
-  .verdict.show > * { animation: none; }
+  .hint, .table-button { animation: none !important; opacity: .85; }
+  .verdict.show > *, .notice, .notice.is-hidden b, .notice.is-held, .roll.is-new, .room-chip.is-empty { animation: none; }
 }
