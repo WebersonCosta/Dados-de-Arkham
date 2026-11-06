@@ -7,11 +7,12 @@ no seu celular ou PC. O uso principal será numa call do Discord entre amigos.
 Andamento: fase 1 (plano) aprovada em 31/10/2026. Fase 2, passo 1 (preparação) pronto em
 31/10/2026: a mesa de teste está no ar e passou no teste dos três aparelhos. Passo 2 (entrar na
 mesa), passo 3 (rolagens ao vivo, com rótulo), passo 4 (privada, secreta e suspense) e passo 5
-(quedas e encerramento) testados e aprovados por Weberson em 31/10/2026. **Passo 6 (a sessão real
-no Discord) começou em 31/10/2026, esperando a sessão de Weberson.** Antes dela, em 03/11/2026,
-entrou a versão mínima dos valores do investigador (PV, SAN, Sorte e PM), no endereço de teste,
-esperando o teste de Weberson. As decisões, os passos da fase 2, os valores e a ideia da ficha do
-personagem estão no fim deste arquivo.
+(quedas e encerramento) testados e aprovados por Weberson em 31/10/2026. Antes do passo 6, em
+03/11/2026, entrou a versão mínima dos valores do investigador (PV, SAN, Sorte e PM), testada e
+aprovada por Weberson. Passo 6 (a sessão real no Discord) feito: Weberson, como Guardião, jogou uma
+sessão rápida com dois amigos para testar as funções e não encontrou erro (relatado em 06/11/2026).
+**A fase 2 está pronta, esperando o "pode publicar".** As decisões, os passos da fase 2, os valores
+e a ideia da ficha do personagem estão no fim deste arquivo.
 
 ## Sala e entrada
 

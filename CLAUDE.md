@@ -23,12 +23,12 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 - Quando Weberson pedir para avisar de problemas antes de implementar, explicar o problema e
   perguntar antes de mexer.
 
-## Estado atual (03/11/2026)
+## Estado atual (06/11/2026)
 
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.1**, publicada em 30/10/2026 | `main` = tag `v1.1` (94cafb6), https://webersoncosta.github.io/Dados-de-Arkham/ |
-| Desenvolvimento | **1.2**: mesa compartilhada, fase 2, passo 6 (a sessão real no Discord) com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 12` |
+| Desenvolvimento | **1.2**: mesa compartilhada (fase 2) testada por Weberson, esperando o "pode publicar" | `desenvolvimento`; endereço de teste com o envio `teste 12` |
 
 Versões publicadas (tags): `v1.0` (3ac132c) e `v1.1` (94cafb6). A 1.1 trouxe: vários dados
 juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
@@ -66,8 +66,10 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   das rolagens feitas sem conexão, o aviso "Sem conexão com a mesa" perto da bandeja e o aviso de
   versão (veja "Mesa compartilhada: o app"), com a conferência de versão (`outdated`) na mesa de
   teste. "Encerrar a mesa" e a sala que se apaga sozinha já vinham dos passos 1 e 2.
-- Fase 2, passo 6 (a sessão real no Discord, pelo endereço de teste) começou em 31/10/2026,
-  esperando a sessão de Weberson; depois dela, os ajustes e o "pode publicar". Antes da sessão: a
+- Fase 2, passo 6 (a sessão real no Discord, pelo endereço de teste) feito: Weberson, como
+  Guardião, jogou uma sessão rápida com dois amigos só para testar as funções (as rolagens e a
+  visão dos resultados), sem derrubar a internet de propósito, e não encontrou erro (relatado em
+  06/11/2026; as quedas já tinham sido testadas no passo 5). Antes da sessão: a
   mesa cheia (o Guardião e 6 jogadores rolando ao mesmo tempo, na mesa de teste: cada rolagem
   chegou uma vez a cada um; o teste dos aparelhos agora tem esse caso, 13 de 13 com o da sala que
   se apaga sozinha pulado) e a tela com a mesa cheia e nomes compridos, que trouxe dois ajustes
@@ -80,10 +82,15 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   dá para liberar um lugar (isso é do painel do Guardião, fase 3). Orientação dada: entrar e
   voltar sempre pelo link do convite; se a mesa encher, encerrar e criar outra.
 - Valores do investigador (PV, SAN, Sorte e PM), pedidos por Weberson em 03/11/2026 antes da sessão
-  real: no endereço de teste (envio `teste 12`), esperando o teste dele. A mesa de teste foi enviada
-  de novo e passou no teste dos aparelhos (22 de 22; o da sala que se apaga sozinha fica pulado). O
+  real (envio `teste 12`): testados e aprovados por ele, com o PC como Guardião e o celular como
+  jogador (relatado em 06/11/2026). A mesa de teste passou no teste dos aparelhos (22 de 22; o da
+  sala que se apaga sozinha fica pulado). O
   pedido e a ideia da ficha do personagem estão no plano. Ficaram para depois: alertas para o
   Guardião, o painel completo e outras regras da mesa.
+- Próximo passo: o "pode publicar" da 1.2, que põe no ar o app e a mesa oficial juntos (veja
+  "Fluxo"). Na publicação: o README e o guia de uso deixam de dizer "em teste" (e a tabela de
+  versões ganha a data), e Weberson fica sabendo que os valores do investigador guardados no
+  endereço de teste não passam para o oficial (cada endereço guarda os seus).
 
 ## Decisões tomadas (e por quê)
 
@@ -338,7 +345,9 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   que o app faz, inclusive a data e as versões do alto e a tabela de versões.
 - Publicar, só depois do "pode publicar": a `main` vira cópia exata da `desenvolvimento`
   (`git restore --source=desenvolvimento ...`), commit "Versão X.Y", tag `vX.Y`, push da `main`
-  e da tag, conferir o endereço oficial, voltar para a `desenvolvimento` e subir `VERSION`.
+  e da tag, conferir o endereço oficial, voltar para a `desenvolvimento` e subir `VERSION`. Da 1.2
+  em diante, a mesa oficial vai antes (`npm run deploy:oficial` e o teste dos aparelhos contra ela),
+  para o botão "Mesa" do app oficial já encontrá-la.
 - Voltar a uma versão anterior ("volte o app oficial para a versão 1.0"): `git restore
   --source=vX.Y ...` na `main`, commit e push. Os comandos estão no README.
 - Servidor da mesa (dentro de `server/`): a mesa de teste (`npm run deploy:teste`, que roda os
