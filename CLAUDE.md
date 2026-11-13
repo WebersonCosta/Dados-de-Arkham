@@ -23,19 +23,26 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 - Quando Weberson pedir para avisar de problemas antes de implementar, explicar o problema e
   perguntar antes de mexer.
 
-## Estado atual (06/11/2026)
+## Estado atual (13/11/2026)
 
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.2**, publicada em 06/11/2026 | `main` = tag `v1.2` (d41a027), https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev |
-| Desenvolvimento | depois da 1.2: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 12` (a 1.2) |
+| Desenvolvimento | **1.3**: a física dos dados (menores, mais pesados, sem tremor) com o painel de ajuste temporário, em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 13` |
 
 Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6) e `v1.2` (d41a027). A 1.1 trouxe: vários
 dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2 trouxe a mesa
 compartilhada (fase 2), com os valores do investigador.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 13.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 14.
+- **Trabalho atual (13/11/2026): a física dos dados.** Weberson notou no celular dados tremendo quando
+  quase parados e empurrõezinhos em dados quase parados; pediu menos empurrões e mais
+  discretos, dados um pouco menores, sensação de mais peso e um painel de ajuste temporário. No
+  envio `teste 13`, esperando ele escolher os valores no celular. Quando escolher: pôr os valores
+  em `FEEL` (`src/core/physics.js`) e tirar o painel antes de publicar (o arquivo
+  `src/tune-panel.js`, a linha dele no `APP_FILES` do `sw.js` e o trecho "Painel de ajuste" no
+  fim do `src/main.js`). Veja "Dados e física".
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -102,11 +109,47 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   antes. As faces saem por igual (teste de qui-quadrado normal em milhares de lançamentos).
 - d4 a d20, e o d100 feito de **dois d10**: dezenas (00 a 90, de pedra) e unidades (0 a 9, de
   osso). "00" com "0" vale 100.
-- Dado que fica torto ou em cima de outro rola de novo (um pulinho para o lugar mais livre da
-  mesa); depois de dois pulinhos, é solto de novo num lugar livre. Dado deitado e quase parado é
-  segurado. Isso só apressa o fim: o número continua vindo da face.
-- Com mais de 4 dados o lançamento é mais suave. Tempos medidos até o resultado (mediana): 2 a
-  3 s até 6 dados; uns 4 s com 8 dados misturados com d12.
+- Dado que fica torto ou em cima de outro rola de novo. O primeiro empurrão é o menor que
+  costuma resolver: escorado na borda ou num vizinho, um pulinho baixo para longe do apoio e para
+  o lado mais livre; em cima de outro dado, rola para fora; de pé numa aresta, só na mesa, uma
+  inclinada. Os dois seguintes são pulinhos de verdade para o lugar mais livre; depois, o dado é
+  solto de novo num lugar livre. Escorado e parado (0,2 s) o empurrão vem logo, enquanto os
+  outros ainda assentam; torto e se mexendo devagar, depois de 1 s. Dado deitado e quase parado
+  dorme (`body.sleep()`: fica parado de vez até outro dado bater nele com força). Isso só apressa
+  o fim: o número continua vindo da face.
+- Com mais de 4 dados o lançamento é mais suave.
+- A física da versão 1.3 (13/11/2026; o que se descobriu, com a ferramenta `tools/medir-dados.js`):
+  - Tremor: a biblioteca devolvia quique de qualquer toque. A cada passo a gravidade dá ao dado
+    parado uns 0,4 de velocidade, e a mesa devolvia isso como um pulinho: o dado quase parado
+    tremia. Agora, no contato com a mesa, abaixo de 1,2·`pace` de velocidade de aproximação o
+    quique é zero (`world.solver.solve` embrulhado). Entre dados e na borda o quique fica: sem
+    ele, os dados ficavam mais escorados (medido).
+  - Ritmo da tela: a física já andava em passos fixos de 1/120 s, mas a biblioteca
+    (`world.step(dt, tempo, max)`) desiste dos passos quando um quadro passa de 8,3 ms de física,
+    e os relógios do lance (`track`) contavam o tempo da tela uma vez por quadro. Num celular
+    lento, ou num pico (no PC houve passos de 5 a 46 ms), os dados andavam em câmera lenta e os
+    relógios corriam. Agora `step` faz os passos ele mesmo (até 8 por quadro), `track` roda a
+    cada passo com o tempo da física e o desenho fica entre os dois últimos passos.
+  - Tamanho e peso (`FEEL`, `setFeel`): `size` multiplica a forma da física e o desenho (`mesh.scale`
+    em `syncMeshes`); `weight` de 0 (como na 1.2) a 10 muda gravidade (34 a 60), quique e atrito da
+    mesa, freio do giro e do movimento; o lançamento acompanha a gravidade (`pace` = √(g/34)),
+    para os dados ainda atravessarem a mesa. Dados e borda continuam lisos. Padrão proposto:
+    tamanho 88%, peso 4.
+  - Medido na mesa do PC (mediana até o resultado; lances com empurrão), antes → peso 4 e 88%:
+    d6 1,78 s → 1,47 s (2,3% → 4,6%); d20 2,67 → 2,08 s (5% → 4%); d100 com 2 de bônus 2,87 →
+    2,25 s (25% → 27%); 8d6 3,2 → 2,3 s (62% → 66%, tirados do lugar 0,18 → 0,18 por lance); 8
+    misturados 3,95 → 2,83 s (68% → 69%; tirados 0,37 → 0,2 por lance). Tremor (segundos de
+    pulinhos por lance) de 0,08 → 0,01 com 1 dado e de 0,9 → 0,2 com 8. Mais peso deixa mais
+    dados escorados (eles quicam menos e param onde caem): peso 9 tem o dobro de empurrões do peso
+    3. Experimentos que pioraram e foram desfeitos: rampinha no pé da borda e borda inclinada para
+    fora (o dado fica mais escorado), empurrão leve repetido (com muitos dados, falha na metade).
+  - Justiça conferida com o qui-quadrado (de 1.500 a 3.000 lances): d4 p=0,69; d6 0,25; d8 0,10;
+    d10 0,14; d12 0,67; d20 0,14; d100 dezenas 0,58 e unidades 0,84; d100 com 2 de bônus, dezenas
+    0,26 e unidades 0,89.
+- Painel de ajuste (TEMPORÁRIO, `src/tune-panel.js`): fora do oficial, com `?ajuste` no endereço.
+  Tamanho (70% a 110%) e peso (0 a 10), "Padrão" e "Como era" (100% e peso 0), e depois de cada
+  lance o tempo até o resultado e os empurrões. Os valores ficam em `arkham-ajuste`, só no aparelho
+  e só valem com `?ajuste`.
 
 **Regras de Call of Cthulhu, 7ª edição (só no tema Arkham, em `rules.js`)**
 - Crítico: d100 = 01 ("Sucesso crítico"). Desastre: d100 = 100. Sem o valor da perícia não dá
@@ -372,6 +415,11 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   `table`, `tick`…) para testes. Para simular a física rápido: pare o laço
   (`window.requestAnimationFrame = () => 0`), troque `__dados.stage.render` por uma função vazia
   e chame `__dados.tick(1/60)` quantas vezes precisar.
+- `tools/medir-dados.js` (no console de http://localhost:8766): centenas de lances direto na
+  física, com tempo até o resultado, empurrões e o motivo de cada um, tremor, custo de cada passo,
+  um celular imitado (`celular: 12`) e o qui-quadrado (`justica: true`). Os lances rodam sem pausa:
+  com o painel de navegador escondido, a página fica lenta para as pausas, e uma chamada passa de
+  45 s com muitos lances (divida).
 - No painel de navegador do Claude, se o painel estiver escondido, as capturas de tela podem vir
   atrasadas (tire duas). Os avisos "Blocked call to navigator.vibrate" nos testes são normais.
 - Servidor da mesa: `npm test` (dentro de `server/`) testa as regras da sala sem servidor. O

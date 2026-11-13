@@ -162,6 +162,7 @@ function syncMeshes(interpolated) {
   for (const { die, mesh } of current.dice) {
     mesh.position.copy(interpolated ? die.body.interpolatedPosition : die.body.position);
     mesh.quaternion.copy(interpolated ? die.body.interpolatedQuaternion : die.body.quaternion);
+    mesh.scale.setScalar(table.feel.size);   // o desenho tem o tamanho do dado da física
   }
 }
 
@@ -581,6 +582,14 @@ if (saved) {
 window.addEventListener('resize', relayout);
 document.fonts.ready.then(relayout);
 requestAnimationFrame(frame);
+
+// Painel de ajuste do tamanho e do peso dos dados. TEMPORÁRIO (sai antes de publicar): só fora do
+// endereço oficial, com "?ajuste" no fim do endereço.
+if (PLACE !== 'oficial' && new URLSearchParams(location.search).has('ajuste')) {
+  import('./tune-panel.js').then(({ createTunePanel }) => createTunePanel({
+    table, onSize: () => { if (state !== 'rolling') toIdle({ instant: true }); }
+  }));
+}
 // (a cópia do app no aparelho, o sw.js, é registrada pela própria página: veja o index.html)
 
 // Atalho só para testes no computador (localhost): permite simular resultados e opções.
