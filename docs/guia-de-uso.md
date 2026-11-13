@@ -1,7 +1,7 @@
 # Guia de uso: Dados de Arkham
 
-Atualizado em 13/11/2026: versão oficial **1.2**, publicada em 06/11/2026. O endereço de teste está
-com a **1.3** (envio "teste 14"), que muda a física dos dados (veja "Rolar os dados").
+Atualizado em 13/11/2026: versão oficial **1.3**, publicada nesse dia, com a física nova dos dados
+(veja "Rolar os dados"). O endereço de teste está com a mesma versão (envio "teste 14").
 
 O Dados de Arkham é um rolador de dados 3D para RPG, feito para *Call of Cthulhu* (7ª edição). Os
 dados caem numa mesa de madeira, à luz de velas, e o resultado é a face que ficou para cima, como
@@ -30,11 +30,11 @@ e até 6 jogadores podem rolar juntos, cada um no seu aparelho, pela **mesa comp
 
 | | Endereço | Versão | O que tem |
 | --- | --- | --- | --- |
-| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.2 | Tudo o que está neste guia |
-| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.2 (teste 12) | A mesma versão; é onde as próximas novidades aparecem primeiro, para testar |
+| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.3 | Tudo o que está neste guia |
+| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.3 (teste 14) | A mesma versão; é onde as próximas novidades aparecem primeiro, para testar |
 
-- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.2** no oficial e
-  **v1.2 · teste 12** no teste, em vermelho. O número depois de "teste" sobe a cada envio: é o
+- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.3** no oficial e
+  **v1.3 · teste 14** no teste, em vermelho. O número depois de "teste" sobe a cada envio: é o
   jeito de saber se a versão nova já chegou.
 - Os dois endereços não se misturam. Cada um guarda à parte as preferências, as fórmulas favoritas
   e a cópia para usar sem internet. Instalado, o oficial se chama **Arkham** e o teste, **Arkham
@@ -91,15 +91,16 @@ rolam de verdade, pela física: nada é sorteado antes. As faces saem por igual,
 com milhares de lançamentos. Dado que para torto, ou em cima de outro, leva um empurrão e rola de
 novo; isso só apressa o fim, e o número continua vindo da face.
 
-**Quanto demora.** De 2 a 3 segundos até 6 dados, e uns 4 segundos com 8.
+**Quanto demora.** Com um dado, de 1,5 a 2,5 segundos (uns 3 no d12, que rola mais); uns 2,4
+segundos com o d100 e de 2,4 a 3 com 8 dados.
 
-**Na versão em teste (1.3).** Os dados estão menores (82% do tamanho de antes) e não tremem mais
-quando estão quase parados. Com um dado, o resultado sai no mesmo tempo de antes ou um pouco mais
-rápido (uns 1,8 segundo no d6); com mais dados, mais rápido: uns 2,4 segundos com o d100 e de 2,4 a
-3 com 8 dados. O empurrão do dado torto ficou mais raro com vários dados e mais discreto: primeiro
-um toque leve, que acontece enquanto os outros ainda estão assentando. Com 8 dados, o dado tirado
-do lugar e solto de novo acontece metade das vezes de antes. E a física não depende mais da
-velocidade do aparelho: num celular mais lento, os dados não andam mais em câmera lenta.
+**O que mudou na versão 1.3.** Os dados ficaram menores (82% do tamanho de antes) e não tremem mais
+quando estão quase parados. Com um dado, o resultado sai no mesmo tempo de antes; com vários, mais
+rápido (com 8 dados, uns 3 segundos em vez de 4). O empurrão do dado torto ficou mais raro com
+vários dados e mais discreto: primeiro um toque leve, que acontece enquanto os outros ainda estão
+assentando. Com 8 dados, o dado tirado do lugar e solto de novo acontece metade das vezes de antes.
+E a física não depende mais da velocidade do aparelho: num celular mais lento, os dados não andam
+mais em câmera lenta.
 
 ## 5. O d100: bônus, penalidade, crítico e desastre
 
@@ -373,7 +374,7 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 | 1.0 | 29/10/2026 | Os dados d4 a d20 e o d100, com dados de bônus e de penalidade, crítico e desastre |
 | 1.1 | 30/10/2026 | Vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e montagem, atualizações sem mistura de versões e o número da versão no canto |
 | 1.2 | 06/11/2026 | A mesa compartilhada, com os valores do investigador (PV, SAN, Sorte e PM) |
-| 1.3 | em teste | Dados menores, sem tremor, e empurrões mais raros e mais discretos |
+| 1.3 | 13/11/2026 | Dados menores, sem tremor, e empurrões mais raros e mais discretos |
 
 ## 12. Limitações atuais
 
@@ -470,8 +471,8 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 
 ## 14. O que vem por aí
 
-- **Agora:** a versão 1.2, com a mesa compartilhada, está publicada. As próximas novidades aparecem
-  primeiro no endereço de teste.
+- **Agora:** a versão 1.3, com a física nova dos dados, está publicada. As próximas novidades
+  aparecem primeiro no endereço de teste.
 - **Fase 3, o painel do Guardião:** rolar em segredo por um jogador, pedir uma rolagem a um jogador
   (o aparelho dele abre com a bandeja já pronta), as regras da mesa, os alertas (PV baixo, perda
   grande de Sanidade) e, provavelmente, liberar um lugar.

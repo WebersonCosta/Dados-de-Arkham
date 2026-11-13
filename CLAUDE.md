@@ -27,22 +27,24 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.2**, publicada em 06/11/2026 | `main` = tag `v1.2` (d41a027), https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev |
-| Desenvolvimento | **1.3**: a física dos dados (menores, sem tremor, empurrões mais raros e mais discretos), com os valores escolhidos e sem o painel de ajuste; falta Weberson conferir e dar o "pode publicar" | `desenvolvimento`; endereço de teste com o envio `teste 14` |
+| Oficial | **1.3**, publicada em 13/11/2026 | `main` = tag `v1.3`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (a mesma da 1.2: o servidor não mudou) |
+| Desenvolvimento | depois da 1.3: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 14` (a 1.3) |
 
-Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6) e `v1.2` (d41a027). A 1.1 trouxe: vários
-dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
-montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2 trouxe a mesa
-compartilhada (fase 2), com os valores do investigador.
+Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027) e `v1.3`. A 1.1
+trouxe: vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos
+dado único e montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2
+trouxe a mesa compartilhada (fase 2), com os valores do investigador. A 1.3 trouxe a física nova dos
+dados: menores (82%), sem tremor, empurrões mais raros e mais discretos, e a mesma física em
+qualquer aparelho.
 
 - Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 15.
-- **Trabalho atual (13/11/2026): a física dos dados.** Weberson notou no celular dados tremendo quando
-  quase parados e empurrõezinhos em dados quase parados; pediu menos empurrões e mais
-  discretos, dados um pouco menores, sensação de mais peso e um painel de ajuste temporário (envio
-  `teste 13`). Testou no celular e no PC (relatado em 13/11/2026): a redução do tamanho foi
+- **A física dos dados (versão 1.3, publicada em 13/11/2026).** Weberson notou no celular dados
+  tremendo quando quase parados e empurrõezinhos em dados quase parados; pediu menos empurrões e
+  mais discretos, dados um pouco menores, sensação de mais peso e um painel de ajuste temporário
+  (envio `teste 13`). Testou no celular e no PC (relatado em 13/11/2026): a redução do tamanho foi
   bastante benéfica, sem nenhum problema de 80% a 85%; não percebeu diferença no peso. Fixados
   tamanho 82% e peso 0 em `FEEL` (`src/core/physics.js`) e tirado o painel, no envio `teste 14`
-  (veja "Dados e física"). Falta Weberson conferir no teste e dar o "pode publicar".
+  (veja "Dados e física"), e publicado com o "pode publicar" dele.
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -412,7 +414,8 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   em diante, a mesa oficial vai antes (`npm run deploy:oficial` e o teste dos aparelhos contra ela,
   com `MESA_ORIGEM=https://webersoncosta.github.io`, a única origem que ela aceita), para o botão
   "Mesa" do app oficial já encontrá-la. Um servidor recém-criado pode responder "error code: 1042"
-  por alguns instantes.
+  por alguns instantes. Isso só quando `server/` mudou desde a última publicação (`git diff --stat
+  vX.Y desenvolvimento -- server/`); na 1.3 não mudou, e a mesa oficial ficou como estava.
 - Voltar a uma versão anterior ("volte o app oficial para a versão 1.0"): `git restore
   --source=vX.Y ...` na `main`, commit e push. Os comandos estão no README.
 - Servidor da mesa (dentro de `server/`): a mesa de teste (`npm run deploy:teste`, que roda os
