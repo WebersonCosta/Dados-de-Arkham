@@ -162,6 +162,7 @@ function syncMeshes(interpolated) {
   for (const { die, mesh } of current.dice) {
     mesh.position.copy(interpolated ? die.body.interpolatedPosition : die.body.position);
     mesh.quaternion.copy(interpolated ? die.body.interpolatedQuaternion : die.body.quaternion);
+    mesh.scale.setScalar(table.feel.size);   // o desenho tem o tamanho do dado da física
   }
 }
 
