@@ -27,10 +27,10 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.3**, publicada em 13/11/2026 | `main` = tag `v1.3`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (a mesma da 1.2: o servidor não mudou) |
+| Oficial | **1.3**, publicada em 13/11/2026 | `main` = tag `v1.3` (fb4481a), https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (a mesma da 1.2: o servidor não mudou) |
 | Desenvolvimento | depois da 1.3: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 14` (a 1.3) |
 
-Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027) e `v1.3`. A 1.1
+Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027) e `v1.3` (fb4481a). A 1.1
 trouxe: vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos
 dado único e montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2
 trouxe a mesa compartilhada (fase 2), com os valores do investigador. A 1.3 trouxe a física nova dos
@@ -44,7 +44,9 @@ qualquer aparelho.
   (envio `teste 13`). Testou no celular e no PC (relatado em 13/11/2026): a redução do tamanho foi
   bastante benéfica, sem nenhum problema de 80% a 85%; não percebeu diferença no peso. Fixados
   tamanho 82% e peso 0 em `FEEL` (`src/core/physics.js`) e tirado o painel, no envio `teste 14`
-  (veja "Dados e física"), e publicado com o "pode publicar" dele.
+  (veja "Dados e física"), e publicado com o "pode publicar" dele. Conferido no endereço oficial:
+  v1.3, sem erros, e a mesa oficial respondendo (uma ligação a um código que não existe recebe
+  `room-not-found`, sem gravar nada: um jeito seguro de ver se a mesa está no ar).
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
