@@ -305,8 +305,6 @@ O restante:
 - `tools/servidor-local.py` e `tools/servidor-caminhos.py`: só para testar no computador.
 - `tools/medir-dados.js`: mede a física no computador (tempo até o resultado, empurrões, tremor e
   se as faces saem por igual), com centenas de lances de uma vez.
-- `src/tune-panel.js`: TEMPORÁRIO, o painel de ajuste do tamanho e do peso dos dados, só no
-  endereço de teste, com `?ajuste` no fim do endereço. Sai antes de publicar.
 - `.nojekyll`: avisa o GitHub Pages para publicar os arquivos como estão.
 
 ## Para criar um tema no futuro

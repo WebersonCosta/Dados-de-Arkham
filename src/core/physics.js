@@ -9,7 +9,9 @@ const MAX_STEPS = 8;    // passos por quadro, no máximo (num aparelho lento dem
 const scratch = new CANNON.Vec3(), va = new CANNON.Vec3(), vb = new CANNON.Vec3();
 
 // O jeito dos dados: o tamanho (1 é o da versão 1.2) e o peso (0 é como era na versão 1.2).
-export const FEEL = { size: .88, weight: 4 };
+// Escolhidos em 13/11/2026: Weberson achou o tamanho ideal entre 80% e 85% e não viu diferença no
+// peso; medido, mais peso deixa mais dados escorados (mais empurrões), então o peso ficou em 0.
+export const FEEL = { size: .82, weight: 0 };
 
 // O que o peso muda, de 0 a 10: menos quique, mais atrito na mesa, mais freio no giro e uma queda
 // mais rápida, como um dado mais denso. O lançamento acompanha a queda (pace), para os dados ainda
@@ -97,7 +99,8 @@ export class DiceTable {
     this.setFeel(FEEL);
   }
 
-  // O tamanho e o peso dos dados (o painel de ajuste do endereço de teste muda os dois na hora).
+  // O tamanho e o peso dos dados. Vale na hora, até para os dados que estão na mesa (para comparar
+  // outros valores no computador: __dados.table.setFeel({ size, weight }), veja tools/medir-dados.js).
   setFeel({ size = this.feel.size, weight = this.feel.weight } = {}) {
     const p = weigh(weight);
     this.feel = { size, weight };

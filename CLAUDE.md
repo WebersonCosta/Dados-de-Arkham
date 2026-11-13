@@ -28,21 +28,21 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.2**, publicada em 06/11/2026 | `main` = tag `v1.2` (d41a027), https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev |
-| Desenvolvimento | **1.3**: a física dos dados (menores, mais pesados, sem tremor) com o painel de ajuste temporário, em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 13` |
+| Desenvolvimento | **1.3**: a física dos dados (menores, sem tremor, empurrões mais raros e mais discretos), com os valores escolhidos e sem o painel de ajuste; falta Weberson conferir e dar o "pode publicar" | `desenvolvimento`; endereço de teste com o envio `teste 14` |
 
 Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6) e `v1.2` (d41a027). A 1.1 trouxe: vários
 dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e
 montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2 trouxe a mesa
 compartilhada (fase 2), com os valores do investigador.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 14.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 15.
 - **Trabalho atual (13/11/2026): a física dos dados.** Weberson notou no celular dados tremendo quando
   quase parados e empurrõezinhos em dados quase parados; pediu menos empurrões e mais
-  discretos, dados um pouco menores, sensação de mais peso e um painel de ajuste temporário. No
-  envio `teste 13`, esperando ele escolher os valores no celular. Quando escolher: pôr os valores
-  em `FEEL` (`src/core/physics.js`) e tirar o painel antes de publicar (o arquivo
-  `src/tune-panel.js`, a linha dele no `APP_FILES` do `sw.js` e o trecho "Painel de ajuste" no
-  fim do `src/main.js`). Veja "Dados e física".
+  discretos, dados um pouco menores, sensação de mais peso e um painel de ajuste temporário (envio
+  `teste 13`). Testou no celular e no PC (relatado em 13/11/2026): a redução do tamanho foi
+  bastante benéfica, sem nenhum problema de 80% a 85%; não percebeu diferença no peso. Fixados
+  tamanho 82% e peso 0 em `FEEL` (`src/core/physics.js`) e tirado o painel, no envio `teste 14`
+  (veja "Dados e física"). Falta Weberson conferir no teste e dar o "pode publicar".
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -133,23 +133,40 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   - Tamanho e peso (`FEEL`, `setFeel`): `size` multiplica a forma da física e o desenho (`mesh.scale`
     em `syncMeshes`); `weight` de 0 (como na 1.2) a 10 muda gravidade (34 a 60), quique e atrito da
     mesa, freio do giro e do movimento; o lançamento acompanha a gravidade (`pace` = √(g/34)),
-    para os dados ainda atravessarem a mesa. Dados e borda continuam lisos. Padrão proposto:
-    tamanho 88%, peso 4.
-  - Medido na mesa do PC (mediana até o resultado; lances com empurrão), antes → peso 4 e 88%:
-    d6 1,78 s → 1,47 s (2,3% → 4,6%); d20 2,67 → 2,08 s (5% → 4%); d100 com 2 de bônus 2,87 →
-    2,25 s (25% → 27%); 8d6 3,2 → 2,3 s (62% → 66%, tirados do lugar 0,18 → 0,18 por lance); 8
-    misturados 3,95 → 2,83 s (68% → 69%; tirados 0,37 → 0,2 por lance). Tremor (segundos de
-    pulinhos por lance) de 0,08 → 0,01 com 1 dado e de 0,9 → 0,2 com 8. Mais peso deixa mais
-    dados escorados (eles quicam menos e param onde caem): peso 9 tem o dobro de empurrões do peso
-    3. Experimentos que pioraram e foram desfeitos: rampinha no pé da borda e borda inclinada para
-    fora (o dado fica mais escorado), empurrão leve repetido (com muitos dados, falha na metade).
-  - Justiça conferida com o qui-quadrado (de 1.500 a 3.000 lances): d4 p=0,69; d6 0,25; d8 0,10;
-    d10 0,14; d12 0,67; d20 0,14; d100 dezenas 0,58 e unidades 0,84; d100 com 2 de bônus, dezenas
-    0,26 e unidades 0,89.
-- Painel de ajuste (TEMPORÁRIO, `src/tune-panel.js`): fora do oficial, com `?ajuste` no endereço.
-  Tamanho (70% a 110%) e peso (0 a 10), "Padrão" e "Como era" (100% e peso 0), e depois de cada
-  lance o tempo até o resultado e os empurrões. Os valores ficam em `arkham-ajuste`, só no aparelho
-  e só valem com `?ajuste`.
+    para os dados ainda atravessarem a mesa. Dados e borda continuam lisos. Fixados em 13/11/2026:
+    tamanho 82% e peso 0 (veja "A escolha", abaixo).
+  - No envio `teste 13` (a proposta: 88% e peso 4), medido na mesa do PC (mediana até o resultado;
+    lances com empurrão), antes → depois: d6 1,78 s → 1,47 s (2,3% → 4,6%); d20 2,67 → 2,08 s (5%
+    → 4%); d100 com 2 de bônus 2,87 → 2,25 s (25% → 27%); 8d6 3,2 → 2,3 s (62% → 66%, tirados do
+    lugar 0,18 → 0,18 por lance); 8 misturados 3,95 → 2,83 s (68% → 69%; tirados 0,37 → 0,2 por
+    lance). Tremor (segundos de pulinhos por lance) de 0,08 → 0,01 com 1 dado e de 0,9 → 0,2 com 8.
+    Mais peso deixa mais dados escorados (eles quicam menos e param onde caem): peso 9 tem o dobro
+    de empurrões do peso 3. Experimentos que pioraram e foram desfeitos: rampinha no pé da borda e
+    borda inclinada para fora (o dado fica mais escorado), empurrão leve repetido (com muitos
+    dados, falha na metade).
+  - A escolha (13/11/2026). Weberson testou o painel no celular e no PC: a redução do tamanho foi
+    bastante benéfica, sem nenhum problema de 80% a 85%; não percebeu diferença no peso. Medido de
+    500 a 1.000 lances de cada conjunto (d6, 3d6, d20, d100, d100 com 2 de bônus, 8d6 e 8
+    misturados, `2d4+2d6+2d10+2d20`) em cada combinação (80%, 82% e 84% com pesos 0, 2 e 4; 82% com
+    1 e 3): o peso muda mais que o tamanho. Na média dos 7 conjuntos, lances com empurrão: 23% com
+    peso 0, 25% com 2, 27% com 4 (24,8% na 1.2), e o resultado 10%, 17% e 23% mais rápido que na
+    1.2; de 80% a 84%, de 24,6% a 25,8%. Ficou 82% (o meio do que Weberson achou ideal) e peso 0
+    (menos empurrões, o pedido dele, e ainda mais rápido que na 1.2). Com 82% e peso 0, contra a
+    1.2: d6 1,83 s (1,77) e 2,9% com empurrão (4%); 3d6 2,05 s (2,0) e 12,8% (12%); d20 2,42 s
+    (2,65) e 3,1% (4%); d100 2,4 s (2,63) e 9,7% (10%); d100 com 2 de bônus 2,53 s (2,85) e 22,8%
+    (26,3%); 8d6 2,38 s (2,98) e 44% (56%), tirados do lugar 0,09 por lance (0,16); 8 misturados
+    2,98 s (3,75) e 61% (62%), tirados 0,19 por lance (0,36). Tremor: 0,02 s por lance com 1 dado,
+    0,23 com 8. A 1.2 foi medida com menos lances (de 200 a 400): a mesma medição feita duas vezes
+    deu, por exemplo, 56% e 62% no 8d6.
+  - Justiça conferida com o qui-quadrado, com 82% e peso 0 (de 1.500 a 3.000 lances): d4 p=0,82;
+    d6 0,39; d8 0,87; d10 0,09; d12 0,12; d20 0,42; d100 dezenas 0,60 e unidades 0,98; d100 com 2
+    de bônus, dezenas 0,42 e unidades 0,48. (No envio `teste 13`: d4 0,69; d6 0,25; d8 0,10; d10
+    0,14; d12 0,67; d20 0,14; d100 0,58 e 0,84; com 2 de bônus, 0,26 e 0,89.)
+- O painel de ajuste temporário (`src/tune-panel.js`, aberto com `?ajuste` fora do oficial: tamanho
+  e peso, "Padrão", "Como era" e o tempo e os empurrões de cada lance) ficou só no envio `teste
+  13` e saiu no `teste 14`, depois da escolha (está no histórico, no commit 0f84d50). Para
+  comparar outros valores no computador: `__dados.table.setFeel({ size, weight })` e
+  `tools/medir-dados.js`.
 
 **Regras de Call of Cthulhu, 7ª edição (só no tema Arkham, em `rules.js`)**
 - Crítico: d100 = 01 ("Sucesso crítico"). Desastre: d100 = 100. Sem o valor da perícia não dá
@@ -419,7 +436,11 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   física, com tempo até o resultado, empurrões e o motivo de cada um, tremor, custo de cada passo,
   um celular imitado (`celular: 12`) e o qui-quadrado (`justica: true`). Os lances rodam sem pausa:
   com o painel de navegador escondido, a página fica lenta para as pausas, e uma chamada passa de
-  45 s com muitos lances (divida).
+  45 s com muitos lances (divida). Outro tamanho ou peso: `__dados.table.setFeel({ size, weight })`
+  antes. Para medir muito: abrir duas ou três abas do localhost e, em cada uma, rodar os lotes em
+  segundo plano, com uma pausa de `MessageChannel` entre eles (as pausas de `setTimeout` de uma
+  aba escondida demoram), guardando os resultados numa variável da página para ler depois; uma
+  aba ocupada só responde quando o lote dela termina.
 - No painel de navegador do Claude, se o painel estiver escondido, as capturas de tela podem vir
   atrasadas (tire duas). Os avisos "Blocked call to navigator.vibrate" nos testes são normais.
 - Servidor da mesa: `npm test` (dentro de `server/`) testa as regras da sala sem servidor. O

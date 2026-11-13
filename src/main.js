@@ -582,14 +582,6 @@ if (saved) {
 window.addEventListener('resize', relayout);
 document.fonts.ready.then(relayout);
 requestAnimationFrame(frame);
-
-// Painel de ajuste do tamanho e do peso dos dados. TEMPORÁRIO (sai antes de publicar): só fora do
-// endereço oficial, com "?ajuste" no fim do endereço.
-if (PLACE !== 'oficial' && new URLSearchParams(location.search).has('ajuste')) {
-  import('./tune-panel.js').then(({ createTunePanel }) => createTunePanel({
-    table, onSize: () => { if (state !== 'rolling') toIdle({ instant: true }); }
-  }));
-}
 // (a cópia do app no aparelho, o sw.js, é registrada pela própria página: veja o index.html)
 
 // Atalho só para testes no computador (localhost): permite simular resultados e opções.

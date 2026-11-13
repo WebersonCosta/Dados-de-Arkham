@@ -1,7 +1,7 @@
 # Guia de uso: Dados de Arkham
 
 Atualizado em 13/11/2026: versão oficial **1.2**, publicada em 06/11/2026. O endereço de teste está
-com a **1.3** (envio "teste 13"), que muda a física dos dados (veja "Rolar os dados").
+com a **1.3** (envio "teste 14"), que muda a física dos dados (veja "Rolar os dados").
 
 O Dados de Arkham é um rolador de dados 3D para RPG, feito para *Call of Cthulhu* (7ª edição). Os
 dados caem numa mesa de madeira, à luz de velas, e o resultado é a face que ficou para cima, como
@@ -93,11 +93,13 @@ novo; isso só apressa o fim, e o número continua vindo da face.
 
 **Quanto demora.** De 2 a 3 segundos até 6 dados, e uns 4 segundos com 8.
 
-**Na versão em teste (1.3).** Os dados são um pouco menores e mais pesados: quicam menos, param de
-um jeito mais firme e não tremem quando estão quase parados. O resultado sai mais rápido (de 1,5 a
-2 segundos com um dado, uns 2,5 com 8). O empurrão do dado torto ficou mais discreto: primeiro um
-toque leve, que acontece enquanto os outros ainda estão assentando. Para testar, um painel de
-ajuste temporário aparece com `?ajuste` no fim do endereço de teste.
+**Na versão em teste (1.3).** Os dados estão menores (82% do tamanho de antes) e não tremem mais
+quando estão quase parados. Com um dado, o resultado sai no mesmo tempo de antes ou um pouco mais
+rápido (uns 1,8 segundo no d6); com mais dados, mais rápido: uns 2,4 segundos com o d100 e de 2,4 a
+3 com 8 dados. O empurrão do dado torto ficou mais raro com vários dados e mais discreto: primeiro
+um toque leve, que acontece enquanto os outros ainda estão assentando. Com 8 dados, o dado tirado
+do lugar e solto de novo acontece metade das vezes de antes. E a física não depende mais da
+velocidade do aparelho: num celular mais lento, os dados não andam mais em câmera lenta.
 
 ## 5. O d100: bônus, penalidade, crítico e desastre
 
@@ -371,7 +373,7 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 | 1.0 | 29/10/2026 | Os dados d4 a d20 e o d100, com dados de bônus e de penalidade, crítico e desastre |
 | 1.1 | 30/10/2026 | Vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e montagem, atualizações sem mistura de versões e o número da versão no canto |
 | 1.2 | 06/11/2026 | A mesa compartilhada, com os valores do investigador (PV, SAN, Sorte e PM) |
-| 1.3 | em teste | Dados menores e mais pesados, sem tremor, e empurrões mais discretos |
+| 1.3 | em teste | Dados menores, sem tremor, e empurrões mais raros e mais discretos |
 
 ## 12. Limitações atuais
 
