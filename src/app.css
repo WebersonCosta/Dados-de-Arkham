@@ -367,10 +367,19 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
   margin: 0; padding: .2rem .6rem; font-family: var(--font-ui); font-size: .66rem; letter-spacing: .06em;
   color: var(--c-penalty); background: rgba(0, 0, 0, .7); border-radius: 2px;
 }
-/* no histórico do Guardião: o registro do alerta, que só ele vê */
+.alert.is-leaving { animation: alert-out .4s ease-in forwards; }   /* passou o tempo: apaga e sai */
+@keyframes alert-out { to { opacity: 0; transform: translateY(-6px); } }
+/* no histórico do Guardião: o registro do alerta, que só ele vê, até ele tocar em "Apagar" */
 .roll.is-note { border-color: var(--c-penalty); border-style: dashed; }
 .roll.is-note .roll-num { color: var(--c-penalty); }
-.roll.is-note .roll-name { color: var(--c-penalty); }
+.roll.is-note .roll-name { color: var(--c-penalty); white-space: normal; }   /* o que mudou aparece inteiro, mesmo no painel estreito */
+.roll-text .note-actions { margin-top: 2px; text-align: right; }
+.note-delete {
+  padding: .3rem 0 .1rem .6rem; font-family: var(--font-ui); font-size: .64rem; letter-spacing: .08em;
+  color: var(--c-text-dim); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer; touch-action: manipulation;
+}
+.note-delete:hover { color: var(--c-penalty); }
 
 /* As rolagens da mesa, a mais nova em cima: o número à esquerda; ao lado, quem rolou e o rótulo, e
    embaixo o que foi rolado. A que acabou de chegar acende por um instante. */
@@ -501,5 +510,5 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 }
 @media (prefers-reduced-motion: reduce) {
   .hint, .table-button { animation: none !important; opacity: .85; }
-  .verdict.show > *, .notice, .notice.is-hidden b, .notice.is-held, .roll.is-new, .room-chip.is-empty, .alert { animation: none; }
+  .verdict.show > *, .notice, .notice.is-hidden b, .notice.is-held, .roll.is-new, .room-chip.is-empty, .alert, .alert.is-leaving { animation: none; }
 }

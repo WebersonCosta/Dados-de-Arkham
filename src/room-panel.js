@@ -4,6 +4,7 @@ import { createRoomLabel } from './room-label.js';
 import { createRoomCounters } from './room-counters.js';
 import { createRoomAlerts } from './room-alerts.js';
 import { VERSION } from './version.js';
+import { closeOnBackdrop } from './lib/util.js';
 
 // O painel da mesa compartilhada. O botão "Mesa", no alto da tela, abre a folha de entrar numa mesa
 // com o código (os jogadores) ou de criar uma (o Guardião). Dentro de uma mesa, ele abre o painel
@@ -574,8 +575,8 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   });
   $('btnCloseTable').addEventListener('click', closeJoin);
   $('btnCloseRoom').addEventListener('click', closePanel);
-  joinSheet.addEventListener('click', ev => { if (ev.target === joinSheet) closeJoin(); });
-  panel.addEventListener('click', ev => { if (ev.target === panel && !wide.matches) closePanel(); });
+  closeOnBackdrop(joinSheet, closeJoin);
+  closeOnBackdrop(panel, () => { if (!wide.matches) closePanel(); });
   document.addEventListener('keydown', ev => {
     if (ev.key !== 'Escape') return;
     if (!joinSheet.hidden) closeJoin();

@@ -28,7 +28,7 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 | | Versão | Onde |
 | --- | --- | --- |
 | Oficial | **1.4**, publicada em 14/11/2026 | `main` = tag `v1.4` (caf3124), https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (atualizada junto, com o tirar um lugar) |
-| Desenvolvimento | depois da 1.4: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 15` (a 1.4) |
+| Desenvolvimento | **1.5**: ajustes pedidos por Weberson depois de testar a 1.4 (os avisos dos alertas somem sozinhos, o histórico só apaga no "Apagar", e a folha dos valores que fechava ao clicar num campo, no PC), em teste | `desenvolvimento`; endereço de teste com o envio `teste 16` |
 
 Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027), `v1.3` (fb4481a) e `v1.4` (caf3124). A 1.1
 trouxe: vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos
@@ -38,7 +38,17 @@ dados: menores (82%), sem tremor, empurrões mais raros e mais discretos, e a me
 qualquer aparelho. A 1.4 trouxe a fase 3 da mesa compartilhada, versão enxuta: os alertas do
 Guardião (SAN e PV) e tirar um lugar da mesa.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 16.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 17.
+- **Trabalho atual (14/11/2026): ajustes depois da 1.4** (envio `teste 16`, sem publicar). Weberson
+  pediu: os alertas não precisam ficar para sempre; o aviso no alto some sozinho depois de alguns
+  segundos se ninguém tocar em "Entendi"; no histórico, o alerta só sai por uma ação de propósito do
+  Guardião. E relatou um erro no PC: na folha dos valores, depois de criados, clicar num campo de
+  máximo fechava a folha (pelo Tab dava certo). A causa: o campo, ao ganhar o foco, subia a folha
+  (`at-top`, feito para o teclado do celular); o botão do mouse era solto já sobre o fundo escuro, e
+  o Chrome manda o clique para o elemento que contém os dois pontos (o fundo), que fechava a folha.
+  No celular o toque é conferido num ponto só, por isso funcionava. Feito: veja "Folhas" e "Mesa
+  compartilhada: alertas e tirar um lugar". Falta Weberson testar e dar o "pode publicar" (o
+  servidor não mudou: a mesa oficial fica como está).
 - **Fase 3 da mesa compartilhada, versão enxuta (versão 1.4, publicada em 14/11/2026).** Depois da
   primeira sessão com o grupo, Weberson reviu as prioridades (o critério e a nova ordem estão em
   "Etapa atual", abaixo, e no plano) e pediu a fase 3 enxuta: alertas para o Guardião (SAN e PV, com
@@ -453,12 +463,17 @@ e o porquê no fim do plano)
   Hit Points, Wounds and Healing) e em fontes secundárias (indefinida e permanente não estão nas
   páginas grátis). Avisado a Weberson como incerto: a base da indefinida ("SAN atual" num mesmo dia de
   jogo: o começo do dia?) e o arredondamento da metade com PV máximo ímpar.
-- Tela: avisos logo abaixo do cabeçalho (`#alerts`, dentro do `.hud-top`, por cima da faixa das velas),
-  o mais novo em cima, até "Entendi"; à vista até 3 no PC e 1 até 600 px de largura (os outros
-  esperam, com "mais N alertas esperando"); até 6 esperando. O jogador com aviso à vista fica em
-  vermelho com "!" na lista (`is-alert`); valores em zero ficam em vermelho na tabela. No histórico,
-  `log.notes()` põe os alertas entre as rolagens (logo acima da última que tinha chegado, `after`),
-  com "!" e "só você vê"; até 60 guardados.
+- Tela (ajustada no envio `teste 16`, a pedido de Weberson): avisos logo abaixo do cabeçalho
+  (`#alerts`, dentro do `.hud-top`, por cima da faixa das velas), o mais novo em cima; à vista até 3
+  no PC e 1 até 600 px de largura (os outros esperam, com "mais N alertas esperando"). Cada aviso some
+  sozinho 10 s depois de aparecer (`TOAST_MS`; com o mouse em cima, espera; ao sair, o resto do tempo,
+  no mínimo 3 s), apagando devagar (`is-leaving`), ou no "Entendi". Os avisos não ficam guardados: o
+  app aberto de novo não os mostra. Os elementos dos avisos à vista são reaproveitados (`cards`), para
+  não piscarem quando outro aviso chega ou sai. No histórico, `log.notes(entries, onDelete)` põe os
+  alertas entre as rolagens (logo acima da última que tinha chegado, `after`), com "!", "só você vê",
+  o lembrete inteiro e o "Apagar": é o único jeito de um sair (fora o fim da mesa); até 200 guardados
+  em `saved.alerts.entries`, só como limite de segurança. O jogador com algum alerta no histórico fica
+  em vermelho com "!" na lista (`is-alert`); valores em zero ficam em vermelho na tabela.
 - Tirar um lugar: o botão "Tirar alguém", ao lado de "Na mesa", só para o Guardião, mostra o × de
   cada jogador (sempre à vista, ele apertava demais os nomes no painel); o × pede `confirm` e manda
   `{ type: 'remove', seat }`. O servidor confere que é o Guardião (`guardian-only`) e que é um lugar
@@ -470,6 +485,16 @@ e o porquê no fim do plano)
   `removed` (mensagem ou erro) como final: esquece a mesa e avisa "O Guardião tirou você desta mesa".
   Na lista, os lugares `removed` não aparecem, mas continuam em `members` para o histórico dizer quem
   rolou.
+
+**Folhas** (as que sobem por cima da tela: atalhos, entrar na mesa, o painel da mesa no celular, o
+rótulo e os valores)
+- Fechar tocando fora (no fundo escuro) é `closeOnBackdrop` (`src/lib/util.js`): só fecha se o toque
+  começou e terminou no fundo. Por quê (envio `teste 16`): no PC, clicar no campo de máximo da folha
+  dos valores subia a folha no meio do clique, o botão era solto sobre o fundo, e o Chrome manda o
+  clique para o elemento que contém os dois pontos, o fundo; a folha fechava. No celular o toque é
+  conferido num ponto só.
+- A folha dos valores sobe (`at-top`) com um campo em foco só com `(pointer: coarse)` (celular e
+  tablet, que têm o teclado na tela); no PC ela fica parada.
 
 ## Fluxo: desenvolver, testar e publicar
 
@@ -526,6 +551,11 @@ e o porquê no fim do plano)
   arquivos do app como módulos sem precisar de package.json). No navegador: uma aba com `?aba` cria
   a mesa (Guardião) e outras com `?aba` entram; o − e o + respondem a `click()` (o `holdRepeat` aceita
   o clique sem `detail`), e o `confirm` do "Tirar alguém" pode ser trocado por `() => true`.
+- Com o painel do navegador escondido, a página não tem o foco da janela (`document.hasFocus()` é
+  false): `elemento.focus()` por comando não dispara `focus`/`focusin`. Para testar o que acontece
+  quando um campo ganha o foco, use um clique de verdade (`computer`, `left_click` com a `ref` do
+  `find`), que também reproduz o caminho do mouse (foi assim que o erro da folha dos valores
+  apareceu).
 - Servidor da mesa: `npm test` (dentro de `server/`) testa as regras da sala sem servidor. O
   simulador local (`npm run local`, que usa o `workerd`) não abre neste PC: o Visual C++ do
   Windows é de 2017 (14.16) e o `workerd` quebra ao iniciar ("access violation"). Instalar o
