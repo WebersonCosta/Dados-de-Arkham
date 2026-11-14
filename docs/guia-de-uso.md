@@ -1,8 +1,8 @@
 # Guia de uso: Dados de Arkham
 
-Atualizado em 14/11/2026: versão oficial **1.3**, publicada em 13/11/2026, com a física nova dos
-dados (veja "Rolar os dados"). O endereço de teste está com a **1.4** (envio "teste 15"), que traz
-para a mesa compartilhada os alertas do Guardião e o "Tirar alguém" (veja "Mesa compartilhada").
+Atualizado em 14/11/2026: versão oficial **1.4**, publicada nesse dia, que traz para a mesa
+compartilhada os alertas do Guardião e o "Tirar alguém" (veja "Mesa compartilhada"). O endereço de
+teste está com a mesma versão (envio "teste 15").
 
 O Dados de Arkham é um rolador de dados 3D para RPG, feito para *Call of Cthulhu* (7ª edição). Os
 dados caem numa mesa de madeira, à luz de velas, e o resultado é a face que ficou para cima, como
@@ -31,10 +31,10 @@ e até 6 jogadores podem rolar juntos, cada um no seu aparelho, pela **mesa comp
 
 | | Endereço | Versão | O que tem |
 | --- | --- | --- | --- |
-| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.3 | Tudo o que está neste guia |
-| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.4 (teste 15) | Tudo, mais as novidades em teste: os alertas do Guardião e tirar alguém da mesa |
+| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.4 | Tudo o que está neste guia |
+| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.4 (teste 15) | A mesma versão; é onde as próximas novidades aparecem primeiro, para testar |
 
-- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.3** no oficial e
+- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.4** no oficial e
   **v1.4 · teste 15** no teste, em vermelho. O número depois de "teste" sobe a cada envio: é o
   jeito de saber se a versão nova já chegou.
 - Os dois endereços não se misturam. Cada um guarda à parte as preferências, as fórmulas favoritas
@@ -301,7 +301,7 @@ Se o Guardião escolheu **Não: só o Guardião vê**, a proteção é feita na 
 como nas rolagens privadas: os números dos outros nunca chegam ao aparelho de um jogador, nem
 escondidos.
 
-### Alertas para o Guardião (em teste, versão 1.4)
+### Alertas para o Guardião (desde a versão 1.4)
 
 Quando um jogador ajusta os valores, o app do Guardião lembra a regra da 7ª edição nos casos que
 podem passar despercebidos no meio da cena. São lembretes curtos: quem decide é o Guardião.
@@ -332,7 +332,7 @@ podem passar despercebidos no meio da cena. São lembretes curtos: quem decide �
 - Mexer no máximo de um valor (acertar a ficha) não conta como perda. Metades e quintos arredondam
   para baixo, como os valores difícil e extremo das perícias (com PV máximo 11, metade é 5).
 
-### Tirar alguém da mesa (em teste, versão 1.4)
+### Tirar alguém da mesa (desde a versão 1.4)
 
 Para um lugar ocupado por engano, ou de alguém que trocou de aparelho e apareceu duas vezes.
 
@@ -394,8 +394,7 @@ aparelho diferente, e o título da aba mostra quem é quem.
 - se **Som** e **Ambiente** estão ligados, o último dado ou fórmula e as fórmulas favoritas;
 - na mesa compartilhada: o nome do investigador e os valores dele, os últimos rótulos, a mesa em que
   você está, as rolagens esperando conexão e uma chave sorteada que identifica o aparelho;
-- no aparelho do Guardião (versão 1.4, em teste), os alertas da mesa atual, que se apagam ao
-  encerrar a mesa.
+- no aparelho do Guardião, os alertas da mesa atual, que se apagam ao encerrar a mesa.
 
 **Na mesa compartilhada** (no servidor, só enquanto a mesa existe): o código, a escolha de quem vê
 os valores, os nomes dos investigadores e os valores deles, um resumo da chave de cada aparelho (a
@@ -425,7 +424,7 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 | 1.1 | 30/10/2026 | Vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos dado único e montagem, atualizações sem mistura de versões e o número da versão no canto |
 | 1.2 | 06/11/2026 | A mesa compartilhada, com os valores do investigador (PV, SAN, Sorte e PM) |
 | 1.3 | 13/11/2026 | Dados menores, sem tremor, e empurrões mais raros e mais discretos |
-| 1.4 | em teste | Na mesa compartilhada, os alertas do Guardião (SAN e PV) e tirar alguém da mesa |
+| 1.4 | 14/11/2026 | Na mesa compartilhada, os alertas do Guardião (SAN e PV) e tirar alguém da mesa |
 
 ## 12. Limitações atuais
 
@@ -460,9 +459,8 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
   um lugar e aparece duas vezes na lista (uma delas "fora da mesa"). Isso acontece mais no iPhone,
   onde o navegador de dentro do Discord, o Safari e o ícone na tela de início guardam coisas
   separadas.
-- No oficial (1.3), ainda não dá para tirar alguém da mesa: se ela encher, o Guardião encerra e
-  cria outra, e o histórico recomeça. No teste (1.4), o Guardião já pode tirar alguém (veja "Tirar
-  alguém da mesa").
+- Um lugar só fica livre quando o Guardião tira alguém da mesa (veja "Tirar alguém da mesa"):
+  "Sair da mesa" guarda o lugar de quem saiu.
 - O Guardião é o aparelho que criou a mesa: em outro aparelho ou navegador, ele entra como
   jogador. O Guardião não tem "Sair da mesa", só "Encerrar a mesa".
 - "Encerrar a mesa" sem conexão só tira o Guardião: a mesa continua existindo e se apaga sozinha 6
@@ -485,14 +483,13 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 - Não há chat: a conversa continua no Discord.
 - Valores do investigador:
   - são só PV, SAN, Sorte e PM, escritos à mão: ainda não há ficha de personagem;
-  - no oficial (1.3), não há alertas para o Guardião; no teste (1.4), há (veja "Alertas para o
-    Guardião");
+  - os alertas para o Guardião são só de SAN e PV (veja "Alertas para o Guardião");
   - o Guardião não altera os valores de ninguém, e a escolha de quem vê não muda depois de criar a
     mesa;
   - ficam só no aparelho: não passam para outro aparelho nem para outro navegador;
   - o valor atual não passa do máximo nem fica abaixo de 0, e o máximo vai até 999;
   - quem sai da mesa continua aparecendo para o Guardião com os últimos valores que mandou.
-- Alertas do Guardião (em teste):
+- Alertas do Guardião:
   - o app só vê os valores, e não de onde veio a perda: duas perdas de verdade em menos de 4
     segundos viram uma só, e uma pausa de mais de 4 segundos no meio dos toques divide uma perda em
     duas. Por isso os lembretes dizem "se veio de uma rolagem só" e "se foi um golpe só";
@@ -518,7 +515,7 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 | "Escreva o nome do investigador." | Preencha o nome antes de entrar |
 | "O código tem 6 letras e números, como K7Q X3M." | Confira o código com o Guardião |
 | "Não existe mesa com esse código. Confira com o Guardião." | O código está errado, ou a mesa já foi encerrada |
-| "Essa mesa já está cheia: são 6 jogadores no máximo." | Veja se alguém aparece duas vezes na lista; no teste (1.4), o Guardião pode tirar o lugar a mais; no oficial, encerrar e criar outra mesa |
+| "Essa mesa já está cheia: são 6 jogadores no máximo." | Veja se alguém aparece duas vezes na lista: o Guardião pode tirar o lugar a mais, com **Tirar alguém** |
 | "O Guardião tirou você desta mesa. Para voltar, entre de novo com o código, se houver vaga." | Se foi engano, entre de novo com o código |
 | "Esta mesa usa outra versão do app. Feche e abra o app para atualizar." | Feche o app de vez e abra de novo |
 | "Sem conexão com a mesa. Confira a internet e tente de novo." | Confira a internet e tente de novo |
@@ -538,9 +535,9 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 Depois da primeira sessão com o grupo (novembro de 2026), as prioridades mudaram. O critério: o
 jogo é por voz no Discord, então só vale construir o que faz algo que a voz não faz.
 
-- **Agora (fase 3), o painel do Guardião, versão enxuta:** os alertas e tirar alguém da mesa, em
-  teste na versão 1.4.
-- **Fase 4, a ficha, primeiro degrau:** carregar a ficha do investigador em Markdown e vê-la dentro
+- **Feita (fase 3), o painel do Guardião, versão enxuta:** os alertas e tirar alguém da mesa,
+  publicados na versão 1.4. As próximas novidades aparecem primeiro no endereço de teste.
+- **Próxima (fase 4), a ficha, primeiro degrau:** carregar a ficha do investigador em Markdown e vê-la dentro
   do app; em PDF, só para ver.
 - **Fase 5, a ficha, segundo degrau:** perícias que se tocam para rolar, com o nível de sucesso, e
   os valores ligados à tabela "Valores derivados" da ficha.

@@ -15,8 +15,9 @@ sessão rápida com dois amigos para testar as funções e não encontrou erro (
 e a ideia da ficha do personagem estão no fim deste arquivo.
 
 Em 14/11/2026, depois da primeira sessão com o grupo, Weberson reviu as prioridades (a seção logo
-abaixo vale mais que a lista de fases original). A fase 3, o painel do Guardião em versão enxuta
-(alertas e remover lugar), está no endereço de teste, no envio "teste 15" (veja o fim do arquivo).
+abaixo vale mais que a lista de fases original). **A fase 3, o painel do Guardião em versão enxuta
+(alertas e remover lugar), foi publicada na versão 1.4, em 14/11/2026, junto com a mesa oficial
+atualizada** (veja o fim do arquivo).
 
 ## Prioridades depois da primeira sessão (14/11/2026)
 
@@ -265,7 +266,7 @@ nada.
 quem trocou de aparelho), com confirmação. A pessoa pode entrar de novo pelo código, se houver lugar.
 A proteção é feita no servidor: só o Guardião pode remover.
 
-**Como foi feito** (envio "teste 15", versão 1.4)
+**Como foi feito** (envio "teste 15"; publicado na versão 1.4, em 14/11/2026)
 
 - Os alertas são calculados no aparelho do Guardião, com os valores que a mesa já entrega a ele: nada
   de novo vai para a mesa, nem para os jogadores. Quais mudanças viram alerta, e o texto, é o tema que

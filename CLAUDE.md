@@ -27,25 +27,26 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.3**, publicada em 13/11/2026 | `main` = tag `v1.3` (fb4481a), https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (a mesma da 1.2: o servidor não mudou) |
-| Desenvolvimento | **1.4**: fase 3 da mesa compartilhada, versão enxuta (alertas do Guardião e tirar um lugar), em teste com Weberson | `desenvolvimento`; endereço de teste com o envio `teste 15`; a mesa de teste já tem o servidor novo (tirar um lugar) |
+| Oficial | **1.4**, publicada em 14/11/2026 | `main` = tag `v1.4`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (atualizada junto, com o tirar um lugar) |
+| Desenvolvimento | depois da 1.4: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 15` (a 1.4) |
 
-Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027) e `v1.3` (fb4481a). A 1.1
+Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027), `v1.3` (fb4481a) e `v1.4`. A 1.1
 trouxe: vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos
 dado único e montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2
 trouxe a mesa compartilhada (fase 2), com os valores do investigador. A 1.3 trouxe a física nova dos
 dados: menores (82%), sem tremor, empurrões mais raros e mais discretos, e a mesma física em
-qualquer aparelho.
+qualquer aparelho. A 1.4 trouxe a fase 3 da mesa compartilhada, versão enxuta: os alertas do
+Guardião (SAN e PV) e tirar um lugar da mesa.
 
 - Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 16.
-- **Trabalho atual (14/11/2026): fase 3 da mesa compartilhada, versão enxuta.** Depois da primeira
-  sessão com o grupo, Weberson reviu as prioridades (o critério e a nova ordem estão em "Etapa
-  atual", abaixo, e no plano) e pediu a fase 3 enxuta: alertas para o Guardião (SAN e PV, com
+- **Fase 3 da mesa compartilhada, versão enxuta (versão 1.4, publicada em 14/11/2026).** Depois da
+  primeira sessão com o grupo, Weberson reviu as prioridades (o critério e a nova ordem estão em
+  "Etapa atual", abaixo, e no plano) e pediu a fase 3 enxuta: alertas para o Guardião (SAN e PV, com
   lembretes da regra) e tirar um lugar da mesa, com a proteção no servidor. No envio `teste 15`, com
-  a mesa de teste já atualizada (teste dos aparelhos: 28 de 28). Falta Weberson testar (PC como
-  Guardião, celular ou abas com `?aba` como jogadores). Ao publicar, a mesa oficial vai antes
-  (`server/` mudou: `npm run deploy:oficial` e o teste dos aparelhos contra ela). Veja "Mesa
-  compartilhada: alertas e tirar um lugar".
+  a mesa de teste atualizada (teste dos aparelhos: 28 de 28), e publicada com o "pode publicar" dele:
+  primeiro a mesa oficial (`npm run deploy:oficial` e o teste dos aparelhos contra ela), depois o app.
+  Veja "Mesa compartilhada: alertas e tirar um lugar". Próxima fase da nova ordem: a 4 (a ficha,
+  primeiro degrau), quando Weberson pedir.
 - **A física dos dados (versão 1.3, publicada em 13/11/2026).** Weberson notou no celular dados
   tremendo quando quase parados e empurrõezinhos em dados quase parados; pediu menos empurrões e
   mais discretos, dados um pouco menores, sensação de mais peso e um painel de ajuste temporário
@@ -129,7 +130,7 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   o app. Os valores do investigador guardados no endereço de teste não passam para o oficial (cada
   endereço guarda os seus).
 - Fase 3, versão enxuta (pedida em 14/11/2026): alertas para o Guardião e tirar um lugar, no envio
-  `teste 15` (veja "Trabalho atual", acima).
+  `teste 15` e publicada na versão 1.4 em 14/11/2026 (veja acima).
 
 ## Decisões tomadas (e por quê)
 
