@@ -72,6 +72,63 @@ export const counters = [
   { id: 'mp', short: 'PM', name: 'Pontos de Magia' }
 ];
 
+// Alertas para o Guardião, com base nos valores que cada jogador ajusta na mesa compartilhada. Só o
+// aparelho do Guardião calcula e mostra: os jogadores não recebem nada. São lembretes da regra, com
+// texto próprio; quem decide é o Guardião.
+// change: uma mudança de um valor, com as mudanças seguidas já juntas numa só (src/core/counter-
+// watch.js): { id, from, to, top }, em que from e to são { max, cur } e top é o maior valor visto
+// nesta sessão. memory: o que este jogador já teve nesta sessão (guardado pelo app; os alertas anotam
+// nele). Devolve as linhas do alerta; nenhuma, sem alerta.
+// As metades e os quintos arredondam para baixo, como os valores difícil e extremo das perícias.
+const half = n => Math.max(1, Math.floor(n / 2));
+const fifth = n => Math.max(1, Math.floor(n / 5));
+
+export function alerts({ id, from, to, top }, memory) {
+  const lost = from.cur - to.cur;
+  if (from.max !== to.max || lost <= 0) return [];   // mexeu no máximo (acertando a ficha) ou não perdeu nada
+  if (id === 'san') return sanity(lost, to, top, memory);
+  if (id === 'hp') return health(lost, to, memory);
+  return [];
+}
+
+function sanity(lost, to, top, memory) {
+  if (to.cur === 0) return ['Chegou a 0 de SAN: insanidade permanente. O investigador deixa de ser um personagem jogável.'];
+  const lines = [];
+  const total = top - to.cur;
+  if (!memory.indefinite && total >= fifth(top)) {
+    memory.indefinite = true;
+    lines.push(`Já perdeu ${total} de SAN nesta sessão (tinha ${top}): um quinto ou mais. Se tudo isso foi num mesmo dia de jogo, ` +
+      'o investigador fica indefinidamente insano, sem teste de INT.');
+  }
+  if (lost >= 5) {
+    lines.push('Perdeu 5 ou mais de uma vez. Se veio de uma rolagem de Sanidade só, peça um teste de INT: se passar, o ' +
+      'investigador entende o que viu e fica temporariamente insano (1D10 horas, a começar por um surto de loucura); se ' +
+      'falhar, a mente bloqueia a lembrança e ele segue são.');
+  }
+  return lines;
+}
+
+function health(lost, to, memory) {
+  const major = lost >= half(to.max);
+  if (to.cur === 0) {
+    const wounded = major || memory.wounded;
+    if (major) memory.wounded = true;
+    return [
+      wounded
+        ? `Chegou a 0 PV com um ferimento grave (${major ? 'esta perda já é um, se veio de um golpe só' : 'o app viu um nesta sessão'}): está ` +
+          'morrendo. No fim de cada rodada, a partir da próxima, teste de CON; se falhar, morre. Só um Primeiros Socorros ' +
+          'bem-sucedido o estabiliza.'
+        : 'Chegou a 0 PV sem ferimento grave nesta sessão: fica inconsciente, mas não morre por isso. Se ainda tem um ferimento ' +
+          'grave de antes, está morrendo: teste de CON no fim de cada rodada, a partir da próxima.',
+      'Se um golpe só tirou o PV máximo ou mais, a morte é na hora.'
+    ];
+  }
+  if (!major) return [];
+  memory.wounded = true;
+  return [`Perdeu ${lost} de uma vez, metade do máximo (${to.max}) ou mais. Se foi um golpe só, é um ferimento grave: marque ` +
+    'na ficha e peça um teste de CON; se falhar, o investigador desmaia.'];
+}
+
 // Opções do d100, da esquerda para a direita. A que não põe dados a mais na mesa é a normal.
 export const modes = {
   d100: {

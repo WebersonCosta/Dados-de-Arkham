@@ -2,6 +2,7 @@ import { newDevice, newRollId, cleanCode, showCode, createRoom, connect } from '
 import { createRoomLog } from './room-log.js';
 import { createRoomLabel } from './room-label.js';
 import { createRoomCounters } from './room-counters.js';
+import { createRoomAlerts } from './room-alerts.js';
 import { VERSION } from './version.js';
 
 // O painel da mesa compartilhada. O botão "Mesa", no alto da tela, abre a folha de entrar numa mesa
@@ -9,7 +10,8 @@ import { VERSION } from './version.js';
 // dela: o código e o convite, quem está na mesa e as rolagens de todos (room-log.js). No celular o
 // painel é uma gaveta; no PC ele fica à vista, ao lado da mesa de dados. Perto da bandeja ficam
 // quem vê a próxima rolagem, o rótulo dela (room-label.js), no celular, o atalho para as rolagens
-// e, para os jogadores, os valores do personagem (room-counters.js).
+// e, para os jogadores, os valores do personagem (room-counters.js). O Guardião recebe os alertas
+// dos valores dos jogadores (room-alerts.js) e pode tirar um jogador da mesa.
 // O nome do personagem, a chave do aparelho e a mesa atual ficam guardados no aparelho: ao abrir o
 // app, ele volta sozinho para a mesa em que estava.
 
@@ -27,8 +29,8 @@ const COUNTERS_WAIT = 300;           // tocando várias vezes no − ou no +, os
 
 // critical e nameOf: para o histórico (veja room-log.js); relayout: refaz a área onde os dados rolam,
 // quando a bandeja ganha a linha do rótulo ou o painel passa a ocupar o lado da tela. counters: os
-// contadores do tema ({ id, short, name }).
-export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf, relayout, counters: counterList = [] }) {
+// contadores do tema ({ id, short, name }); alerts: o que eles avisam ao Guardião (do tema).
+export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf, relayout, counters: counterList = [], alerts: alertRules = null }) {
   const $ = id => document.getElementById(id);
   const button = $('btnTable'), joinSheet = $('tableSheet'), panel = $('roomPanel'), row = $('roomRow');
   const nameInput = $('tableName'), codeInput = $('tableCodeInput'), errorBox = $('tableError');
@@ -44,6 +46,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     name: `Escreva o nome do ${texts.character}.`,
     code: 'O código tem 6 letras e números, como K7Q X3M.',
     busy: 'A mesa está ocupada. Tente de novo em instantes.',
+    removed: `O ${texts.guardian} tirou você desta mesa. Para voltar, entre de novo com o código, se houver vaga.`,
     invalid: 'Algo deu errado. Tente de novo.'
   };
 
@@ -54,7 +57,8 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   const KEY = place === 'teste' ? 'arkham-mesa-teste' : 'arkham-mesa';
   // device: a chave do aparelho; name: o nome do personagem; room: { code, guardian } da mesa atual;
   // labels: os últimos rótulos usados; pending: as rolagens que a mesa ainda não confirmou;
-  // characters: os valores de cada personagem deste aparelho (room-counters.js)
+  // characters: os valores de cada personagem deste aparelho (room-counters.js); alerts: os
+  // alertas do Guardião na mesa atual (room-alerts.js)
   const saved = { device: '', name: '', room: null, labels: [], pending: [], characters: {} };
   try { Object.assign(saved, JSON.parse(store.getItem(KEY) || '{}')); } catch (e) {}
   if (!saved.device) saved.device = newDevice();
@@ -72,6 +76,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   // uma versão mais nova do app.
   let link = null, room = null, status = 'out', joining = false, drawer = false, folded = false, seen = 0, layout = 'out';
   let dropped = false, dropTimer = 0, outdated = false, countersTimer = 0;
+  let managing = false;   // o Guardião abriu o "Tirar alguém": cada jogador mostra o × de tirar da mesa
   const title = document.title;
   const canShare = !!navigator.share && matchMedia('(pointer: coarse)').matches;
   const inviteLabel = canShare ? 'Convidar' : 'Copiar convite';
@@ -83,6 +88,15 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     list: counterList, saved, save, unlock, onChange: shareCounters,
     note: () => `Escreva os máximos; depois é só ajustar com − e +. ${whoSeesValues()} estes valores, que ficam guardados neste aparelho, com o nome do ${texts.character}.`
   });
+  // os alertas do Guardião, a partir dos valores dos jogadores (só no aparelho dele)
+  const alerts = alertRules && counterList.length ? createRoomAlerts({
+    list: counterList, rules: alertRules, saved, save, box: $('alerts'), log, unlock,
+    nameOf: seat => room?.members.find(m => m.seat === seat)?.name || '?',
+    onUpdate: () => render()
+  }) : null;
+  const isGuardian = () => room?.you === 'g';
+  // os valores de quem está na mesa, como chegaram, para os alertas (só o Guardião recebe os de todos)
+  const watchMembers = members => { for (const m of members) if (m.role === 'player') alerts?.see(m.seat, m.counters); };
 
   // Quem vê a próxima rolagem. O jogador escolhe entre aberta (o padrão: todos veem) e privada (só
   // ele e o Guardião); o Guardião, entre secreta (o padrão: só ele vê) e aberta. Quem não pode ver
@@ -97,13 +111,14 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   const visibility = () => (saved.room?.guardian ? ['secret', 'open'] : ['open', 'private'])[flipped ? 1 : 0];
 
   /* ------------------------------------------------------------ entrar, criar, sair */
-  function enter() {
+  // join: entrou agora, pela folha com o código (só assim volta quem o Guardião tirou da mesa).
+  function enter({ join = false } = {}) {
     link?.leave();
     room = null;
     status = 'connecting';
     outdated = false;
     counters.use(saved.room.guardian ? null : saved.name);
-    link = connect({ server, code: saved.room.code, device: saved.device, name: mine(), app: VERSION, onEvent });
+    link = connect({ server, code: saved.room.code, device: saved.device, name: mine(), app: VERSION, join, onEvent });
     watchDrop();
     render();
   }
@@ -116,13 +131,14 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     link = null;
     room = null;
     status = 'out';
-    joining = drawer = folded = flipped = outdated = false;
+    joining = drawer = folded = flipped = outdated = managing = false;
     saved.room = null;
     saved.pending = [];
     save();
     watchDrop();
     label.clear();
     counters.clear();
+    alerts?.clear();
     log.clear();
     render();
   }
@@ -152,6 +168,11 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
       saved.room.guardian = ev.you === 'g';
       log.reset(ev);
       if (fresh) seen = log.last;   // o que já estava na mesa conta como visto
+      // o Guardião: os alertas desta mesa (o que mudou enquanto ele estava fora conta como uma mudança)
+      if (isGuardian() && alerts) {
+        alerts.start(saved.room.code);
+        watchMembers(ev.members);
+      }
       counters.use(saved.room.guardian ? null : saved.name);
       if (joining) {                // entrou pela folha: ela fecha e, no celular, a gaveta da mesa abre
         joining = false;
@@ -173,10 +194,12 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     if (ev.type === 'members' && room) {
       room.members = ev.members;
       log.setMembers(ev.members);
+      if (isGuardian()) watchMembers(ev.members);
     }
     if (ev.type === 'counters' && room) {
       const member = room.members.find(m => m.seat === ev.seat);
       if (member) member.counters = ev.counters;
+      if (isGuardian()) alerts?.see(ev.seat, ev.counters);
     }
     if (ev.type === 'roll' && room) {
       if (saved.pending.some(p => p.msg.id === ev.roll.id)) setPending(saved.pending.filter(p => p.msg.id !== ev.roll.id));
@@ -190,6 +213,12 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     if (ev.type === 'ended') {
       forget();
       notify(ev.reason === 'idle' ? 'A mesa se apagou depois de horas sem uso' : `O ${texts.guardian} encerrou a mesa`);
+      return;
+    }
+    // o Guardião tirou este lugar da mesa: na hora, ou ao voltar (o app esquece a mesa e não volta sozinho)
+    if (ev.type === 'removed' || (ev.type === 'error' && ev.error === 'removed')) {
+      forget();
+      notify(MESSAGES.removed);
       return;
     }
     if (ev.type === 'error' && ev.final && ev.error === 'version' && !joining) {
@@ -259,7 +288,17 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     saved.room = { code, guardian: false };
     save();
     joining = true;
-    enter();
+    enter({ join: true });
+  }
+
+  // O Guardião tira um jogador da mesa (um lugar ocupado por engano, ou de quem trocou de aparelho).
+  // Quem confere que só o Guardião pode é a mesa.
+  function removeSeat(member) {
+    unlock();
+    if (!confirm(`Tirar ${member.name} da mesa? O lugar fica livre, e ${member.name} pode entrar de novo pelo código, se houver vaga.`)) return;
+    if (status !== 'online' || !link?.send({ type: 'remove', seat: member.seat })) return notify('Sem conexão com a mesa: tente de novo quando ela voltar');
+    managing = false;
+    render();
   }
 
   function leave() {
@@ -386,19 +425,26 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     renderMembers();
   }
 
-  // Quem está na mesa, na ordem de entrada: o Guardião primeiro, depois os jogadores. Para quem vê
-  // os valores (o Guardião e, se ele deixou, todos), uma tabela com os de cada um; para os outros,
-  // uma fileira de etiquetas: os números dos outros nem chegam a este aparelho.
+  // Quem está na mesa, na ordem de entrada: o Guardião primeiro, depois os jogadores (quem o
+  // Guardião tirou fica de fora; o nome só continua no histórico). Para quem vê os valores (o
+  // Guardião e, se ele deixou, todos), uma tabela com os de cada um; para os outros, uma fileira de
+  // etiquetas: os números dos outros nem chegam a este aparelho. Para o Guardião, cada jogador tem o
+  // botão de tirar da mesa, e quem tem um alerta à vista fica destacado.
   function renderMembers() {
-    const list = room?.members || [];
+    const list = (room?.members || []).filter(m => m.role !== 'removed');
     const withValues = !!room && counterList.length > 0 && (room.you === 'g' || room.rules.counters === 'all');
+    const btnManage = $('btnManage');
+    if (!isGuardian() || !list.some(m => m.role === 'player')) managing = false;
+    btnManage.hidden = !isGuardian() || !list.some(m => m.role === 'player');
+    btnManage.textContent = managing ? 'Pronto' : 'Tirar alguém';
+    btnManage.setAttribute('aria-pressed', String(managing));
     $('tableMembers').hidden = withValues;
     $('tableValues').hidden = !withValues;
     $('tableMembersTitle').textContent = !withValues ? 'Na mesa' : `Na mesa · ${room.rules.counters === 'all' ? 'todos veem os valores' : 'só você vê os valores'}`;
     if (withValues) return renderValues(list);
     $('tableMembers').replaceChildren(...list.map(m => {
       const li = document.createElement('li');
-      li.className = 'member' + (m.online ? ' is-online' : '') + (m.seat === room.you ? ' is-me' : '');
+      li.className = 'member' + (m.online ? ' is-online' : '') + (m.seat === room.you ? ' is-me' : '') + (flagged(m) ? ' is-alert' : '');
       const dot = document.createElement('i');
       dot.className = 'dot';
       const name = document.createElement('span');
@@ -407,8 +453,22 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
       const note = document.createElement('small');
       note.textContent = [m.seat === room.you ? 'você' : '', m.online ? '' : 'fora da mesa'].filter(Boolean).join(' · ');
       li.append(dot, name, note);
+      if (canRemove(m)) li.append(removeButton(m));
       return li;
     }));
+  }
+
+  const canRemove = m => managing && isGuardian() && m.role === 'player';
+  const flagged = m => isGuardian() && !!alerts?.flagged(m.seat);
+  function removeButton(m) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'member-remove';
+    b.textContent = '×';
+    b.title = `Tirar ${m.name} da mesa`;
+    b.setAttribute('aria-label', b.title);
+    b.addEventListener('click', () => removeSeat(m));
+    return b;
   }
 
   function renderValues(list) {
@@ -426,7 +486,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
     }));
     const rows = list.map(m => {
       const tr = cell('tr');
-      tr.className = 'member-row' + (m.online ? ' is-online' : '') + (m.seat === room.you ? ' is-me' : '');
+      tr.className = 'member-row' + (m.online ? ' is-online' : '') + (m.seat === room.you ? ' is-me' : '') + (flagged(m) ? ' is-alert' : '');
       const who = cell('th');
       who.scope = 'row';
       who.className = 'member-who';
@@ -434,9 +494,10 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
       dot.className = 'dot';
       const name = cell('span', m.role === 'guardian' ? texts.guardian : m.name);
       name.className = 'member-name';
-      name.title = name.textContent + (m.online ? '' : ' (fora da mesa)');
+      name.title = name.textContent + (m.online ? '' : ' (fora da mesa)') + (flagged(m) ? ' · com alerta' : '');
       const box = cell('span');
       box.append(dot, name);
+      if (canRemove(m)) box.append(removeButton(m));
       who.append(box);
       // o próprio jogador vê os valores do aparelho, que são os mais novos
       const values = m.seat === room.you ? counters.values() : m.counters;
@@ -446,6 +507,7 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
         if (m.role === 'guardian') return td;
         if (!value) td.textContent = '—';
         else td.append(cell('b', value.cur), `/${value.max}`);
+        if (value?.cur === 0) td.className = 'is-zero';   // zerado: chama a atenção de quem vê
         return td;
       }));
       return tr;
@@ -526,6 +588,11 @@ export function createRoomPanel({ place, texts, unlock, notify, critical, nameOf
   btnJoin.addEventListener('click', join);
   btnInvite.addEventListener('click', invite);
   btnLeave.addEventListener('click', leave);
+  $('btnManage').addEventListener('click', () => {
+    unlock();
+    managing = !managing;
+    render();
+  });
   $('tableForm').addEventListener('submit', ev => { ev.preventDefault(); join(); });
   $('tableCharacter').textContent = `Nome do ${texts.character}`;
   $('tableGuardian').textContent = `É o ${texts.guardian}?`;

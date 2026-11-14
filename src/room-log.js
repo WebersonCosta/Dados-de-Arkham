@@ -1,6 +1,8 @@
 // As rolagens da mesa compartilhada: o histórico, com a mais nova em cima (no painel da mesa), e o
 // aviso discreto perto da bandeja quando outra pessoa rola. Cada rolagem chega do servidor já do
-// jeito que este aparelho pode ver: inteira, ou só o sinal de que alguém rolou (sem o número).
+// jeito que este aparelho pode ver: inteira, ou só o sinal de que alguém rolou (sem o número). No
+// aparelho do Guardião, o histórico mostra também os alertas (room-alerts.js), que só ele vê: eles
+// nunca saem deste aparelho.
 
 const MAX = 100;           // como o servidor (HISTORY em server/room.js)
 const NOTICE_MS = 5000;    // quanto tempo o aviso fica perto da bandeja
@@ -10,8 +12,10 @@ const MAX_NOTICES = 3;     // vários de uma vez (todos rolando Sanidade, por ex
 // critical: a regra do tema (crítico e desastre); nameOf: como se escreve o que foi rolado ('2d6+6'
 // vira '2d6 + 6').
 export function createRoomLog({ list, empty, notices, texts, critical, nameOf }) {
-  // waiting: as rolagens deste aparelho que a mesa ainda não confirmou; held: o aviso que fica
-  let rolls = [], waiting = [], members = [], you = null, names = '', held = null;
+  // waiting: as rolagens deste aparelho que a mesa ainda não confirmou; held: o aviso que fica;
+  // notes: os alertas do Guardião ({ id, at, after, title, lines }: after é a última rolagem que
+  // tinha chegado, para o alerta ficar no lugar certo entre elas)
+  let rolls = [], waiting = [], notes = [], members = [], you = null, names = '', held = null;
 
   const el = (tag, className, text) => {
     const e = document.createElement(tag);
@@ -72,10 +76,29 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
     return li;
   }
 
-  // As que esperam a mesa ficam em cima de todas.
-  function render() {
-    list.replaceChildren(...waiting.map(r => entry(r, false, true)).reverse(), ...rolls.map(r => entry(r)).reverse());
-    empty.hidden = rolls.length + waiting.length > 0;
+  // Um alerta do Guardião no histórico: "!" no lugar do número, de quem é e o que mudou, a marca de
+  // que só ele vê, e o lembrete da regra.
+  function noteEntry(note) {
+    const li = el('li', 'roll is-note');
+    li.append(el('b', 'roll-num', '!'));
+    const top = el('p', 'roll-who'), title = el('span', 'roll-title');
+    title.append(el('span', 'roll-name', note.title));
+    top.append(title, el('small', 'roll-veil', 'só você vê'), el('time', '', time(note.at)));
+    const text = el('div', 'roll-text');
+    text.append(top, ...note.lines.map(line => el('p', 'roll-what', line)));
+    li.append(text);
+    return li;
+  }
+
+  // As que esperam a mesa ficam em cima de todas; os alertas, logo acima da rolagem que tinha
+  // chegado por último quando eles apareceram. fresh: a rolagem que acabou de chegar.
+  function render(fresh) {
+    const items = [
+      ...rolls.map(r => ({ at: r.seq, el: () => entry(r, r.id === fresh) })),
+      ...notes.map(n => ({ at: n.after + .5, time: n.at, el: () => noteEntry(n) }))
+    ].sort((a, b) => a.at - b.at || (a.time || 0) - (b.time || 0));
+    list.replaceChildren(...waiting.map(r => entry(r, false, true)).reverse(), ...items.reverse().map(i => i.el()));
+    empty.hidden = rolls.length + waiting.length + notes.length > 0;
   }
 
   // O aviso perto da bandeja: quem rolou, o rótulo (ou o que foi rolado) e o número. O sinal de
@@ -114,13 +137,14 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
     add(roll) {
       if (rolls.some(r => r.id === roll.id)) return;
       rolls.push(roll);
-      list.insertBefore(entry(roll, true), list.children[waiting.length] || null);
-      if (rolls.length > MAX) {
-        rolls.shift();
-        list.lastElementChild.remove();
-      }
-      empty.hidden = true;
+      if (rolls.length > MAX) rolls.shift();
+      render(roll.id);
       if (roll.seat !== you) notice(roll);
+    },
+    // Os alertas do Guardião, como estão agora (só no aparelho dele).
+    notes(list) {
+      notes = list;
+      render();
     },
     // As rolagens deste aparelho que a mesa ainda não confirmou ([{ at, msg }], da mais velha para
     // a mais nova); name: o nome de quem rola, para antes de a mesa responder.
@@ -148,6 +172,7 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
     clear() {
       rolls = [];
       waiting = [];
+      notes = [];
       members = [];
       you = null;
       names = '';

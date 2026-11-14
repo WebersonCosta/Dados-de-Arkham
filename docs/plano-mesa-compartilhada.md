@@ -14,6 +14,40 @@ sessão rápida com dois amigos para testar as funções e não encontrou erro (
 **A fase 2 foi publicada na versão 1.2, em 06/11/2026, junto com a mesa oficial.** As decisões, os passos da fase 2, os valores
 e a ideia da ficha do personagem estão no fim deste arquivo.
 
+Em 14/11/2026, depois da primeira sessão com o grupo, Weberson reviu as prioridades (a seção logo
+abaixo vale mais que a lista de fases original). A fase 3, o painel do Guardião em versão enxuta
+(alertas e remover lugar), está no endereço de teste, no envio "teste 15" (veja o fim do arquivo).
+
+## Prioridades depois da primeira sessão (14/11/2026)
+
+Revistas por Weberson depois da primeira sessão com o grupo.
+
+**Critério para novas funcionalidades:** jogamos por voz no Discord, então só vale construir o que
+faz algo que a voz não faz.
+
+**Nova ordem das fases.** Na lista de Weberson são os itens 1 a 5; como as fases 1 (o plano) e 2 (a
+sala) já foram feitas, aqui eles viram as fases 3 a 7:
+
+3. **Painel do Guardião, versão enxuta** (esta etapa): alertas e remover lugar.
+4. **Ficha, primeiro degrau:** carregar a ficha em Markdown e ver dentro do app; PDF só para
+   visualizar.
+5. **Ficha, segundo degrau:** perícias tocáveis com nível de sucesso e contadores ligados à tabela
+   "Valores derivados" da ficha em Markdown.
+6. **Documentos e pistas:** o Guardião carrega imagens (mapas, cartas, fotos) e revela para todos ou
+   para jogadores específicos, usando a visibilidade que já existe; com um "apontar" num ponto da
+   imagem.
+7. **Polimento e atmosfera:** velas da cena atual reagindo ao jogo (rolagem secreta, perda de
+   Sanidade), trilha sonora e efeitos do Guardião.
+
+**Ideia arquivada (não descartada):** a mesa ritual 3D com a visão de toda a mesa. Na sessão, a aba
+de rolagens foi suficiente.
+
+**Ideias para o futuro, sem prioridade:** pedido de rolagem secreto do Guardião para um jogador;
+rolagem de grupo; rolar em segredo por um jogador com nível de sucesso (depende da ficha); teste de
+Sanidade guiado; Sorte do grupo (rola quem tem a menor Sorte); NPCs salvos para rolagens secretas;
+referência rápida de regras escrita com texto próprio; criação guiada de personagem; outros temas e
+sistemas.
+
 ## Sala e entrada
 
 - O Guardião cria a sala e passa um código; jogadores entram com ele, sem cadastro.
@@ -69,6 +103,9 @@ e a ideia da ficha do personagem estão no fim deste arquivo.
 - Respeitar a separação mecânica/tema: a lógica da sala é mecânica; a mesa ritual é do tema Arkham.
 
 ## Fases
+
+> A ordem abaixo é a do plano original. Desde 14/11/2026 vale a nova ordem de "Prioridades depois da
+> primeira sessão", no começo deste arquivo; a mesa ritual 3D ficou arquivada.
 
 1. Plano (esta etapa).
 2. Sala funcional: sala com código, entrada com nome do investigador, reconexão, histórico,
@@ -166,7 +203,8 @@ Versão mínima de PV, Sanidade, Sorte e Pontos de Magia, antes da primeira sess
   números.
 
 Fica para depois: alertas para o Guardião (PV baixo, perda grande de Sanidade), o painel completo
-do Guardião e outras regras da mesa.
+do Guardião e outras regras da mesa. (Os alertas entraram na fase 3, versão enxuta: veja o fim do
+arquivo.)
 
 **Como foi feito**
 
@@ -202,3 +240,64 @@ Como isso entra:
 - A ficha fica no aparelho, ao lado dos valores e ligada ao mesmo nome do investigador
   (`saved.characters`; um PDF, por ser grande, pediria outro lugar de guardar). A mesa não muda: ela
   continua recebendo só os contadores, e a ficha nunca sai do aparelho.
+
+## Fase 3: o painel do Guardião, versão enxuta (pedido de Weberson em 14/11/2026)
+
+Weberson é o Guardião e ainda está aprendendo as regras. O objetivo: o app avisar o que pode passar
+despercebido no meio da cena.
+
+**Alertas para o Guardião.** Com base nos valores que cada jogador ajusta, avisar o Guardião (e só
+ele), com um lembrete curto da regra, escrito com texto próprio:
+
+- perda de 5 ou mais de SAN de uma vez: pede teste de INT para insanidade temporária;
+- perda de SAN igual ou maior que um quinto da SAN atual durante a sessão: possível insanidade
+  indefinida;
+- SAN chegou a zero: insanidade permanente;
+- perda de PV igual ou maior que metade do máximo de uma vez: ferimento grave;
+- PV chegou a zero: inconsciente, ou morrendo se houver ferimento grave.
+
+Os alertas são lembretes: quem decide é o Guardião. Várias mudanças seguidas em poucos segundos
+contam como uma única perda. O alerta aparece como um aviso que o Guardião dispensa, com o jogador
+destacado na lista e um registro no histórico, visível só para o Guardião. Os jogadores não recebem
+nada.
+
+**Remover um lugar.** O Guardião pode tirar um jogador da mesa (um lugar ocupado por engano, ou de
+quem trocou de aparelho), com confirmação. A pessoa pode entrar de novo pelo código, se houver lugar.
+A proteção é feita no servidor: só o Guardião pode remover.
+
+**Como foi feito** (envio "teste 15", versão 1.4)
+
+- Os alertas são calculados no aparelho do Guardião, com os valores que a mesa já entrega a ele: nada
+  de novo vai para a mesa, nem para os jogadores. Quais mudanças viram alerta, e o texto, é o tema que
+  diz (`alerts`, em `src/themes/arkham/rules.js`); juntar os toques é mecânica
+  (`src/core/counter-watch.js`); a tela é `src/room-alerts.js`.
+- Toques seguidos: quando um valor fica 4 segundos sem mudar, a mudança vai do valor de antes do
+  primeiro toque ao de depois do último. Quem erra e corrige nesse tempo fica só com o resultado.
+  Limites, ditos nos lembretes: duas perdas de verdade em menos de 4 segundos viram uma só ("se veio de
+  uma rolagem só", "se foi um golpe só"), e uma pausa maior que 4 segundos divide uma perda em duas.
+  Mexer no máximo (acertar a ficha) não é perda.
+- "Durante a sessão" é desde que o jogador entrou nesta mesa, a partir do maior valor de SAN que ele
+  teve nela. O app guarda isso no aparelho do Guardião, e continua certo se o app for fechado e
+  aberto no meio da sessão (o que mudou enquanto ele estava fora conta como uma mudança).
+- Metades e quintos arredondam para baixo, como os valores difícil e extremo das perícias.
+- PV zero: "morrendo" se esta perda já foi um ferimento grave, ou se o app viu um nesta mesa; o app não
+  sabe dos ferimentos de sessões anteriores, e o lembrete diz isso. Lembra também que um golpe do PV
+  máximo ou mais mata na hora: o PV não desce abaixo de zero, e o app não vê o tamanho do golpe.
+- Como aparece: um aviso logo abaixo do cabeçalho, até o Guardião tocar em "Entendi" (até 3 no PC, 1
+  no celular, com "mais N alertas esperando"); o jogador em vermelho, com "!", na lista, enquanto o
+  aviso estiver lá; e o registro no histórico, marcado "só você vê", que fica. Valores em zero aparecem
+  em vermelho na tabela do Guardião.
+- Remover lugar: o botão "Tirar alguém", ao lado de "Na mesa" (só para o Guardião), mostra um × em
+  cada jogador; o × pede confirmação. A mesa confere que quem pede é o Guardião. O lugar tirado
+  continua na lista só com o nome, para o histórico (os valores saem); as conexões dele são avisadas e
+  desligadas. A pessoa só volta entrando de propósito pelo código (o app voltando sozinho é recusado),
+  num lugar novo: o número de um lugar nunca se repete numa mesa, para quem chega depois não herdar as
+  rolagens privadas do lugar tirado.
+- Regras conferidas nas páginas de regras da Chaosium e em outras fontes (insanidade temporária,
+  ferimento grave, morrendo, morte por um golpe do PV máximo). Pontos incertos, avisados a Weberson: a
+  insanidade indefinida fala em "um quinto da SAN atual num mesmo dia de jogo", sem deixar claro (nas
+  fontes conferidas) se a base é a SAN do começo do dia; e, com PV máximo ímpar, se a metade arredonda
+  para baixo.
+- Testado: os testes dos alertas (`tests/alertas.test.js`) e das regras da sala, o teste dos aparelhos
+  simulados contra a mesa de teste (com o lugar tirado) e, no navegador, o Guardião e dois jogadores em
+  abas com `?aba`.

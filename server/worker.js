@@ -1,8 +1,8 @@
 import { DurableObject } from 'cloudflare:workers';
 import {
-  PROTOCOL, GUARDIAN, HISTORY,
+  PROTOCOL, GUARDIAN, HISTORY, REMOVED,
   newCode, cleanCode, cleanName, cleanVersion, compareVersions, newest, cleanRules,
-  validDevice, digest, readRoll, seenBy, readCounters, seesCounters, nextSeat, publicSeat
+  validDevice, digest, readRoll, seenBy, readCounters, seesCounters, nextSeat, publicSeat, isPlayerSeat
 } from './room.js';
 
 // Servidor da mesa compartilhada, no Cloudflare. Cada sala é um Durable Object: um pequeno programa
@@ -13,9 +13,11 @@ import {
 // - POST /rooms, com { protocol, device, name, rules }: cria uma sala e devolve { code }. Quem cria
 //   é o Guardião.
 // - /rooms/<código>: a conexão ao vivo (WebSocket). A primeira mensagem do app é
-//   { type: 'hello', protocol, device, name, app }, e a resposta é a sala ({ type: 'room' }).
-//   Depois chegam 'members', 'roll', 'counters', 'outdated' (o app ficou para trás), 'error' e
-//   'ended'; o app manda 'roll', o jogador manda 'counters' (os dele) e o Guardião manda 'end'.
+//   { type: 'hello', protocol, device, name, app, join? }, e a resposta é a sala ({ type: 'room' }).
+//   join: true quando a pessoa entrou de propósito, pela folha com o código (e não o app voltando
+//   sozinho). Depois chegam 'members', 'roll', 'counters', 'outdated' (o app ficou para trás),
+//   'removed' (o Guardião tirou este lugar da mesa), 'error' e 'ended'; o app manda 'roll', o
+//   jogador manda 'counters' (os dele) e o Guardião manda 'remove' ({ seat }) e 'end'.
 
 export default {
   async fetch(request, env) {
@@ -115,20 +117,35 @@ export class Room extends DurableObject {
     if (!this.exists()) return this.refuse(ws, 'room-not-found');
     const seat = ws.deserializeAttachment()?.seat;
     if (!seat) return msg.type === 'hello' ? this.hello(ws, msg) : this.refuse(ws, 'invalid');
+    // um lugar que o Guardião tirou não manda mais nada, nem por uma conexão que ainda não fechou
+    if (this.sql.exec('SELECT role FROM seats WHERE seat = ?', seat).toArray()[0]?.role !== (seat === GUARDIAN ? 'guardian' : 'player')) {
+      return this.refuse(ws, 'removed');
+    }
     if (msg.type === 'roll') return this.roll(ws, seat, msg);
     if (msg.type === 'counters') return this.counters(ws, seat, msg);
+    if (msg.type === 'remove') return seat === GUARDIAN ? this.remove(ws, msg.seat) : this.send(ws, { type: 'error', error: 'guardian-only' });
     if (msg.type === 'end') return seat === GUARDIAN ? this.end('guardian') : this.send(ws, { type: 'error', error: 'guardian-only' });
     this.send(ws, { type: 'error', error: 'invalid' });
   }
 
   // Chegada (ou volta) de um aparelho. O mesmo aparelho volta sempre para o mesmo lugar; um
-  // aparelho novo senta no próximo lugar de jogador livre.
+  // aparelho novo senta no próximo lugar de jogador livre. O aparelho de um lugar que o Guardião
+  // tirou só entra de novo de propósito, pelo código (join): voltando sozinho, é recusado.
   async hello(ws, msg) {
     if (msg.protocol !== PROTOCOL) return this.refuse(ws, 'version');
     if (!validDevice(msg.device)) return this.refuse(ws, 'invalid');
     const device = await digest(msg.device), name = cleanName(msg.name);
     if (!this.exists()) return this.refuse(ws, 'room-not-found');   // apagada enquanto o resumo era feito
     let me = this.sql.exec('SELECT * FROM seats WHERE device = ?', device).toArray()[0];
+    if (me?.role === REMOVED) {
+      if (msg.join !== true) return this.refuse(ws, 'removed');
+      if (!name) return this.refuse(ws, 'name');
+      // sem vaga, o aparelho continua marcado como tirado (e não volta sozinho quando abrir uma)
+      if (!nextSeat(this.seats())) return this.refuse(ws, 'room-full');
+      // entrou de novo pelo código: o lugar antigo fica só no histórico, e ele senta num lugar novo
+      this.sql.exec('UPDATE seats SET device = ? WHERE seat = ?', `${REMOVED}:${me.seat}`, me.seat);
+      me = null;
+    }
     if (!me) {
       if (!name) return this.refuse(ws, 'name');
       const seats = this.seats(), seat = nextSeat(seats);
@@ -184,6 +201,23 @@ export class Room extends DurableObject {
     }
   }
 
+  // O Guardião tira um jogador da mesa (um lugar ocupado por engano, ou de quem trocou de aparelho).
+  // Só o Guardião pode (quem chama já foi conferido). O lugar fica na lista só com o nome, para o
+  // histórico; os valores dele saem. As conexões daquele lugar são avisadas e desligadas, e a
+  // pessoa só volta entrando de novo pelo código, num lugar novo, se houver vaga.
+  async remove(ws, target) {
+    const row = isPlayerSeat(target) && this.sql.exec("SELECT seat FROM seats WHERE seat = ? AND role = 'player'", target).toArray()[0];
+    if (!row) return this.send(ws, { type: 'error', error: 'invalid' });
+    this.sql.exec('UPDATE seats SET role = ?, counters = NULL WHERE seat = ?', REMOVED, target);
+    await this.touch();
+    const gone = this.connections().filter(c => c.seat === target).map(c => c.ws);
+    for (const socket of gone) {
+      this.send(socket, { type: 'removed' });
+      try { socket.close(4000, 'removed'); } catch (e) {}
+    }
+    this.announceMembers({ gone });
+  }
+
   // O Guardião encerrou a sessão, ou a sala ficou tempo demais sem uso: avisa quem está nela,
   // desliga todas as conexões e apaga tudo o que a sala guardava.
   async end(reason) {
@@ -237,11 +271,12 @@ export class Room extends DurableObject {
       .toArray().map(r => seenBy(fromRow(r), seat));
   }
 
-  // As conexões abertas que já disseram de que lugar são (menos `gone`, a que está caindo), com a
-  // versão do app de cada uma.
+  // As conexões abertas que já disseram de que lugar são (menos `gone`: a que está caindo, ou a lista
+  // das que estão sendo desligadas), com a versão do app de cada uma.
   connections(gone) {
+    const skip = new Set([gone].flat());
     return this.ctx.getWebSockets().flatMap(ws => {
-      const me = ws !== gone && ws.readyState === 1 && ws.deserializeAttachment();
+      const me = !skip.has(ws) && ws.readyState === 1 && ws.deserializeAttachment();
       return me?.seat ? [{ ws, seat: me.seat, app: me.app || '0.0' }] : [];
     });
   }

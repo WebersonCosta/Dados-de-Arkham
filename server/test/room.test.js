@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import {
   GUARDIAN, MAX_PLAYERS, CODE_CHARS, CODE_LENGTH,
   newCode, cleanCode, validDevice, digest, cleanName, bounds, readRoll, seenBy, nextSeat, publicSeat,
-  cleanVersion, compareVersions, newest, readCounters, cleanRules, seesCounters, MAX_COUNTERS, MAX_COUNTER
+  cleanVersion, compareVersions, newest, readCounters, cleanRules, seesCounters, MAX_COUNTERS, MAX_COUNTER,
+  REMOVED, isPlayerSeat
 } from '../room.js';
 
 test('código da sala: 6 letras e números, sem os que se confundem', () => {
@@ -116,6 +117,17 @@ test('lugares: j1 a j6 na ordem de entrada, depois a mesa está cheia', () => {
     seats.push({ seat, role: 'player' });
   }
   assert.equal(nextSeat(seats), null);
+});
+
+test('lugar tirado pelo Guardião: abre a vaga, mas o número do lugar nunca volta', () => {
+  const seats = [{ seat: GUARDIAN, role: 'guardian' }, { seat: 'j1', role: 'player' }, { seat: 'j2', role: REMOVED }, { seat: 'j3', role: 'player' }];
+  assert.equal(nextSeat(seats), 'j4');   // e não j2: quem chega não herda as privadas do lugar tirado
+  const full = [{ seat: GUARDIAN, role: 'guardian' }, ...Array.from({ length: MAX_PLAYERS }, (_, i) => ({ seat: `j${i + 1}`, role: 'player' }))];
+  assert.equal(nextSeat(full), null);
+  full[3].role = REMOVED;
+  assert.equal(nextSeat(full), `j${MAX_PLAYERS + 1}`);
+  assert.ok(isPlayerSeat('j1') && isPlayerSeat('j12'));
+  for (const bad of [GUARDIAN, 'j', 'j0x', 'x1', 'j1234', 1, null, undefined]) assert.ok(!isPlayerSeat(bad), String(bad));
 });
 
 test('a lista de quem está na mesa não leva a chave do aparelho', () => {

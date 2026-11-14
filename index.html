@@ -74,6 +74,8 @@
       <button id="btnAmb" class="toggle" type="button" aria-pressed="true">Ambiente</button>
       <button id="btnTable" class="toggle table-button" type="button">Mesa</button>
     </div>
+    <!-- mesa compartilhada: os alertas do Guardião, logo abaixo do cabeçalho (room-alerts.js) -->
+    <div class="alerts" id="alerts"></div>
   </header>
 
   <div class="verdict" id="verdict" hidden aria-live="polite">
@@ -185,7 +187,11 @@
         <button type="button" class="toggle" id="btnInvite">Copiar convite</button>
       </div>
       <p class="table-status" id="tableStatus" aria-live="polite"></p>
-      <p class="sheet-label" id="tableMembersTitle">Na mesa</p>
+      <div class="members-head">
+        <p class="sheet-label" id="tableMembersTitle">Na mesa</p>
+        <!-- só o Guardião: mostra o × de cada jogador, para tirar alguém da mesa -->
+        <button type="button" class="link-button" id="btnManage" hidden>Tirar alguém</button>
+      </div>
       <ol class="members" id="tableMembers"></ol>
       <table class="values" id="tableValues" hidden></table>
       <p class="sheet-label">Rolagens</p>

@@ -540,7 +540,7 @@ bindToggle($('btnAmb'), 'amb', theme.texts.ambient, on => audio.setAmbient(on));
 // usa a internet: rolar sozinho continua igual, mesmo sem conexão.
 const roomPanel = createRoomPanel({
   place: PLACE, texts: theme.texts, unlock: () => audio.unlock(), notify: flashHint, relayout,
-  critical: theme.critical, counters: theme.counters,
+  critical: theme.critical, counters: theme.counters, alerts: theme.alerts,
   nameOf: id => { const f = formulas.parse(id); return f ? formulas.text(f) : id; }   // '2d6+6' → '2d6 + 6'; o d100 fica como está
 });
 

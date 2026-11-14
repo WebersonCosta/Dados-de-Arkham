@@ -320,6 +320,57 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 .member-who .member-name { font-size: .95rem; line-height: 1.25; color: var(--c-text); }
 .member-row.is-me .member-name { color: var(--c-accent); }
 .member-row:not(.is-online) .member-name { opacity: .55; }
+.values td.is-zero b { color: var(--c-penalty); }   /* PV ou SAN zerados */
+/* Para o Guardião: o jogador com um alerta à vista fica destacado, e cada jogador tem o botão de
+   tirar da mesa, no fim do nome. */
+.member-row.is-alert .member-who .member-name, .member.is-alert .member-name { color: var(--c-penalty); opacity: 1; }
+.member-row.is-alert .member-who .member-name::before, .member.is-alert .member-name::before { content: '! '; font-weight: 700; }
+.member-row.is-alert th, .member-row.is-alert td { background: var(--c-penalty-soft); }
+.member-remove {
+  flex: none; margin-left: auto; width: 1.7rem; height: 1.7rem; padding: 0;
+  font: 1rem/1 var(--font-ui); color: var(--c-penalty); background: var(--c-penalty-soft);
+  border: 1px solid var(--c-penalty); border-radius: 2px; cursor: pointer; touch-action: manipulation;
+}
+/* o título "Na mesa" e, para o Guardião, o "Tirar alguém", que mostra o × de cada jogador */
+.members-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.members-head p { margin: 0; }
+.link-button {
+  flex: none; padding: .3rem 0; font-family: var(--font-ui); font-size: .66rem; letter-spacing: .08em;
+  color: var(--c-text-dim); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer; touch-action: manipulation;
+}
+.link-button[aria-pressed="true"] { color: var(--c-penalty); }
+
+/* Os alertas do Guardião: logo abaixo do cabeçalho, por cima da faixa das velas (onde os dados
+   quase não chegam), até ele dispensar. O mais novo fica em cima. */
+.hud-top > .alerts {
+  position: absolute; top: 100%; left: 0; right: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+  pointer-events: none;
+}
+.alert {
+  width: 100%; max-width: 520px; box-sizing: border-box; padding: .5rem .7rem .55rem;
+  font-family: var(--font-ui); color: var(--c-text);
+  background: rgba(12, 8, 7, .9); border: 1px solid var(--c-penalty); border-radius: 2px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .55); pointer-events: auto;
+  animation: alert-in .35s ease-out both;
+}
+.alert p { margin: 0; }
+.alert-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.alert-title { min-width: 0; font-family: var(--font-title); font-size: 1.02rem; color: var(--c-penalty); }
+.alert-title::before { content: '! '; font-weight: 700; }
+.alert-ok { flex: none; padding: .35rem .6rem; }
+.alert-line { margin-top: .3rem !important; font-size: .72rem; line-height: 1.45; letter-spacing: .02em; color: var(--c-text); }
+@keyframes alert-in { from { opacity: 0; transform: translateY(-6px); } }
+.alerts .alert-more {
+  margin: 0; padding: .2rem .6rem; font-family: var(--font-ui); font-size: .66rem; letter-spacing: .06em;
+  color: var(--c-penalty); background: rgba(0, 0, 0, .7); border-radius: 2px;
+}
+/* no histórico do Guardião: o registro do alerta, que só ele vê */
+.roll.is-note { border-color: var(--c-penalty); border-style: dashed; }
+.roll.is-note .roll-num { color: var(--c-penalty); }
+.roll.is-note .roll-name { color: var(--c-penalty); }
 
 /* As rolagens da mesa, a mais nova em cima: o número à esquerda; ao lado, quem rolou e o rótulo, e
    embaixo o que foi rolado. A que acabou de chegar acende por um instante. */
@@ -450,5 +501,5 @@ button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; 
 }
 @media (prefers-reduced-motion: reduce) {
   .hint, .table-button { animation: none !important; opacity: .85; }
-  .verdict.show > *, .notice, .notice.is-hidden b, .notice.is-held, .roll.is-new, .room-chip.is-empty { animation: none; }
+  .verdict.show > *, .notice, .notice.is-hidden b, .notice.is-held, .roll.is-new, .room-chip.is-empty, .alert { animation: none; }
 }
