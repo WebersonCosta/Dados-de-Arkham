@@ -1,8 +1,9 @@
 # Guia de uso: Dados de Arkham
 
-Atualizado em 14/11/2026: versão oficial **1.4**, publicada nesse dia, que traz para a mesa
-compartilhada os alertas do Guardião e o "Tirar alguém" (veja "Mesa compartilhada"). O endereço de
-teste está com a mesma versão (envio "teste 15").
+Atualizado em 14/11/2026: versão oficial **1.5**, publicada nesse dia. A 1.4, do mesmo dia, trouxe
+para a mesa compartilhada os alertas do Guardião e o "Tirar alguém" (veja "Mesa compartilhada"); a
+1.5 faz os avisos dos alertas sumirem sozinhos, guarda os alertas no histórico até o Guardião apagar
+e conserta a folha dos valores no PC. O endereço de teste está com a mesma versão (envio "teste 16").
 
 O Dados de Arkham é um rolador de dados 3D para RPG, feito para *Call of Cthulhu* (7ª edição). Os
 dados caem numa mesa de madeira, à luz de velas, e o resultado é a face que ficou para cima, como
@@ -31,11 +32,11 @@ e até 6 jogadores podem rolar juntos, cada um no seu aparelho, pela **mesa comp
 
 | | Endereço | Versão | O que tem |
 | --- | --- | --- | --- |
-| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.4 | Tudo o que está neste guia |
-| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.4 (teste 15) | A mesma versão; é onde as próximas novidades aparecem primeiro, para testar |
+| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.5 | Tudo o que está neste guia |
+| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.5 (teste 16) | A mesma versão; é onde as próximas novidades aparecem primeiro, para testar |
 
-- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.4** no oficial e
-  **v1.4 · teste 15** no teste, em vermelho. O número depois de "teste" sobe a cada envio: é o
+- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.5** no oficial e
+  **v1.5 · teste 16** no teste, em vermelho. O número depois de "teste" sobe a cada envio: é o
   jeito de saber se a versão nova já chegou.
 - Os dois endereços não se misturam. Cada um guarda à parte as preferências, as fórmulas favoritas
   e a cópia para usar sem internet. Instalado, o oficial se chama **Arkham** e o teste, **Arkham
@@ -314,11 +315,15 @@ podem passar despercebidos no meio da cena. São lembretes curtos: quem decide �
 | Perda de metade do PV máximo ou mais de uma vez | Ferimento grave: marcar na ficha e teste de CON para não desmaiar |
 | PV chegou a zero | Inconsciente; com um ferimento grave, morrendo (teste de CON a cada rodada). E um golpe do PV máximo ou mais mata na hora |
 
-- **Como aparece:** um aviso no alto da tela, com o nome, o valor de antes e o de agora (**Ana · SAN
-  55 → 49**) e o lembrete. Ele fica até o Guardião tocar em **Entendi**. No PC cabem até 3 de uma
-  vez; no celular, um, com "mais 1 alerta esperando" embaixo. Enquanto o aviso estiver lá, o jogador
-  fica destacado em vermelho, com um "!", na lista de quem está na mesa. E o alerta fica no histórico
-  das rolagens, marcado **só você vê**.
+- **Como aparece:**
+  - **No alto da tela:** um aviso com o nome, o valor de antes e o de agora (**Ana · SAN 55 → 49**) e
+    o lembrete. Ele some sozinho depois de uns 10 segundos, ou antes, com **Entendi**; no PC, com o
+    mouse em cima, ele espera. No PC cabem até 3 de uma vez; no celular, um, com "mais 1 alerta
+    esperando" embaixo.
+  - **No histórico das rolagens:** o alerta fica marcado **só você vê**, com o lembrete inteiro. Ele
+    só sai quando o Guardião toca em **Apagar**, embaixo dele.
+  - **Na lista de quem está na mesa:** o jogador fica destacado em vermelho, com um "!", enquanto tiver
+    algum alerta no histórico.
 - **Toques seguidos contam como uma perda só.** O jogador ajusta com − e +, um toque de cada vez.
   O app do Guardião espera ele parar: quando o valor fica 4 segundos sem mudar, tudo o que mudou
   desde o primeiro toque conta como uma mudança só (cinco toques no − são uma perda de 5). Se o
@@ -328,7 +333,7 @@ podem passar despercebidos no meio da cena. São lembretes curtos: quem decide �
   nesta mesa.
 - **Só o Guardião:** os alertas são feitos no aparelho dele, com os valores que a mesa já mostra para
   ele. A mesa não sabe dos alertas, e os jogadores não recebem nada. Fechar e abrir o app não perde os
-  alertas; encerrar a mesa apaga.
+  alertas do histórico (o aviso no alto não volta); encerrar a mesa apaga todos.
 - Mexer no máximo de um valor (acertar a ficha) não conta como perda. Metades e quintos arredondam
   para baixo, como os valores difícil e extremo das perícias (com PV máximo 11, metade é 5).
 
@@ -425,6 +430,7 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 | 1.2 | 06/11/2026 | A mesa compartilhada, com os valores do investigador (PV, SAN, Sorte e PM) |
 | 1.3 | 13/11/2026 | Dados menores, sem tremor, e empurrões mais raros e mais discretos |
 | 1.4 | 14/11/2026 | Na mesa compartilhada, os alertas do Guardião (SAN e PV) e tirar alguém da mesa |
+| 1.5 | 14/11/2026 | Os avisos dos alertas somem sozinhos e o histórico só apaga no "Apagar"; no PC, a folha dos valores não fecha mais ao clicar num campo |
 
 ## 12. Limitações atuais
 
@@ -536,7 +542,8 @@ Depois da primeira sessão com o grupo (novembro de 2026), as prioridades mudara
 jogo é por voz no Discord, então só vale construir o que faz algo que a voz não faz.
 
 - **Feita (fase 3), o painel do Guardião, versão enxuta:** os alertas e tirar alguém da mesa,
-  publicados na versão 1.4. As próximas novidades aparecem primeiro no endereço de teste.
+  publicados na versão 1.4 e ajustados na 1.5. As próximas novidades aparecem primeiro no endereço de
+  teste.
 - **Próxima (fase 4), a ficha, primeiro degrau:** carregar a ficha do investigador em Markdown e vê-la dentro
   do app; em PDF, só para ver.
 - **Fase 5, a ficha, segundo degrau:** perícias que se tocam para rolar, com o nível de sucesso, e

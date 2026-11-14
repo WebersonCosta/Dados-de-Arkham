@@ -1,3 +1,5 @@
+import { closeOnBackdrop } from './lib/util.js';
+
 // O rótulo da rolagem ("Furtividade", "Dano"…): escolhido antes de lançar, vai para a mesa junto
 // com a próxima rolagem e depois se apaga, como o bônus e a penalidade (ninguém esquece um rótulo
 // ligado). Os últimos usados ficam guardados no aparelho, para escolher com um toque.
@@ -50,7 +52,7 @@ export function createRoomLabel({ saved, save, unlock }) {
   $('btnCloseLabel').addEventListener('click', close);
   $('btnNoLabel').addEventListener('click', () => choose(''));
   $('labelForm').addEventListener('submit', ev => { ev.preventDefault(); choose(input.value); });
-  sheet.addEventListener('click', ev => { if (ev.target === sheet) close(); });
+  closeOnBackdrop(sheet, close);
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !sheet.hidden) close(); });
   render();
 

@@ -14,8 +14,8 @@ const MAX_NOTICES = 3;     // vários de uma vez (todos rolando Sanidade, por ex
 export function createRoomLog({ list, empty, notices, texts, critical, nameOf }) {
   // waiting: as rolagens deste aparelho que a mesa ainda não confirmou; held: o aviso que fica;
   // notes: os alertas do Guardião ({ id, at, after, title, lines }: after é a última rolagem que
-  // tinha chegado, para o alerta ficar no lugar certo entre elas)
-  let rolls = [], waiting = [], notes = [], members = [], you = null, names = '', held = null;
+  // tinha chegado, para o alerta ficar no lugar certo entre elas); deleteNote: o "Apagar" de cada um
+  let rolls = [], waiting = [], notes = [], members = [], you = null, names = '', held = null, deleteNote = null;
 
   const el = (tag, className, text) => {
     const e = document.createElement(tag);
@@ -77,15 +77,20 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
   }
 
   // Um alerta do Guardião no histórico: "!" no lugar do número, de quem é e o que mudou, a marca de
-  // que só ele vê, e o lembrete da regra.
+  // que só ele vê, o lembrete da regra e o "Apagar" (ele só sai do histórico assim).
   function noteEntry(note) {
     const li = el('li', 'roll is-note');
     li.append(el('b', 'roll-num', '!'));
     const top = el('p', 'roll-who'), title = el('span', 'roll-title');
     title.append(el('span', 'roll-name', note.title));
     top.append(title, el('small', 'roll-veil', 'só você vê'), el('time', '', time(note.at)));
+    const actions = el('p', 'note-actions'), del = el('button', 'note-delete', 'Apagar');
+    del.type = 'button';
+    del.setAttribute('aria-label', `Apagar o alerta: ${note.title}`);
+    del.addEventListener('click', () => deleteNote?.(note.id));
+    actions.append(del);
     const text = el('div', 'roll-text');
-    text.append(top, ...note.lines.map(line => el('p', 'roll-what', line)));
+    text.append(top, ...note.lines.map(line => el('p', 'roll-what', line)), actions);
     li.append(text);
     return li;
   }
@@ -141,9 +146,10 @@ export function createRoomLog({ list, empty, notices, texts, critical, nameOf })
       render(roll.id);
       if (roll.seat !== you) notice(roll);
     },
-    // Os alertas do Guardião, como estão agora (só no aparelho dele).
-    notes(list) {
+    // Os alertas do Guardião, como estão agora (só no aparelho dele); onDelete(id): o "Apagar".
+    notes(list, onDelete = null) {
       notes = list;
+      deleteNote = onDelete;
       render();
     },
     // As rolagens deste aparelho que a mesa ainda não confirmou ([{ at, msg }], da mais velha para

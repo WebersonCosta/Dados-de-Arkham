@@ -123,8 +123,9 @@ plano completo está em `docs/plano-mesa-compartilhada.md`).
   - perda de metade do PV máximo ou mais de uma vez (ferimento grave);
   - PV chegando a zero (inconsciente, ou morrendo com um ferimento grave).
 
-  O aviso aparece no alto da tela e fica até o Guardião tocar em **Entendi**. Enquanto isso, o
-  jogador fica destacado na lista, e o alerta fica no histórico, marcado "só você vê". Os toques
+  O aviso aparece no alto da tela e some sozinho depois de uns 10 segundos (ou com **Entendi**). No
+  histórico, o alerta fica marcado "só você vê" até o Guardião tocar em **Apagar**; enquanto isso, o
+  jogador fica destacado na lista. Os toques
   seguidos no − contam como uma perda só: o app espera o jogador ficar 4 segundos sem mexer naquele
   valor. Os alertas são calculados no aparelho do Guardião: a mesa não sabe deles, e os jogadores
   não recebem nada. São lembretes; quem decide é o Guardião.

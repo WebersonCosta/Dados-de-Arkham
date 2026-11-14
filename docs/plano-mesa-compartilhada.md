@@ -284,10 +284,16 @@ A proteção é feita no servidor: só o Guardião pode remover.
 - PV zero: "morrendo" se esta perda já foi um ferimento grave, ou se o app viu um nesta mesa; o app não
   sabe dos ferimentos de sessões anteriores, e o lembrete diz isso. Lembra também que um golpe do PV
   máximo ou mais mata na hora: o PV não desce abaixo de zero, e o app não vê o tamanho do golpe.
-- Como aparece: um aviso logo abaixo do cabeçalho, até o Guardião tocar em "Entendi" (até 3 no PC, 1
-  no celular, com "mais N alertas esperando"); o jogador em vermelho, com "!", na lista, enquanto o
-  aviso estiver lá; e o registro no histórico, marcado "só você vê", que fica. Valores em zero aparecem
-  em vermelho na tabela do Guardião.
+- Como aparece: um aviso logo abaixo do cabeçalho (até 3 no PC, 1 no celular, com "mais N alertas
+  esperando"); o registro no histórico, marcado "só você vê"; e o jogador em vermelho, com "!", na
+  lista. Valores em zero aparecem em vermelho na tabela do Guardião.
+- Ajuste pedido por Weberson depois de testar a 1.4 (14/11/2026; publicado na versão 1.5, no mesmo
+  dia): os alertas não precisam ficar para
+  sempre. O aviso no alto some sozinho depois de alguns segundos se ninguém tocar em "Entendi" (ficou
+  em 10 s; com o mouse em cima, espera). No histórico, o alerta só sai por uma ação de propósito do
+  Guardião: o "Apagar" de cada um. O destaque na lista acompanha o histórico (fica enquanto o jogador
+  tiver algum alerta lá). Aberto de novo, o app mostra os alertas do histórico, mas o aviso no alto
+  não volta.
 - Remover lugar: o botão "Tirar alguém", ao lado de "Na mesa" (só para o Guardião), mostra um × em
   cada jogador; o × pede confirmação. A mesa confere que quem pede é o Guardião. O lugar tirado
   continua na lista só com o nome, para o histórico (os valores saem); as conexões dele são avisadas e

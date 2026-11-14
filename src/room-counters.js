@@ -1,5 +1,5 @@
 import { readMax, setMax, step, cleanCounters, characterKey } from './core/counters.js';
-import { holdRepeat } from './lib/util.js';
+import { holdRepeat, closeOnBackdrop } from './lib/util.js';
 
 // Os valores do personagem na mesa compartilhada (no tema Arkham: PV, SAN, Sorte e PM). O jogador
 // escreve o máximo de cada um e ajusta o valor atual com − e +, numa folha aberta pelo botão perto
@@ -118,7 +118,7 @@ export function createRoomCounters({ list, saved, save, unlock, note, onChange }
 
   chip.addEventListener('click', open);
   $('btnCloseCounters').addEventListener('click', close);
-  sheet.addEventListener('click', ev => { if (ev.target === sheet) close(); });
+  closeOnBackdrop(sheet, close);
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !sheet.hidden) close(); });
   grid.addEventListener('change', commit);
   // o Enter do teclado passa para o próximo campo
@@ -130,8 +130,10 @@ export function createRoomCounters({ list, saved, save, unlock, note, onChange }
     else ev.target.blur();
   });
   // Escrevendo um máximo, a folha sobe, para o teclado não cobrir os campos; no resto do tempo fica
-  // embaixo, perto do polegar.
-  grid.addEventListener('focusin', ev => sheet.classList.toggle('at-top', ev.target.matches('input')));
+  // embaixo, perto do polegar. Só no celular e no tablet, que têm o teclado na tela: no PC, a folha
+  // subindo no meio do clique fugia do mouse.
+  const touch = matchMedia('(pointer: coarse)');
+  grid.addEventListener('focusin', ev => sheet.classList.toggle('at-top', touch.matches && ev.target.matches('input')));
   grid.addEventListener('focusout', () => sheet.classList.remove('at-top'));
   render();
 

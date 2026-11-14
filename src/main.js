@@ -6,7 +6,7 @@ import { createFormulas, MAX_DICE } from './core/formula.js';
 import { createDieModel } from './core/polyhedra.js';
 import { THEMES, DEFAULT_THEME } from './themes/index.js';
 import { VERSION, PLACE } from './version.js';
-import { holdRepeat } from './lib/util.js';
+import { holdRepeat, closeOnBackdrop } from './lib/util.js';
 import { createRoomPanel } from './room-panel.js';
 
 // Liga as peças: carrega o tema, monta a mesa e cuida do toque, da escolha dos dados e do resultado.
@@ -285,7 +285,7 @@ $('btnSave').addEventListener('click', () => {
 });
 $('btnShortcuts').addEventListener('click', openSheet);
 $('btnCloseSheet').addEventListener('click', closeSheet);
-sheet.addEventListener('click', ev => { if (ev.target === sheet) closeSheet(); });
+closeOnBackdrop(sheet, closeSheet);
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !sheet.hidden) closeSheet(); });
 $('btnClear').addEventListener('click', clearFormula);
 holdRepeat($('btnMinus'), () => stepFixed(-1), () => audio.unlock());
