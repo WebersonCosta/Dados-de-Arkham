@@ -27,10 +27,10 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.4**, publicada em 14/11/2026 | `main` = tag `v1.4`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (atualizada junto, com o tirar um lugar) |
+| Oficial | **1.4**, publicada em 14/11/2026 | `main` = tag `v1.4` (caf3124), https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (atualizada junto, com o tirar um lugar) |
 | Desenvolvimento | depois da 1.4: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 15` (a 1.4) |
 
-Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027), `v1.3` (fb4481a) e `v1.4`. A 1.1
+Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027), `v1.3` (fb4481a) e `v1.4` (caf3124). A 1.1
 trouxe: vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos
 dado único e montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2
 trouxe a mesa compartilhada (fase 2), com os valores do investigador. A 1.3 trouxe a física nova dos
@@ -44,7 +44,9 @@ Guardião (SAN e PV) e tirar um lugar da mesa.
   "Etapa atual", abaixo, e no plano) e pediu a fase 3 enxuta: alertas para o Guardião (SAN e PV, com
   lembretes da regra) e tirar um lugar da mesa, com a proteção no servidor. No envio `teste 15`, com
   a mesa de teste atualizada (teste dos aparelhos: 28 de 28), e publicada com o "pode publicar" dele:
-  primeiro a mesa oficial (`npm run deploy:oficial` e o teste dos aparelhos contra ela), depois o app.
+  primeiro a mesa oficial (`npm run deploy:oficial` e o teste dos aparelhos contra ela: 28 de 28;
+  outras origens recebem 403), depois o app. Conferido no endereço oficial: v1.4, sem erros, e a
+  mesa oficial respondendo.
   Veja "Mesa compartilhada: alertas e tirar um lugar". Próxima fase da nova ordem: a 4 (a ficha,
   primeiro degrau), quando Weberson pedir.
 - **A física dos dados (versão 1.3, publicada em 13/11/2026).** Weberson notou no celular dados
