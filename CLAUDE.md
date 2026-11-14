@@ -27,19 +27,21 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.4**, publicada em 14/11/2026 | `main` = tag `v1.4` (caf3124), https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (atualizada junto, com o tirar um lugar) |
-| Desenvolvimento | **1.5**: ajustes pedidos por Weberson depois de testar a 1.4 (os avisos dos alertas somem sozinhos, o histórico só apaga no "Apagar", e a folha dos valores que fechava ao clicar num campo, no PC), em teste | `desenvolvimento`; endereço de teste com o envio `teste 16` |
+| Oficial | **1.5**, publicada em 14/11/2026 | `main` = tag `v1.5`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (a mesma da 1.4: o servidor não mudou) |
+| Desenvolvimento | depois da 1.5: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 16` (a 1.5) |
 
-Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027), `v1.3` (fb4481a) e `v1.4` (caf3124). A 1.1
+Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027), `v1.3` (fb4481a), `v1.4` (caf3124) e `v1.5`. A 1.1
 trouxe: vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos
 dado único e montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2
 trouxe a mesa compartilhada (fase 2), com os valores do investigador. A 1.3 trouxe a física nova dos
 dados: menores (82%), sem tremor, empurrões mais raros e mais discretos, e a mesma física em
 qualquer aparelho. A 1.4 trouxe a fase 3 da mesa compartilhada, versão enxuta: os alertas do
-Guardião (SAN e PV) e tirar um lugar da mesa.
+Guardião (SAN e PV) e tirar um lugar da mesa. A 1.5 ajustou os alertas (o aviso some sozinho; o
+histórico só apaga no "Apagar") e consertou a folha dos valores que fechava ao clicar num campo, no
+PC.
 
 - Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 17.
-- **Trabalho atual (14/11/2026): ajustes depois da 1.4** (envio `teste 16`, sem publicar). Weberson
+- **Ajustes depois da 1.4 (versão 1.5, publicada em 14/11/2026; envio `teste 16`).** Weberson
   pediu: os alertas não precisam ficar para sempre; o aviso no alto some sozinho depois de alguns
   segundos se ninguém tocar em "Entendi"; no histórico, o alerta só sai por uma ação de propósito do
   Guardião. E relatou um erro no PC: na folha dos valores, depois de criados, clicar num campo de
@@ -47,8 +49,8 @@ Guardião (SAN e PV) e tirar um lugar da mesa.
   (`at-top`, feito para o teclado do celular); o botão do mouse era solto já sobre o fundo escuro, e
   o Chrome manda o clique para o elemento que contém os dois pontos (o fundo), que fechava a folha.
   No celular o toque é conferido num ponto só, por isso funcionava. Feito: veja "Folhas" e "Mesa
-  compartilhada: alertas e tirar um lugar". Falta Weberson testar e dar o "pode publicar" (o
-  servidor não mudou: a mesa oficial fica como está).
+  compartilhada: alertas e tirar um lugar". Publicado com o "pode publicar" dele; o servidor não
+  mudou, e a mesa oficial ficou como estava.
 - **Fase 3 da mesa compartilhada, versão enxuta (versão 1.4, publicada em 14/11/2026).** Depois da
   primeira sessão com o grupo, Weberson reviu as prioridades (o critério e a nova ordem estão em
   "Etapa atual", abaixo, e no plano) e pediu a fase 3 enxuta: alertas para o Guardião (SAN e PV, com

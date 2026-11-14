@@ -287,7 +287,8 @@ A proteção é feita no servidor: só o Guardião pode remover.
 - Como aparece: um aviso logo abaixo do cabeçalho (até 3 no PC, 1 no celular, com "mais N alertas
   esperando"); o registro no histórico, marcado "só você vê"; e o jogador em vermelho, com "!", na
   lista. Valores em zero aparecem em vermelho na tabela do Guardião.
-- Ajuste pedido por Weberson depois de testar a 1.4 (14/11/2026): os alertas não precisam ficar para
+- Ajuste pedido por Weberson depois de testar a 1.4 (14/11/2026; publicado na versão 1.5, no mesmo
+  dia): os alertas não precisam ficar para
   sempre. O aviso no alto some sozinho depois de alguns segundos se ninguém tocar em "Entendi" (ficou
   em 10 s; com o mouse em cima, espera). No histórico, o alerta só sai por uma ação de propósito do
   Guardião: o "Apagar" de cada um. O destaque na lista acompanha o histórico (fica enquanto o jogador

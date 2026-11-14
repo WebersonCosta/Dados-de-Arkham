@@ -1,9 +1,9 @@
 # Guia de uso: Dados de Arkham
 
-Atualizado em 14/11/2026: versão oficial **1.4**, publicada nesse dia, que traz para a mesa
-compartilhada os alertas do Guardião e o "Tirar alguém" (veja "Mesa compartilhada"). O endereço de
-teste está com a **1.5** (envio "teste 16"): os avisos dos alertas somem sozinhos, o histórico guarda
-os alertas até o Guardião apagar, e a folha dos valores não fecha mais ao clicar num campo, no PC.
+Atualizado em 14/11/2026: versão oficial **1.5**, publicada nesse dia. A 1.4, do mesmo dia, trouxe
+para a mesa compartilhada os alertas do Guardião e o "Tirar alguém" (veja "Mesa compartilhada"); a
+1.5 faz os avisos dos alertas sumirem sozinhos, guarda os alertas no histórico até o Guardião apagar
+e conserta a folha dos valores no PC. O endereço de teste está com a mesma versão (envio "teste 16").
 
 O Dados de Arkham é um rolador de dados 3D para RPG, feito para *Call of Cthulhu* (7ª edição). Os
 dados caem numa mesa de madeira, à luz de velas, e o resultado é a face que ficou para cima, como
@@ -32,10 +32,10 @@ e até 6 jogadores podem rolar juntos, cada um no seu aparelho, pela **mesa comp
 
 | | Endereço | Versão | O que tem |
 | --- | --- | --- | --- |
-| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.4 | Tudo o que está neste guia |
-| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.5 (teste 16) | Tudo, mais os ajustes em teste: os avisos dos alertas que somem sozinhos, o "Apagar" no histórico e a folha dos valores consertada no PC |
+| **Oficial** | https://webersoncosta.github.io/Dados-de-Arkham/ | 1.5 | Tudo o que está neste guia |
+| **Teste** | https://webersoncosta.github.io/Dados-de-Arkham-teste/ | 1.5 (teste 16) | A mesma versão; é onde as próximas novidades aparecem primeiro, para testar |
 
-- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.4** no oficial e
+- O número da versão aparece pequeno no canto de baixo da tela, à direita: **v1.5** no oficial e
   **v1.5 · teste 16** no teste, em vermelho. O número depois de "teste" sobe a cada envio: é o
   jeito de saber se a versão nova já chegou.
 - Os dois endereços não se misturam. Cada um guarda à parte as preferências, as fórmulas favoritas
@@ -430,7 +430,7 @@ chave mesmo nunca sai do aparelho) e as rolagens. Tudo se apaga quando o Guardi�
 | 1.2 | 06/11/2026 | A mesa compartilhada, com os valores do investigador (PV, SAN, Sorte e PM) |
 | 1.3 | 13/11/2026 | Dados menores, sem tremor, e empurrões mais raros e mais discretos |
 | 1.4 | 14/11/2026 | Na mesa compartilhada, os alertas do Guardião (SAN e PV) e tirar alguém da mesa |
-| 1.5 | em teste | Os avisos dos alertas somem sozinhos e o histórico só apaga no "Apagar"; no PC, a folha dos valores não fecha mais ao clicar num campo |
+| 1.5 | 14/11/2026 | Os avisos dos alertas somem sozinhos e o histórico só apaga no "Apagar"; no PC, a folha dos valores não fecha mais ao clicar num campo |
 
 ## 12. Limitações atuais
 
@@ -542,7 +542,8 @@ Depois da primeira sessão com o grupo (novembro de 2026), as prioridades mudara
 jogo é por voz no Discord, então só vale construir o que faz algo que a voz não faz.
 
 - **Feita (fase 3), o painel do Guardião, versão enxuta:** os alertas e tirar alguém da mesa,
-  publicados na versão 1.4. As próximas novidades aparecem primeiro no endereço de teste.
+  publicados na versão 1.4 e ajustados na 1.5. As próximas novidades aparecem primeiro no endereço de
+  teste.
 - **Próxima (fase 4), a ficha, primeiro degrau:** carregar a ficha do investigador em Markdown e vê-la dentro
   do app; em PDF, só para ver.
 - **Fase 5, a ficha, segundo degrau:** perícias que se tocam para rolar, com o nível de sucesso, e
