@@ -1,7 +1,7 @@
 import { createArkhamScene } from './scene.js';
 import { createArkhamAudio } from './audio.js';
 import { createDieMaterial, dimDie } from './dice-look.js';
-import { critical, modes, kinds, shortcuts, counters } from './rules.js';
+import { critical, modes, kinds, shortcuts, counters, alerts } from './rules.js';
 
 // Ficha do tema "Arkham" (horror cósmico, Call of Cthulhu).
 // O tema decide tudo o que se vê e se ouve, e as regras do jogo. A física, as formas dos dados
@@ -31,13 +31,15 @@ export default {
 
   // Regras de Call of Cthulhu (em rules.js): 01 é sucesso crítico e 100 é desastre, no d100; os
   // dados de bônus e de penalidade, que aparecem como opções acima da bandeja quando o d100 está
-  // escolhido; o 1d3, rolado com um d6; os atalhos prontos (3d6, 2d6+6…); e os valores do
-  // investigador na mesa compartilhada (PV, SAN, Sorte e PM).
+  // escolhido; o 1d3, rolado com um d6; os atalhos prontos (3d6, 2d6+6…); os valores do
+  // investigador na mesa compartilhada (PV, SAN, Sorte e PM); e os alertas que esses valores dão
+  // ao Guardião (perdas grandes de SAN e de PV).
   critical,
   modes,
   kinds,
   shortcuts,
   counters,
+  alerts,
 
   // vibração em milissegundos (funciona no Android)
   haptics: { throw: 12, settle: 35, critical: [30, 60, 30, 60, 140], fumble: [260, 80, 120] }

@@ -23,28 +23,39 @@ para depois. Mantenha este arquivo em dia a cada etapa.
 - Quando Weberson pedir para avisar de problemas antes de implementar, explicar o problema e
   perguntar antes de mexer.
 
-## Estado atual (13/11/2026)
+## Estado atual (14/11/2026)
 
 | | Versão | Onde |
 | --- | --- | --- |
-| Oficial | **1.3**, publicada em 13/11/2026 | `main` = tag `v1.3`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (a mesma da 1.2: o servidor não mudou) |
-| Desenvolvimento | depois da 1.3: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 14` (a 1.3) |
+| Oficial | **1.4**, publicada em 14/11/2026 | `main` = tag `v1.4`, https://webersoncosta.github.io/Dados-de-Arkham/; mesa oficial em https://mesa-arkham.mesa-arkham.workers.dev (atualizada junto, com o tirar um lugar) |
+| Desenvolvimento | depois da 1.4: a próxima etapa espera o pedido de Weberson | `desenvolvimento`; endereço de teste com o envio `teste 15` (a 1.4) |
 
-Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027) e `v1.3`. A 1.1
+Versões publicadas (tags): `v1.0` (3ac132c), `v1.1` (94cafb6), `v1.2` (d41a027), `v1.3` (fb4481a) e `v1.4`. A 1.1
 trouxe: vários dados juntos (fórmulas como 2d6 + 6), o 1d3, atalhos e fórmulas favoritas, os modos
 dado único e montagem, as atualizações sem mistura de versões e o número da versão no canto. A 1.2
 trouxe a mesa compartilhada (fase 2), com os valores do investigador. A 1.3 trouxe a física nova dos
 dados: menores (82%), sem tremor, empurrões mais raros e mais discretos, e a mesma física em
-qualquer aparelho.
+qualquer aparelho. A 1.4 trouxe a fase 3 da mesa compartilhada, versão enxuta: os alertas do
+Guardião (SAN e PV) e tirar um lugar da mesa.
 
-- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 15.
+- Próximo envio para o teste: subir o `RELEASE` do `sw.js` para 16.
+- **Fase 3 da mesa compartilhada, versão enxuta (versão 1.4, publicada em 14/11/2026).** Depois da
+  primeira sessão com o grupo, Weberson reviu as prioridades (o critério e a nova ordem estão em
+  "Etapa atual", abaixo, e no plano) e pediu a fase 3 enxuta: alertas para o Guardião (SAN e PV, com
+  lembretes da regra) e tirar um lugar da mesa, com a proteção no servidor. No envio `teste 15`, com
+  a mesa de teste atualizada (teste dos aparelhos: 28 de 28), e publicada com o "pode publicar" dele:
+  primeiro a mesa oficial (`npm run deploy:oficial` e o teste dos aparelhos contra ela), depois o app.
+  Veja "Mesa compartilhada: alertas e tirar um lugar". Próxima fase da nova ordem: a 4 (a ficha,
+  primeiro degrau), quando Weberson pedir.
 - **A física dos dados (versão 1.3, publicada em 13/11/2026).** Weberson notou no celular dados
   tremendo quando quase parados e empurrõezinhos em dados quase parados; pediu menos empurrões e
   mais discretos, dados um pouco menores, sensação de mais peso e um painel de ajuste temporário
   (envio `teste 13`). Testou no celular e no PC (relatado em 13/11/2026): a redução do tamanho foi
   bastante benéfica, sem nenhum problema de 80% a 85%; não percebeu diferença no peso. Fixados
   tamanho 82% e peso 0 em `FEEL` (`src/core/physics.js`) e tirado o painel, no envio `teste 14`
-  (veja "Dados e física"), e publicado com o "pode publicar" dele.
+  (veja "Dados e física"), e publicado com o "pode publicar" dele. Conferido no endereço oficial:
+  v1.3, sem erros, e a mesa oficial respondendo (uma ligação a um código que não existe recebe
+  `room-not-found`, sem gravar nada: um jeito seguro de ver se a mesa está no ar).
 - A passagem da 1.0 para a 1.1 ainda dependeu do `sw.js` antigo (o da 1.0, que buscava cada
   arquivo na internet): nos primeiros minutos depois da publicação, quem abriu o app pode ter
   pegado uma página misturada e precisado fechar e abrir de novo. Da 1.1 em diante, as
@@ -54,6 +65,22 @@ qualquer aparelho.
 aparelho, numa call do Discord. O plano de Weberson (sala com código, visibilidade aberta, privada
 ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) está em
 [`docs/plano-mesa-compartilhada.md`](docs/plano-mesa-compartilhada.md): leia antes de mexer nisso.
+- **Prioridades revistas por Weberson em 14/11/2026**, depois da primeira sessão com o grupo (no
+  plano, "Prioridades depois da primeira sessão", que vale mais que a lista de fases original):
+  - **Critério para novas funcionalidades:** o jogo é por voz no Discord, então só vale construir o
+    que faz algo que a voz não faz.
+  - **Nova ordem** (na lista dele, itens 1 a 5; aqui, fases 3 a 7): 3. painel do Guardião, versão
+    enxuta (alertas e remover lugar); 4. ficha, primeiro degrau (carregar a ficha em Markdown e ver
+    no app; PDF só para ver); 5. ficha, segundo degrau (perícias tocáveis com nível de sucesso e
+    contadores ligados à tabela "Valores derivados"); 6. documentos e pistas (imagens reveladas a
+    todos ou a jogadores escolhidos, com a visibilidade que já existe, e um "apontar" na imagem);
+    7. polimento e atmosfera (velas reagindo ao jogo, trilha sonora, efeitos do Guardião).
+  - **Arquivada (não descartada):** a mesa ritual 3D. Na sessão, a aba de rolagens bastou.
+  - **Ideias sem prioridade:** pedido de rolagem secreto do Guardião para um jogador; rolagem de
+    grupo; rolar em segredo por um jogador com nível de sucesso (depende da ficha); teste de Sanidade
+    guiado; Sorte do grupo (rola quem tem a menor Sorte); NPCs salvos para rolagens secretas;
+    referência rápida de regras com texto próprio; criação guiada de personagem; outros temas e
+    sistemas.
 - Fase 1 (o plano) aprovada em 31/10/2026: as decisões e os 6 passos da fase 2 estão no fim do
   plano. Resumo: um servidor de salas no Cloudflare (Workers + Durable Objects, plano gratuito,
   sem cartão), JavaScript puro, sem biblioteca de interface.
@@ -101,8 +128,9 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   (`npm run deploy:oficial`; nos primeiros instantes o Cloudflare respondeu "error code: 1042" e
   logo passou), testada com os aparelhos simulados (22 de 22; outras origens recebem 403), e depois
   o app. Os valores do investigador guardados no endereço de teste não passam para o oficial (cada
-  endereço guarda os seus). Próxima etapa da mesa compartilhada: a fase 3 (o painel do Guardião),
-  quando Weberson pedir.
+  endereço guarda os seus).
+- Fase 3, versão enxuta (pedida em 14/11/2026): alertas para o Guardião e tirar um lugar, no envio
+  `teste 15` e publicada na versão 1.4 em 14/11/2026 (veja acima).
 
 ## Decisões tomadas (e por quê)
 
@@ -211,7 +239,8 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   `createScene`, `createAudio`, `dieMaterial`, `dimDie`, `critical(setId, result)`, `modes`
   (rolagens especiais por conjunto: `'d100'` ou a fórmula sem espaços, como `'1d20'`), `kinds`
   (dados a mais, como o d3), `shortcuts`, `counters` (os valores do personagem na mesa
-  compartilhada: `{ id, short, name }`) e `haptics`.
+  compartilhada: `{ id, short, name }`), `alerts(change, memory)` (o que esses valores avisam ao
+  Guardião; veja "Mesa compartilhada: alertas e tirar um lugar") e `haptics`.
 - O caminho para vantagem e desvantagem de D&D (2d20, fica o maior ou o menor) está pronto e
   explicado no README ("Rolagens especiais"), e foi testado.
 
@@ -240,15 +269,18 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   (`Room`, em `worker.js`), achado pelo código (`idFromName`). As regras ficam em `room.js`, sem
   nada do Cloudflare, para testar com `node --test`.
 - Código da sala: 6 caracteres de `ABCDEFGHJKMNPQRSTUVWXYZ23456789` (sem 0, O, 1, I e L).
-  Lugares: `g` (o Guardião, quem criou a sala) e `j1` a `j6`, na ordem de entrada. O mesmo
-  aparelho volta sempre para o mesmo lugar.
+  Lugares: `g` (o Guardião, quem criou a sala) e `j1`, `j2`… na ordem de entrada, até 6 jogadores
+  ao mesmo tempo. O mesmo aparelho volta sempre para o mesmo lugar. O número de um lugar nunca se
+  repete numa mesa (`nextSeat`: o maior já usado mais 1): quem chega depois de um lugar tirado pelo
+  Guardião não herda as rolagens privadas dele.
 - Aparelho: o app sorteia uma chave (22 a 64 caracteres, base64url) e a guarda só nele; o
   servidor guarda só o SHA-256 dela, e a chave nunca volta em mensagem nenhuma.
 - Conversa: `POST /rooms` cria a sala (`{ protocol, device, name, rules }` → `{ code }`);
-  `/rooms/<código>` é o WebSocket. Primeira mensagem do app: `hello` (`{ protocol, device, name, app
-  }`); resposta: `room` (o lugar, as regras, os membros e as últimas 100 rolagens, já filtrados).
-  Depois chegam `members`, `roll`, `counters`, `outdated`, `error` e `ended`; o app manda `roll`, o
-  jogador manda `counters` (os dele) e o Guardião manda `end`. `PROTOCOL` (hoje
+  `/rooms/<código>` é o WebSocket. Primeira mensagem do app: `hello` (`{ protocol, device, name, app,
+  join? }`; `join: true` só quando a pessoa entrou de propósito, pela folha com o código); resposta:
+  `room` (o lugar, as regras, os membros e as últimas 100 rolagens, já filtrados). Depois chegam
+  `members`, `roll`, `counters`, `outdated`, `removed`, `error` e `ended`; o app manda `roll`, o
+  jogador manda `counters` (os dele) e o Guardião manda `remove` (`{ seat }`) e `end`. `PROTOCOL` (hoje
   1) muda quando app e servidor deixam de se entender (o `hello` é recusado com `version`). "ping"
   recebe "pong" sem acordar a sala.
 - Versão do app (passo 5): o `hello` leva `app` (o `VERSION` de `src/version.js`, como '1.2';
@@ -395,6 +427,48 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   cheia: 25 px por linha, tabela de 190 px; no notebook de 1366×640 sobram 201 px para as rolagens
   (de 3 a 4 à vista); o nome fica com 127 px no painel de 355 px e 83 px no de 280 px.
 
+**Mesa compartilhada: alertas e tirar um lugar** (fase 3, versão enxuta, pedida em 14/11/2026;
+`src/room-alerts.js`, `src/core/counter-watch.js`, `alerts` em `src/themes/arkham/rules.js`; o pedido
+e o porquê no fim do plano)
+- Alertas só no aparelho do Guardião, com os valores que a mesa já entrega a ele (`room`, `members`,
+  `counters`): nada novo no servidor, nada para os jogadores. `room-panel.js` passa os valores dos
+  jogadores a `alerts.see(seat, counters)` só quando `room.you === 'g'`.
+- Toques seguidos (`counter-watch.js`, `QUIET` = 4 s): cada valor de cada lugar abre uma mudança no
+  primeiro toque (`state.from`) e ela termina quando o valor fica 4 s sem mudar; vai do valor de
+  antes do primeiro toque ao de depois do último. `state.top` guarda o maior valor da sessão (recomeça
+  no primeiro valor visto e num máximo novo). Tudo em `saved.alerts` (`{ code, watch, memory,
+  entries }`, ligado ao código da mesa): o app aberto de novo no meio de uma mudança a continua, e o
+  que mudou com o Guardião fora conta como uma mudança. Sai ao encerrar a mesa (`alerts.clear()`).
+- As regras (`alerts(change, memory)`, no tema): só perdas com o mesmo máximo (mexer no máximo é
+  acerto da ficha). SAN: 0 → permanente (só esse lembrete); perdeu `top − atual` ≥ um quinto do `top`
+  → indefinida (uma vez por jogador na mesa, `memory.indefinite`); perda ≥ 5 → teste de INT. PV: perda
+  ≥ metade do máximo → ferimento grave (`memory.wounded`); 0 → morrendo se esta perda foi ferimento
+  grave ou se já houve um na mesa, senão inconsciente, mais o lembrete da morte por um golpe do PV
+  máximo (o PV não desce abaixo de zero). Metades e quintos arredondam para baixo (com mínimo 1).
+  Textos próprios, curtos; quem decide é o Guardião. Testes em `tests/alertas.test.js` (relógio de
+  mentira).
+- Regras conferidas em 14/11/2026 nas páginas de regras da Chaosium (cocwiki.chaosium.com: Sanity;
+  Hit Points, Wounds and Healing) e em fontes secundárias (indefinida e permanente não estão nas
+  páginas grátis). Avisado a Weberson como incerto: a base da indefinida ("SAN atual" num mesmo dia de
+  jogo: o começo do dia?) e o arredondamento da metade com PV máximo ímpar.
+- Tela: avisos logo abaixo do cabeçalho (`#alerts`, dentro do `.hud-top`, por cima da faixa das velas),
+  o mais novo em cima, até "Entendi"; à vista até 3 no PC e 1 até 600 px de largura (os outros
+  esperam, com "mais N alertas esperando"); até 6 esperando. O jogador com aviso à vista fica em
+  vermelho com "!" na lista (`is-alert`); valores em zero ficam em vermelho na tabela. No histórico,
+  `log.notes()` põe os alertas entre as rolagens (logo acima da última que tinha chegado, `after`),
+  com "!" e "só você vê"; até 60 guardados.
+- Tirar um lugar: o botão "Tirar alguém", ao lado de "Na mesa", só para o Guardião, mostra o × de
+  cada jogador (sempre à vista, ele apertava demais os nomes no painel); o × pede `confirm` e manda
+  `{ type: 'remove', seat }`. O servidor confere que é o Guardião (`guardian-only`) e que é um lugar
+  de jogador ativo (`invalid`), muda o papel para `removed` (fica o nome, para o histórico; os valores
+  saem) e manda `{ type: 'removed' }` às conexões daquele lugar, que são desligadas. Qualquer mensagem
+  de um lugar que não está mais ativo é recusada com `removed`. No `hello`, o aparelho de um lugar
+  tirado só entra com `join: true` (e com vaga: senão continua marcado e não volta sozinho quando abrir
+  uma); aí o lugar antigo perde o aparelho (`removed:jN`) e ele senta num lugar novo. O app trata
+  `removed` (mensagem ou erro) como final: esquece a mesa e avisa "O Guardião tirou você desta mesa".
+  Na lista, os lugares `removed` não aparecem, mas continuam em `members` para o histórico dizer quem
+  rolou.
+
 ## Fluxo: desenvolver, testar e publicar
 
 - Repositório principal: https://github.com/WebersonCosta/Dados-de-Arkham (`main` = oficial,
@@ -446,6 +520,10 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
   aba ocupada só responde quando o lote dela termina.
 - No painel de navegador do Claude, se o painel estiver escondido, as capturas de tela podem vir
   atrasadas (tire duas). Os avisos "Blocked call to navigator.vibrate" nos testes são normais.
+- Alertas do Guardião: `node --test tests/alertas.test.js` (na pasta do projeto; o Node 24 lê os
+  arquivos do app como módulos sem precisar de package.json). No navegador: uma aba com `?aba` cria
+  a mesa (Guardião) e outras com `?aba` entram; o − e o + respondem a `click()` (o `holdRepeat` aceita
+  o clique sem `detail`), e o `confirm` do "Tirar alguém" pode ser trocado por `() => true`.
 - Servidor da mesa: `npm test` (dentro de `server/`) testa as regras da sala sem servidor. O
   simulador local (`npm run local`, que usa o `workerd`) não abre neste PC: o Visual C++ do
   Windows é de 2017 (14.16) e o `workerd` quebra ao iniciar ("access violation"). Instalar o
@@ -457,12 +535,14 @@ ou secreta protegida no servidor, o Guardião, a mesa ritual 3D e as 5 fases) es
 - **Outros temas**: por exemplo um de fantasia para D&D, com crítico no d20 (20 é crítico, 1 é
   falha) e vantagem/desvantagem (o exemplo está no README). Copiar `src/themes/arkham`, trocar
   visual, sons, textos e `rules.js`, e registrar o tema em `src/themes/index.js`.
-- **Campo de perícia**: informar o valor da perícia (por exemplo 60) antes de rolar o d100, e o
-  app mostrar o nível de sucesso da 7ª edição: crítico (01), extremo (até 1/5 da perícia),
-  difícil (até a metade), normal (até a perícia), fracasso, e desastre (100, ou 96 a 100 quando
-  a perícia é menor que 50). Entra na fase 5 da mesa compartilhada.
+- **Nível de sucesso**: o nível de sucesso da 7ª edição no d100: crítico (01), extremo (até 1/5 da
+  perícia), difícil (até a metade), normal (até a perícia), fracasso, e desastre (100, ou 96 a 100
+  quando a perícia é menor que 50). Desde 14/11/2026 entra com a ficha, no segundo degrau (fase 5 da
+  nova ordem: perícias tocáveis com nível de sucesso), e não mais como um campo à parte.
 - **Mesa compartilhada**: virou a etapa atual (veja "Estado atual" e
-  `docs/plano-mesa-compartilhada.md`).
-- **Ficha do personagem** (Markdown, que os contadores leem e atualizam, e PDF, só para ver) e
-  **alertas para o Guardião** (PV baixo, perda grande de Sanidade): o pedido e como a ficha entra sem
-  refazer os contadores estão no fim do plano.
+  `docs/plano-mesa-compartilhada.md`). A mesa ritual 3D ficou arquivada em 14/11/2026, e as ideias
+  sem prioridade (rolagem de grupo, teste de Sanidade guiado, Sorte do grupo…) estão em "Etapa
+  atual".
+- **Ficha do personagem** (Markdown, que os contadores leem e atualizam, e PDF, só para ver): as
+  fases 4 e 5 da nova ordem. O pedido e como a ficha entra sem refazer os contadores estão no plano.
+  Os alertas para o Guardião já foram feitos (fase 3, versão enxuta).

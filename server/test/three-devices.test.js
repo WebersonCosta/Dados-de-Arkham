@@ -28,15 +28,15 @@ async function createRoom(device, rules) {
   return (await res.json()).code;
 }
 
-// Um aparelho na sala (app: a versão do app dele). `raw` guarda o texto de cada mensagem exatamente
-// como chegou.
+// Um aparelho na sala (app: a versão do app dele; extra: mais campos no "hello", como o join de quem
+// entra pela folha com o código). `raw` guarda o texto de cada mensagem exatamente como chegou.
 const devices = [];
-function join(code, device, name, app) {
+function join(code, device, name, app, extra = {}) {
   return new Promise(resolve => {
     const ws = new WebSocket(`${BASE.replace(/^http/, 'ws')}/rooms/${code}`, { headers: { Origin: ORIGIN } });
     const me = { name, device, ws, raw: [], messages: [] };
     devices.push(me);
-    ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', protocol: 1, device, name, app }));
+    ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', protocol: 1, device, name, app, ...extra }));
     ws.onmessage = ev => {
       me.raw.push(ev.data);
       const msg = JSON.parse(ev.data);
@@ -306,6 +306,69 @@ test('o Guardião deixou: todos recebem os valores de todos', { skip: !BASE && '
   } finally {
     send(g, { type: 'end' });
     await until(a, msg => msg.type === 'ended');
+    for (const d of devices) d.ws.close();
+  }
+});
+
+test('o Guardião tira um lugar: só ele pode, e quem saiu só volta pelo código', { skip: !BASE && 'defina MESA_URL' }, async t => {
+  const keys = { g: newDevice(), a: newDevice(), b: newDevice() };
+  const code = await createRoom(keys.g);
+  const g = await join(code, keys.g, 'Guardião');
+  const a = await join(code, keys.a, 'Ana');
+  const b = await join(code, keys.b, 'Bento');
+  const errors = me => me.messages.filter(msg => msg.type === 'error');
+  let back = null, again = null;
+  try {
+    // antes de sair, Ana rola uma privada e manda os valores dela
+    const secretId = newId();
+    send(a, { type: 'roll', id: secretId, vis: 'private', set: 'd100', name: 'd100', total: 42, text: '42', label: 'SEGREDO-TIRADA' });
+    await until(g, rollOf(secretId));
+    send(a, { type: 'counters', counters: { hp: { max: 10, cur: 9 } } });
+    await until(g, isCounters('j1'));
+
+    await t.test('jogador não tira ninguém', async () => {
+      send(b, { type: 'remove', seat: 'j1' });
+      assert.equal((await until(b, msg => msg.type === 'error')).error, 'guardian-only');
+      await wait(300);
+      assert.ok(!a.messages.some(msg => msg.type === 'removed'));
+    });
+
+    await t.test('o Guardião não tira a si mesmo, nem um lugar que não existe', async () => {
+      for (const seat of ['g', 'j9', { x: 1 }]) send(g, { type: 'remove', seat });
+      for (const end = Date.now() + 4000; errors(g).length < 3 && Date.now() < end;) await wait(15);
+      assert.deepEqual(errors(g).map(e => e.error), ['invalid', 'invalid', 'invalid']);
+    });
+
+    await t.test('Ana sai na hora; os outros veem o lugar tirado, sem os valores dela', async () => {
+      send(g, { type: 'remove', seat: 'j1' });
+      await until(a, msg => msg.type === 'removed');
+      const gone = msg => msg.type === 'members' && memberOf(msg.members, 'j1')?.role === 'removed';
+      for (const me of [g, b]) {
+        const seen = memberOf((await until(me, gone)).members, 'j1');
+        assert.equal(seen.name, 'Ana');   // o nome fica, para o histórico dizer quem rolou
+        assert.equal(seen.online, false);
+        assert.ok(!('counters' in seen));
+      }
+    });
+
+    await t.test('voltando sozinha, é recusada; entrando pelo código, senta num lugar novo', async () => {
+      assert.equal((await join(code, keys.a, 'Ana')).error, 'removed');
+      back = await join(code, keys.a, 'Ana', undefined, { join: true });
+      assert.equal(back.room.you, 'j3');
+      // a privada do lugar antigo não volta nem para ela: só o Guardião continua vendo
+      assert.deepEqual(Object.keys(back.room.rolls.find(r => r.id === secretId)).sort(), SUSPENSE);
+      again = await join(code, keys.a, 'Ana');   // depois disso, ela volta sozinha para o lugar novo
+      assert.equal(again.room.you, 'j3');
+      const g2 = await join(code, keys.g, 'Guardião');
+      assert.equal(g2.room.rolls.find(r => r.id === secretId).total, 42);
+    });
+
+    await t.test('ninguém além do Guardião recebeu a privada do lugar tirado', () => {
+      for (const me of [b, back, again]) assert.ok(!me.raw.join('\n').includes('SEGREDO-TIRADA'), `${me.name} recebeu a privada`);
+    });
+  } finally {
+    send(g, { type: 'end' });
+    await until(b, msg => msg.type === 'ended');
     for (const d of devices) d.ws.close();
   }
 });

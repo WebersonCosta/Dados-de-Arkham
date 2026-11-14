@@ -1,6 +1,7 @@
 // A ligação do app com a mesa compartilhada (o servidor fica em server/): criar a mesa, entrar,
 // manter a conexão viva e voltar sozinho quando ela cai. Não mexe na tela: conta o que aconteceu
-// por onEvent ({ type: 'status' | 'room' | 'members' | 'roll' | 'counters' | 'error' | 'ended', ... }).
+// por onEvent ({ type: 'status' | 'room' | 'members' | 'roll' | 'counters' | 'error' | 'removed' |
+// 'ended', ... }).
 
 export const PROTOCOL = 1;      // o mesmo do servidor (server/room.js)
 const PING_EVERY = 25000;       // um "ping" a cada 25 s mantém a conexão aberta nas redes de celular
@@ -48,9 +49,11 @@ export async function createRoom(server, device, name, rules) {
 // Entra numa mesa (ou volta para ela) e fica conectado até leave(). Se a conexão cai, tenta de
 // novo sozinho, com esperas cada vez maiores, e na hora em que o app volta para a tela ou a
 // internet volta. Uma recusa na entrada (mesa cheia, mesa que não existe…) ou o fim da mesa
-// encerram a ligação: o evento vem com final: true. app: a versão do app ('1.2'), para a mesa avisar
-// quem ficou com uma versão mais velha que a dos outros.
-export function connect({ server, code, device, name, app, onEvent }) {
+// encerram a ligação: o evento vem com final: true, como quando o Guardião tira este lugar da mesa
+// ('removed'). app: a versão do app ('1.2'), para a mesa avisar quem ficou com uma versão mais velha
+// que a dos outros. join: a pessoa entrou agora, de propósito, pela folha com o código (e não o app
+// voltando sozinho para a mesa): só assim volta quem o Guardião tirou da mesa.
+export function connect({ server, code, device, name, app, join = false, onEvent }) {
   let ws = null, left = false, tries = 0, retryTimer = 0, pingTimer = 0, pongTimer = 0;
   const emit = (type, data) => onEvent({ ...data, type });
 
@@ -60,7 +63,7 @@ export function connect({ server, code, device, name, app, onEvent }) {
     const socket = ws = new WebSocket(`${server.replace(/^http/, 'ws')}/rooms/${code}`);
     let inside = false;   // esta conexão já recebeu a mesa
     emit('status', { status: tries ? 'reconnecting' : 'connecting' });
-    socket.onopen = () => socket.send(JSON.stringify({ type: 'hello', protocol: PROTOCOL, device, name, app }));
+    socket.onopen = () => socket.send(JSON.stringify({ type: 'hello', protocol: PROTOCOL, device, name, app, ...(join && { join: true }) }));
     socket.onclose = () => { if (socket === ws) retry(); };
     socket.onmessage = ev => {
       if (socket !== ws) return;
@@ -69,11 +72,12 @@ export function connect({ server, code, device, name, app, onEvent }) {
       try { msg = JSON.parse(ev.data); } catch (e) { return; }
       if (msg.type === 'room') {
         inside = true;
+        join = false;   // já entrou: as próximas voltas são o app voltando sozinho
         tries = 0;
         keepAlive();
         emit('status', { status: 'online' });
       }
-      const final = msg.type === 'ended' || (msg.type === 'error' && !inside && FINAL.has(msg.error));
+      const final = msg.type === 'ended' || msg.type === 'removed' || (msg.type === 'error' && (msg.error === 'removed' || (!inside && FINAL.has(msg.error))));
       if (final) stop();
       emit(msg.type, { ...msg, final });
     };

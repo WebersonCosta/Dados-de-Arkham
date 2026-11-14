@@ -115,6 +115,24 @@ plano completo está em `docs/plano-mesa-compartilhada.md`).
   - Ao criar a mesa, o Guardião escolhe se os outros jogadores também veem. Se escolher que não, a
     proteção é feita na própria mesa, no servidor: os números dos outros nunca chegam ao aparelho de
     um jogador.
+- **Alertas para o Guardião** (desde a versão 1.4): quando um jogador ajusta os valores, o app
+  do Guardião lembra a regra da 7ª edição nos casos que pedem atenção:
+  - perda de 5 ou mais de SAN de uma vez (teste de INT para insanidade temporária);
+  - perda de um quinto ou mais da SAN na sessão (possível insanidade indefinida);
+  - SAN chegando a zero (insanidade permanente);
+  - perda de metade do PV máximo ou mais de uma vez (ferimento grave);
+  - PV chegando a zero (inconsciente, ou morrendo com um ferimento grave).
+
+  O aviso aparece no alto da tela e fica até o Guardião tocar em **Entendi**. Enquanto isso, o
+  jogador fica destacado na lista, e o alerta fica no histórico, marcado "só você vê". Os toques
+  seguidos no − contam como uma perda só: o app espera o jogador ficar 4 segundos sem mexer naquele
+  valor. Os alertas são calculados no aparelho do Guardião: a mesa não sabe deles, e os jogadores
+  não recebem nada. São lembretes; quem decide é o Guardião.
+- **Tirar alguém da mesa** (desde a versão 1.4): o Guardião toca em **Tirar alguém**, ao lado
+  de "Na mesa", e no × do jogador, e confirma. É para um lugar ocupado por engano ou por quem trocou
+  de aparelho. A pessoa sai na hora (ou, se estava fora, ao voltar) e só volta entrando de novo com
+  o código, num lugar novo, se houver vaga. A proteção é feita na própria mesa, no servidor: só o
+  Guardião consegue tirar alguém.
 - Se a conexão cair, ou se o app for fechado e aberto de novo, ele volta sozinho para o mesmo
   lugar, e o histórico volta junto. Sem conexão por mais que alguns segundos, aparece um aviso
   acima da bandeja ("Sem conexão com a mesa · reconectando…"), que some quando ela volta.
@@ -254,13 +272,14 @@ O app tem duas metades que não se misturam:
 | `stage.js` | Câmera e área da mesa, ajustadas ao tamanho da tela (no PC, o painel da mesa compartilhada fica ao lado) |
 | `room-link.js` | A ligação com a mesa compartilhada: criar a mesa, entrar, manter a conexão viva e voltar sozinho quando ela cai |
 | `counters.js` | Os contadores de um personagem (máximo e valor atual): as contas, sem tela e sem tema |
+| `counter-watch.js` | Para os alertas do Guardião: junta numa mudança só os toques seguidos num valor e guarda o maior valor de cada um na sessão |
 
 **O tema** (`src/themes/arkham/`) é tudo o que se vê e se ouve, e as regras do jogo:
 
 | Arquivo | O que faz |
 | --- | --- |
 | `theme.js` | Ficha do tema: nome, textos, vibração e quais regras e peças ele usa |
-| `rules.js` | Regras de Call of Cthulhu: crítico, desastre, dados de bônus e de penalidade, o 1d3, os atalhos prontos e os valores do investigador (PV, SAN, Sorte e PM) |
+| `rules.js` | Regras de Call of Cthulhu: crítico, desastre, dados de bônus e de penalidade, o 1d3, os atalhos prontos, os valores do investigador (PV, SAN, Sorte e PM) e os alertas que eles dão ao Guardião |
 | `theme.css` | Cores e fontes da interface |
 | `scene.js` | Mesa, velas, tomo, papéis, névoa, luz e a reação aos críticos |
 | `dice-look.js` | Material e pintura dos dados (pedra, osso, números) e o dado descartado apagado |
@@ -272,11 +291,11 @@ o que ela pode ver e se apaga sozinho:
 
 | Arquivo | O que faz |
 | --- | --- |
-| `room.js` | As regras da sala: o código, os lugares (Guardião e até 6 jogadores), a conferência de cada rolagem e dos valores dos jogadores, e quem vê o quê |
-| `worker.js` | A parte do Cloudflare: criar a sala, as conexões ao vivo, guardar, entregar e apagar |
+| `room.js` | As regras da sala: o código, os lugares (Guardião e até 6 jogadores; o número de um lugar tirado nunca volta), a conferência de cada rolagem e dos valores dos jogadores, e quem vê o quê |
+| `worker.js` | A parte do Cloudflare: criar a sala, as conexões ao vivo, guardar, entregar, tirar um lugar (só o Guardião) e apagar |
 | `wrangler.toml` | Os dois servidores: a mesa oficial e a mesa de teste |
 | `test/room.test.js` | Testes das regras, sem servidor |
-| `test/three-devices.test.js` | O Guardião e os jogadores simulados, conferindo que ninguém recebe o que não pode ver (rolagens e valores), a mesa cheia rolando ao mesmo tempo e o aviso para quem está com o app mais velho |
+| `test/three-devices.test.js` | O Guardião e os jogadores simulados, conferindo que ninguém recebe o que não pode ver (rolagens e valores), a mesa cheia rolando ao mesmo tempo, o aviso para quem está com o app mais velho e o lugar tirado pelo Guardião |
 
 O restante:
 
@@ -299,6 +318,9 @@ O restante:
 - `src/room-label.js`: o rótulo da próxima rolagem e os últimos usados.
 - `src/room-counters.js`: os valores do investigador: o botão perto da bandeja, a folha com − e +, e
   o que fica guardado no aparelho, ligado ao nome dele.
+- `src/room-alerts.js`: os alertas do Guardião: o aviso no alto da tela, o destaque na lista e o
+  registro no histórico, guardados no aparelho dele.
+- `tests/alertas.test.js`: testes dos alertas, sem navegador (`node --test tests/alertas.test.js`).
 - `src/app.css`: posição dos elementos na tela.
 - `src/themes/index.js`: a lista de temas (hoje só "arkham").
 - `src/lib/`: ferramentas pequenas usadas em todo o app.
@@ -372,3 +394,6 @@ http://localhost:8766 no navegador. Ali o app não guarda cópia, e cada mudanç
 Para testar a cópia guardada e as atualizações de versão, rode `python tools/servidor-caminhos.py`
 e abra http://localhost:8767/Dados-de-Arkham-teste/ (ou `/Dados-de-Arkham/`): o app se comporta
 como publicado.
+
+Os alertas do Guardião têm testes que rodam sem navegador, com o Node.js: `node --test
+tests/alertas.test.js`.

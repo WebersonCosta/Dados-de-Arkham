@@ -149,10 +149,19 @@ export const cleanRules = input => ({ counters: input?.counters === 'all' ? 'all
 // Quem vê os contadores de um lugar: o próprio, o Guardião e, se a regra da mesa deixar, os outros.
 export const seesCounters = (viewer, owner, rules) => viewer === owner || viewer === GUARDIAN || rules.counters === 'all';
 
-// O lugar de quem chega pela primeira vez: o próximo de jogador (j1, j2…), ou null com a mesa cheia.
+// O lugar que o Guardião tirou da mesa continua na lista, com o papel REMOVED: sem aparelho, sem
+// valores e sem conexão, só com o nome, para o histórico continuar dizendo quem rolou.
+export const REMOVED = 'removed';
+export const isPlayerSeat = seat => typeof seat === 'string' && /^j\d{1,3}$/.test(seat);
+
+// O lugar de quem chega pela primeira vez: o próximo de jogador, ou null com a mesa cheia (os lugares
+// tirados pelo Guardião não contam). O número nunca se repete numa mesa: quem chega depois de alguém
+// ter sido tirado não herda o lugar dele, nem as rolagens privadas que só aquele lugar podia ver.
 export function nextSeat(seats) {
   const players = seats.filter(s => s.role === 'player').length;
-  return players < MAX_PLAYERS ? `j${players + 1}` : null;
+  if (players >= MAX_PLAYERS) return null;
+  const used = seats.filter(s => isPlayerSeat(s.seat)).map(s => Number(s.seat.slice(1)));
+  return `j${Math.max(0, ...used) + 1}`;
 }
 
 // Quem está na mesa, como cada lugar recebe: o lugar, o nome, o papel, a ordem de entrada, se está
